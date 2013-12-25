@@ -190,7 +190,6 @@ static void
 rs_commit() {
 	if (RS->object == 0)
 		return;
-	printf("=====> commit\n");
 	glBindBuffer(GL_ARRAY_BUFFER, RS->vertex_buffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(struct quad) * RS->object, RS->vb, GL_DYNAMIC_DRAW);
 
