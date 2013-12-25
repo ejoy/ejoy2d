@@ -1,0 +1,88 @@
+#include <lua.h>
+#include <lauxlib.h>
+
+#include "shader.h"
+#include "screen.h"
+#include "texture.h"
+
+static int
+lload(lua_State *L) {
+	int prog = luaL_checkinteger(L,1);
+	const char *fs = luaL_checkstring(L, 2);
+	const char *vs = luaL_checkstring(L, 3);
+	shader_load(prog, fs, vs);
+	return 0;
+}
+
+static int
+lunload(lua_State *L) {
+	shader_unload();
+	return 0;
+}
+
+/*
+	int texture
+	table float[16]  
+	uint32_t color
+	uint32_t additive
+ */
+static int
+ldraw(lua_State *L) {
+	int tex = luaL_checkinteger(L,1);
+	int texid = texture_glid(tex);
+	if (texid == 0) {
+		lua_pushboolean(L,0);
+		return 1;
+	} 
+	luaL_checktype(L, 2, LUA_TTABLE);
+	uint32_t color = 0xffffffff;
+
+	if (!lua_isnoneornil(L,3)) {
+		color = lua_tounsigned(L,3);
+	}
+	uint32_t additive = luaL_optunsigned(L,4,0);
+	shader_program(PROGRAM_PICTURE,additive);
+	shader_texture(texid);
+	int n = lua_rawlen(L, 2);
+	int point = n/4;
+	if (point * 4 != n) {
+		return luaL_error(L, "Invalid polygon");
+	}
+	float vb[n];
+	int i;
+	for (i=0;i<point;i++) {
+		lua_rawgeti(L, 2, i*2+1);
+		lua_rawgeti(L, 2, i*2+2);
+		lua_rawgeti(L, 2, point*2+i*2+1);
+		lua_rawgeti(L, 2, point*2+i*2+2);
+		float tx = lua_tonumber(L, -4);
+		float ty = lua_tonumber(L, -3);
+		float vx = lua_tonumber(L, -2) * 64.0f;
+		float vy = lua_tonumber(L, -1) * 64.0f;
+		lua_pop(L,4);
+		screen_trans(&vx,&vy);
+		texture_coord(tex, &tx, &ty);
+		vb[i*4+0] = vx + 1.0f;
+		vb[i*4+1] = vy - 1.0f;
+		vb[i*4+2] = tx;
+		vb[i*4+3] = ty;
+	}
+	if (point == 4) {
+		shader_draw(vb, color);
+	} else {
+		shader_drawpolygon(point, vb, color);
+	}
+	return 0;
+}
+
+int 
+ejoy2d_shader(lua_State *L) {
+	luaL_Reg l[] = {
+		{"load", lload},
+		{"unload", lunload},
+		{"draw", ldraw},
+		{NULL,NULL},
+	};
+	luaL_newlib(L,l);
+	return 1;
+}
