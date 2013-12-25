@@ -82,7 +82,7 @@ ejoy2d_game() {
 	G->logic_time = 0;
 	lua_atpanic(L, _panic);
 	luaL_openlibs(L);
-	luaL_requiref(L, "ejoy2d.shader", ejoy2d_shader, 0);
+	luaL_requiref(L, "ejoy2d.shader.c", ejoy2d_shader, 0);
 	luaL_requiref(L, "ejoy2d.framework", ejoy2d_framework, 0);
 	luaL_requiref(L, "ejoy2d.ppm", ejoy2d_ppm, 0);
 	luaL_requiref(L, "ejoy2d.spritepack.c", ejoy2d_spritepack, 0);

@@ -288,7 +288,7 @@ limport(lua_State *L) {
 	if (lua_istable(L,1)) {
 		int i;
 		for (i=0; i<tex; i++) {
-			lua_rawgeti(L,2,i+1);
+			lua_rawgeti(L,1,i+1);
 			pack->tex[i] = luaL_checkinteger(L, -1);
 			lua_pop(L,1);
 		}
