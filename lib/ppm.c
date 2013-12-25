@@ -25,12 +25,12 @@ struct ppm {
 	uint8_t *buffer;
 };
 
-#define LINE_MAX 128
+#define LINEMAX 128
 
 static char *
 readline(FILE *f, char *buffer) {
 	for (;;) {
-		char * ret = fgets(buffer, LINE_MAX, f);
+		char * ret = fgets(buffer, LINEMAX, f);
 		if (ret == NULL) {
 			return NULL;
 		}
@@ -42,7 +42,7 @@ readline(FILE *f, char *buffer) {
 
 static int
 ppm_header(FILE *f, struct ppm *ppm) {
-	char tmp[LINE_MAX];
+	char tmp[LINEMAX];
 	char *line = readline(f, tmp);
 	if (line == NULL)
 		return 0;
