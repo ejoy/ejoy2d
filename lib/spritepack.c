@@ -100,7 +100,7 @@ import_picture(struct import_stream *is) {
 	pp->n = n;
 	int i,j;
 	for (i=0;i<n;i++) {
-		struct pack_quad * q = &pp->quad[i];
+		struct pack_quad * q = &pp->rect[i];
 		q->texid = import_byte(is);
 		for (j=0;j<8;j++) {
 			q->texture_coord[j] = import_word(is);

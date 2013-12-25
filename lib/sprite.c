@@ -22,7 +22,7 @@ sprite_drawquad(struct pack_picture *picture, struct srt *srt,  const struct spr
 	int *m = tmp.m;
 	shader_program(PROGRAM_PICTURE, arg->additive);
 	for (i=0;i<picture->n;i++) {
-		struct pack_quad *q = &picture->quad[i];
+		struct pack_quad *q = &picture->rect[i];
 		int glid = texture_glid(q->texid);
 		if (glid == 0)
 			continue;

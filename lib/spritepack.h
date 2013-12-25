@@ -19,7 +19,7 @@ struct pack_quad {
 
 struct pack_picture {
 	int n;
-	struct pack_quad quad[1];
+	struct pack_quad rect[1];
 };
 
 struct pack_poly {
