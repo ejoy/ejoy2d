@@ -133,10 +133,10 @@ create_window(int w, int h) {
 }
 
 int
-main() {
+main(int argc, char *argv[]) {
 	register_class();
 	HWND wnd = create_window(WIDTH,HEIGHT);
-	ejoy2d_win_init();
+	ejoy2d_win_init(argc, argv);
 
 	ShowWindow(wnd, SW_SHOWDEFAULT);
 	UpdateWindow(wnd);

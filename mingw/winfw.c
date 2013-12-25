@@ -11,11 +11,28 @@
 
 static struct game *G = NULL;
 
+static const char * startscript =
+"local path, script = ...\n"
+"assert(script, 'I need a script name')\n"
+"path = string.match(path,[[(.*)\\[^\\]*$]])\n"
+"package.path = path .. [[\\?.lua;]] .. path .. [[\\?\\init.lua;.\\?.lua;.\\?\\init.lua]]\n"
+"dofile(script)\n";
+
 void
-ejoy2d_win_init() {
+ejoy2d_win_init(int argc, char *argv[]) {
 	G = ejoy2d_game();
 	lua_State *L = ejoy2d_game_lua(G);
-	int err = luaL_dofile(L, "main.lua");
+	int err = luaL_loadstring(L, startscript);
+	if (err) {
+		const char *msg = lua_tostring(L,-1);
+		fault("%s", msg);
+	}
+	int i;
+	for (i=0;i<argc;i++) {
+		lua_pushstring(L, argv[i]);
+	}
+
+	err = lua_pcall(L, argc, 0,0);
 	if (err) {
 		const char *msg = lua_tostring(L,-1);
 		fault("%s", msg);
