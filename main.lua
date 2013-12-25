@@ -1,5 +1,7 @@
 local ej = require "ejoy2d"
 
+local game = {}
+
 function game.update()
 end
 
