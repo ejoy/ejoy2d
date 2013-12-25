@@ -3,11 +3,12 @@ local pack = require "ejoy2d.simplepackage"
 
 pack.load {
 	pattern = [[e:\res\hayday\?.sc]],
-	"animals",
+--	"animals",
 	"background",
+	"nature_new",
 }
 
-local obj = ej.sprite("animals","pig01_harvest01")
+local obj = ej.sprite("nature_new","crop_wheat")
 
 local game = {}
 

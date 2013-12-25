@@ -101,7 +101,8 @@ import_picture(struct import_stream *is) {
 	int i,j;
 	for (i=0;i<n;i++) {
 		struct pack_quad * q = &pp->rect[i];
-		q->texid = import_byte(is);
+		int texid = import_byte(is);
+		q->texid = is->pack->tex[texid];
 		for (j=0;j<8;j++) {
 			q->texture_coord[j] = import_word(is);
 		}
@@ -119,7 +120,8 @@ import_polygon(struct import_stream *is) {
 	int i,j;
 	for (i=0;i<n;i++) {
 		struct pack_poly * p = &pp->poly[i];
-		p->texid = import_byte(is);
+		int texid = import_byte(is);
+		p->texid = is->pack->tex[texid];
 		p->n = import_byte(is);
 		p->texture_coord = ialloc(is->alloc, p->n * 2 * sizeof(uint16_t));
 		p->screen_coord =  ialloc(is->alloc, p->n * 2 * sizeof(uint32_t));
