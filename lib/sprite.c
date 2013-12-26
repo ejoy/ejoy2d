@@ -4,12 +4,13 @@
 #include "texture.h"
 #include "screen.h"
 #include "matrix.h"
+#include "label.h"
 
 #include <string.h>
 #include <assert.h>
 
 void
-sprite_drawquad(struct pack_picture *picture, struct srt *srt,  const struct sprite_trans *arg) {
+sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const struct sprite_trans *arg) {
 	struct matrix tmp;
 	float vb[16];
 	int i,j;
@@ -47,7 +48,7 @@ sprite_drawquad(struct pack_picture *picture, struct srt *srt,  const struct spr
 }
 
 void 
-sprite_drawpolygon(struct pack_polygon *poly, struct srt *srt, const struct sprite_trans *arg) {
+sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg) {
 	struct matrix tmp;
 	int i,j;
 	if (arg->mat == NULL) {
@@ -90,11 +91,11 @@ sprite_size(struct sprite_pack *pack, int id) {
 	if (id < 0 || id >=	pack->n)
 		return 0;
 	int type = pack->type[id];
-	if (type == TYPE_PICTURE || type == TYPE_POLYGON) {
-		return sizeof(struct sprite) - sizeof(struct sprite *);
-	} else if (type == TYPE_ANIMATION) {
+	if (type == TYPE_ANIMATION) {
 		struct pack_animation * ani = pack->data[id];
 		return sizeof(struct sprite) + (ani->component_number - 1) * sizeof(struct sprite *);
+	} else {
+		return sizeof(struct sprite);
 	}
 	return 0;
 }
@@ -138,13 +139,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	s->name = NULL;
 	s->id = id;
 	s->type = pack->type[id];
-	if (s->type == TYPE_PICTURE || s->type == TYPE_POLYGON) {
-		s->s.pic = pack->data[id];
-		s->start_frame = 0;
-		s->total_frame = 0;
-		s->frame = 0;
-		assert(sz >= sizeof(struct sprite) - sizeof(struct sprite *));
-	} else if (s->type == TYPE_ANIMATION) {
+	if (s->type == TYPE_ANIMATION) {
 		struct pack_animation * ani = pack->data[id];
 		s->s.ani = ani;
 		s->frame = 0;
@@ -153,11 +148,15 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 		int n = ani->component_number;
 		assert(sz >= sizeof(struct sprite) + (n - 1) * sizeof(struct sprite *));
 		for (i=0; i<n ;i++) {
-			s->children[i] = NULL;
+			s->data.children[i] = NULL;
 		}
 	} else {
-		// todo : invalid type
-		s->visible = 0;
+		s->s.pic = pack->data[id];
+		s->start_frame = 0;
+		s->total_frame = 0;
+		s->frame = 0;
+		s->data.text = NULL;
+		assert(sz >= sizeof(struct sprite) - sizeof(struct sprite *));
 	}
 }
 
@@ -166,7 +165,7 @@ sprite_mount(struct sprite *parent, int index, struct sprite *child) {
 	assert(parent->type == TYPE_ANIMATION);
 	struct pack_animation *ani = parent->s.ani;
 	assert(index >= 0 && index < ani->component_number);
-	parent->children[index] = child;
+	parent->data.children[index] = child;
 }
 
 static int
@@ -284,12 +283,18 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 	case TYPE_POLYGON:
 		sprite_drawpolygon(s->s.poly, srt, t);
 		return;
+	case TYPE_LABEL:
+		if (s->data.text) {
+			label_draw(s->data.text, s->s.label,srt,t);
+		}
+		return;
 	case TYPE_ANIMATION:
 		break;
 	default:
 		// todo : invalid type
 		return;
 	}
+	// draw animation
 	struct pack_animation *ani = s->s.ani;
 	int frame = real_frame(s) + s->start_frame;
 	struct pack_frame * pf = &ani->frame[frame];
@@ -297,7 +302,7 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 	for (i=0;i<pf->n;i++) {
 		struct pack_part *pp = &pf->part[i];
 		int index = pp->component_id;
-		struct sprite * child = s->children[index];
+		struct sprite * child = s->data.children[index];
 		if (child == NULL || child->visible == 0) {
 			continue;
 		}
@@ -324,7 +329,7 @@ sprite_setframe(struct sprite *s, int frame) {
 	struct pack_animation * ani = s->s.ani;
 	for (i=0;i<ani->component_number;i++) {
 		if (ani->component[i].name == NULL) {
-			sprite_setframe(s->children[i],frame);
+			sprite_setframe(s->data.children[i],frame);
 		}
 	}
 }

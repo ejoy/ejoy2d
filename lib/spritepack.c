@@ -223,6 +223,16 @@ import_animation(struct import_stream *is) {
 }
 
 static void
+import_label(struct import_stream *is) {
+	struct pack_label * pl = ialloc(is->alloc, sizeof(struct pack_label));
+	pl->align = import_byte(is);
+	pl->color = import_color(is);
+	pl->size = import_word(is);
+	pl->width = import_word(is);
+	pl->height = import_word(is);
+}
+
+static void
 import_sprite(struct import_stream *is) {
 	int id = import_word(is);
 	if (id <0 || id >= is->pack->n) {
@@ -243,6 +253,9 @@ import_sprite(struct import_stream *is) {
 		break;
 	case TYPE_POLYGON:
 		import_polygon(is);
+		break;
+	case TYPE_LABEL:
+		import_label(is);
 		break;
 	default:
 		luaL_error(is->alloc->L, "Invalid stream : Unknown type %d", type);
@@ -494,6 +507,12 @@ lstring_size(lua_State *L) {
 	return 1;
 }
 
+static int
+llabel_size(lua_State *L) {
+	lua_pushinteger(L, sizeof(struct pack_label));
+	return 1;
+}
+
 void 
 dump_pack(struct sprite_pack *pack) {
 	if (pack == NULL)
@@ -534,6 +553,7 @@ ejoy2d_spritepack(lua_State *L) {
 		{ "animation_size", lanimation_size },
 		{ "part_size", lpart_size },
 		{ "string_size" , lstring_size },
+		{ "label_size", llabel_size },
 		{ "import", limport },
 		{ "dump", ldumppack },
 		{ NULL, NULL },
@@ -547,6 +567,8 @@ ejoy2d_spritepack(lua_State *L) {
 	lua_setfield(L, -2, "TYPE_ANIMATION");
 	lua_pushinteger(L, TYPE_POLYGON);
 	lua_setfield(L, -2, "TYPE_POLYGON");
+	lua_pushinteger(L, TYPE_LABEL);
+	lua_setfield(L, -2, "TYPE_LABEL");
 
 	return 1;
 }

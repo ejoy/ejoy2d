@@ -51,4 +51,6 @@ function shader.init()
 	s.load(1, text_fs, sprite_vs)
 end
 
+shader.draw = s.draw
+
 return shader

@@ -39,15 +39,6 @@ struct srt {
 	int rot;
 };
 
-static inline void 
-srt_xy(struct srt *srt, float x, float y) {
-	srt->scalex = 1024;
-	srt->scaley = 1024;
-	srt->rot = 0;
-	srt->offx = (int)(x * 1024);
-	srt->offy = (int)(y * 1024);
-}
-
 void matrix_srt(struct matrix *mm, const struct srt *srt);
 void matrix_rot(struct matrix *m, int rot);
 void matrix_scale(struct matrix *m, int sx, int sy);

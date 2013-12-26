@@ -57,8 +57,8 @@ ldraw(lua_State *L) {
 		lua_rawgeti(L, 2, point*2+i*2+2);
 		float tx = lua_tonumber(L, -4);
 		float ty = lua_tonumber(L, -3);
-		float vx = lua_tonumber(L, -2) * 64.0f;
-		float vy = lua_tonumber(L, -1) * 64.0f;
+		float vx = lua_tonumber(L, -2);
+		float vy = lua_tonumber(L, -1);
 		lua_pop(L,4);
 		screen_trans(&vx,&vy);
 		texture_coord(tex, &tx, &ty);

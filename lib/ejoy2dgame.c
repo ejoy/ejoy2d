@@ -12,6 +12,7 @@
 #include "spritepack.h"
 #include "sprite.h"
 #include "lmatrix.h"
+#include "label.h"
 
 #define LOGIC_FRAME 30
 
@@ -29,12 +30,6 @@ struct game {
 	float real_time;
 	float logic_time;
 };
-
-
-struct game * ejoy2d_game();
-void ejoy2d_game_exit(struct game *);
-void ejoy2d_fame_start(struct game *);
-
 
 static int
 _panic(lua_State *L) {
@@ -92,12 +87,14 @@ ejoy2d_game() {
 	lua_settop(L,0);
 
 	shader_init();
+	label_load();
 
 	return G;
 }
 
 void 
 ejoy2d_game_exit(struct game *G) {
+	label_unload();
 	texture_exit();
 	shader_unload();
 	lua_close(G->L);
@@ -183,4 +180,5 @@ ejoy2d_game_drawframe(struct game *G) {
 	call(G->L, 0, 0);
 	lua_settop(G->L, TOP_FUNCTION);
 	shader_flush();
+	label_flush();
 }

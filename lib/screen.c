@@ -1,5 +1,6 @@
 #include "screen.h"
 #include "opengl.h"
+#include "spritepack.h"
 
 struct screen {
 	float width;
@@ -16,8 +17,8 @@ screen_init(float w, float h, float scale) {
 	SCREEN.width = w;
 	SCREEN.height = h;
 	SCREEN.scale = scale;
-	SCREEN.invw = 2.0f / 16.0f / w;
-	SCREEN.invh = -2.0f / 16.0f / h;
+	SCREEN.invw = 2.0f / SCREEN_SCALE / w;
+	SCREEN.invh = -2.0f / SCREEN_SCALE / h;
 	glViewport(0,0,w * scale,h * scale);
 }
 

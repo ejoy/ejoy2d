@@ -1,9 +1,10 @@
+local debug = debug
 local c = require "ejoy2d.sprite.c"
 local pack = require "ejoy2d.spritepack"
 
 local method = c.method
-method.fetch = c.fetch
 method.mount = c.mount
+local fetch
 
 local get = c.get
 local set = c.set
@@ -16,7 +17,12 @@ function sprite_property_get(spr, key)
 	if getter then
 		return getter(spr)
 	end
-	error("Unsupport get " ..  key)
+	local child = fetch(spr, key)
+	if child then
+		return child
+	else
+		error("Unsupport get " ..  key)
+	end
 end
 
 function sprite_property_set(spr, key, v)
@@ -33,7 +39,19 @@ local sprite_meta = {
 	__newindex = sprite_property_set,
 }
 
-local function sprite_new(packname, name)
+-- local function
+function fetch(spr, child)
+	local cobj = c.fetch(spr, child)
+	if cobj then
+		return debug.setmetatable(cobj, sprite_meta)
+	end
+end
+
+method.fetch = fetch
+
+local sprite = {}
+
+function sprite.new(packname, name)
 	local pack, id = pack.query(packname, name)
 	local cobj = c.new(pack,id)
 	if cobj then
@@ -41,4 +59,16 @@ local function sprite_new(packname, name)
 	end
 end
 
-return sprite_new
+function sprite.label(tbl)
+	local size = tbl.size or tbl.height - 2
+	local l = (c.label(tbl.width, tbl.height, size, tbl.color, tbl.align))
+	if l then
+		l = debug.setmetatable(l, sprite_meta)
+		if tbl.text then
+			l.name = tbl.text
+		end
+		return l
+	end
+end
+
+return sprite

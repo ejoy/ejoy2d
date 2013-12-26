@@ -13,6 +13,7 @@ local spritepack = {}
 local TYPE_PICTURE = assert(pack.TYPE_PICTURE)
 local TYPE_ANIMATION = assert(pack.TYPE_ANIMATION)
 local TYPE_POLYGON = assert(pack.TYPE_POLYGON)
+local TYPE_LABEL = assert(pack.TYPE_LABEL)
 
 local function pack_picture(src, ret)
 	table.insert(ret , pack.byte(TYPE_PICTURE))
@@ -111,6 +112,16 @@ local function pack_frame(data, ret)
 	return size
 end
 
+local function pack_label(data, ret)
+	table.insert(ret, pack.byte(TYPE_LABEL))
+	table.insert(ret, pack.byte(data.align))
+	table.insert(ret, pack.color(data.color))
+	table.insert(ret, pack.word(data.size))
+	table.insert(ret, pack.word(data.width))
+	table.insert(ret, pack.word(data.height))
+	return pack.label_size()
+end
+
 local function pack_animation(data, ret)
 	local size = 0
 	local max_id = 0
@@ -141,6 +152,7 @@ local function pack_animation(data, ret)
 			size = size + fsz
 		end
 	end
+
 	return size, max_id
 end
 
@@ -177,6 +189,9 @@ function spritepack.pack( data )
 			if texid > ret.texture then
 				ret.texture = texid
 			end
+		elseif v.type == "label" then
+			local sz = pack_label(v, ret.data)
+			ret.size = ret.size + sz
 		else
 			error ("Unknown type " .. tostring(v.type))
 		end
@@ -208,8 +223,16 @@ function spritepack.init( name, texture, meta )
 end
 
 function spritepack.query( packname, name )
-	local p = assert(pack_pool[packname])
-	local id = assert(p.export[name])
+	local p = assert(pack_pool[packname], "Load package first")
+	local id
+	if type(name) == "number" then
+		id = name
+	else
+		id = p.export[name]
+	end
+	if not id then
+		error(string.format("'%s' is not exist in package %s", name, packname))
+	end
 	return p.cobj, id
 end
 

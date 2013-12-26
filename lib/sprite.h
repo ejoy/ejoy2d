@@ -15,6 +15,7 @@ struct sprite {
 		struct pack_animation *ani;
 		struct pack_picture *pic;
 		struct pack_polygon *poly;
+		struct pack_label *label;
 	} s;
 	struct matrix mat;
 	int start_frame;
@@ -22,11 +23,14 @@ struct sprite {
 	int frame;	
 	int visible;
 	const char *name;	// name for parent
-	struct sprite * children[1];
+	union {
+		struct sprite * children[1];
+		const char * text;
+	} data;
 };
 
-void sprite_drawquad(struct pack_picture *picture, struct srt *srt, const struct sprite_trans *arg);
-void sprite_drawpolygon(struct pack_polygon *poly, struct srt *srt, const struct sprite_trans *arg);
+void sprite_drawquad(struct pack_picture *picture, const struct srt *srt, const struct sprite_trans *arg);
+void sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg);
 
 // sprite_size must be call before sprite_init
 int sprite_size(struct sprite_pack *pack, int id);

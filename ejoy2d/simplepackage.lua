@@ -50,7 +50,7 @@ function ejoy2d.sprite(packname, name)
 	if packages[packname] == nil then
 		spack.preload(packname)
 	end
-	return sprite(packname, name)
+	return sprite.new(packname, name)
 end
 
 function spack.load(tbl)
@@ -58,6 +58,13 @@ function spack.load(tbl)
 	for _,v in ipairs(tbl) do
 		spack.preload(v)
 	end
+end
+
+function spack.texture(packname, index)
+	if packages[packname] == nil then
+		spack.preload(packname)
+	end
+	return packages[packname].tex[index or 1]
 end
 
 return spack

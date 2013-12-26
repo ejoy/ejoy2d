@@ -8,8 +8,19 @@
 #define TYPE_PICTURE 1
 #define TYPE_ANIMATION 2
 #define TYPE_POLYGON 3
+#define TYPE_LABEL 4
+
+#define SCREEN_SCALE 16
 
 struct matrix;
+
+struct pack_label {
+	uint32_t color;
+	int width;
+	int height;
+	int align;
+	int size;
+};
 
 struct pack_quad {
 	int texid;

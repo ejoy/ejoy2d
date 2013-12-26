@@ -1,5 +1,6 @@
 #include "spritepack.h"
 #include "sprite.h"
+#include "label.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -10,6 +11,69 @@
 #define SRT_SY 4
 #define SRT_ROT 5
 #define SRT_SCALE 6
+
+static struct sprite *
+newlabel(lua_State *L, struct pack_label *label) {
+	int sz = sizeof(struct sprite) + sizeof(struct pack_label);
+	struct sprite *s = lua_newuserdata(L, sz);
+	// label never has a child
+	struct pack_label * pl = (struct pack_label *)(s+1);
+	*pl = *label;
+	s->s.label = pl;
+	s->t.mat = NULL;
+	s->t.color = 0xffffffff;
+	s->t.additive = 0;
+	s->visible = 1;
+	s->name = NULL;
+	s->id = 0;
+	s->type = TYPE_LABEL;
+	s->start_frame = 0;
+	s->total_frame = 0; 
+	s->frame = 0;
+	s->data.text = NULL;
+	return s;
+}
+
+/*
+	integer width
+	integer height
+	integer size
+	uinteger color
+	string l/r/c
+
+	ret: userdata
+ */
+static int
+lnewlabel(lua_State *L) {
+	struct pack_label label;
+	label.width = luaL_checkinteger(L,1);
+	label.height = luaL_checkinteger(L,2);
+	label.size = luaL_checkinteger(L,3);
+	label.color = luaL_optunsigned(L,4,0xffffffff);
+	const char * align = lua_tostring(L,5);
+	if (align == NULL) {
+		label.align = LABEL_ALIGN_LEFT;
+	} else {
+		switch(align[0]) {
+		case 'l':
+		case 'L':
+			label.align = LABEL_ALIGN_LEFT;
+			break;
+		case 'r':
+		case 'R':
+			label.align = LABEL_ALIGN_RIGHT;
+			break;
+		case 'c':
+		case 'C':
+			label.align = LABEL_ALIGN_CENTER;
+			break;
+		default:
+			return luaL_error(L, "Align must be left/right/center");
+		}
+	}
+	newlabel(L, &label);
+	return 1;
+}
 
 static const char * srt_key[] = {
 	"x",
@@ -195,12 +259,46 @@ lsetmat(lua_State *L) {
 	return 0;
 }
 
+static int
+lgetname(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->name == NULL)
+		return 0;
+	lua_pushstring(L, s->name);
+	return 1;
+}
+
+static int
+lsettext(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_LABEL) {
+		return luaL_error(L, "Only label can set text");
+	}
+	lua_settop(L,2);
+	s->data.text = luaL_checkstring(L,2);
+	lua_setuservalue(L, 1);
+	return 0;
+}
+
+static int
+lgettext(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_LABEL) {
+		return luaL_error(L, "Only label can get text");
+	}
+	lua_settop(L,2);
+	lua_getuservalue(L, 1);
+	return 0;
+}
+
 static void
 lgetter(lua_State *L) {
 	luaL_Reg l[] = {
 		{"frame", lgetframe},
 		{"frame_count", lgettotalframe },
 		{"visible", lgetvisible },
+		{"name", lgetname },
+		{"text", lgettext},
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -213,6 +311,7 @@ lsetter(lua_State *L) {
 		{"action", lsetaction},
 		{"visible", lsetvisible},
 		{"matrix" , lsetmat},
+		{"text", lsettext},
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -257,6 +356,7 @@ int
 ejoy2d_sprite(lua_State *L) {
 	luaL_Reg l[] ={
 		{ "new", lnew },
+		{ "label", lnewlabel },
 		{ "fetch", lfetch },
 		{ "mount", lmount },
 		{ NULL, NULL },
