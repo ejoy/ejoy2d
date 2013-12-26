@@ -19,6 +19,7 @@
 #define EJOY_INIT "EJOY2D_INIT"
 #define EJOY_UPDATE "EJOY2D_UPDATE"
 #define EJOY_DRAWFRAME "EJOY2D_DRAWFRAME"
+#define EJOY_TOUCH "EJOY2D_TOUCH"
 
 #define TRACEBACK_FUNCTION 1
 #define UPDATE_FUNCTION 2
@@ -44,6 +45,7 @@ linject(lua_State *L) {
 		EJOY_INIT,
 		EJOY_UPDATE,
 		EJOY_DRAWFRAME,
+		EJOY_TOUCH,
 	};
 	int i;
 	for (i=0;i<sizeof(ejoy_callback)/sizeof(ejoy_callback[0]);i++) {
@@ -182,3 +184,15 @@ ejoy2d_game_drawframe(struct game *G) {
 	shader_flush();
 	label_flush();
 }
+
+void 
+ejoy2d_game_touch(struct game *G, int id, float x, float y, int status) {
+	lua_getfield(G->L, LUA_REGISTRYINDEX, EJOY_TOUCH);
+	lua_pushnumber(G->L, x);
+	lua_pushnumber(G->L, y);
+	lua_pushinteger(G->L, status+1);
+	lua_pushinteger(G->L, id);
+	call(G->L, 4, 0);
+}
+
+

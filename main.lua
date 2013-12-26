@@ -11,11 +11,11 @@ pack.load {
 }
 
 local obj2 = ej.sprite("nature_new","crop_wheat")
---local obj = ej.sprite("hud","wheel_of_fortune_win")
 local obj = ej.sprite("hud","wheel_of_fortune_win")
 
 local game = {}
 
+--obj:fetch("Text").text = "你好"
 obj.Text.text = "你好"
 --obj:mount("ItemIcon", obj2)
 obj.ItemIcon = obj2
@@ -38,6 +38,10 @@ function game.drawframe()
 --	text:draw(pos)
 
 	obj:draw(pos)
+end
+
+function game.touch(...)
+	print(...)
 end
 
 ej.start(game)

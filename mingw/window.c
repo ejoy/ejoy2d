@@ -63,6 +63,12 @@ update_frame(HDC hDC) {
 
 }
 
+static void
+get_xy(LPARAM lParam, int *x, int *y) {
+	*x = (short)(lParam & 0xffff); 
+	*y = (short)((lParam>>16) & 0xffff); 
+}
+
 LRESULT CALLBACK 
 WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -88,6 +94,24 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
+	case WM_LBUTTONUP: {
+		int x,y;
+		get_xy(lParam, &x, &y); 
+		ejoy2d_win_touch(x,y,TOUCH_END);
+		break;
+	}
+	case WM_LBUTTONDOWN: {
+		int x,y;
+		get_xy(lParam, &x, &y); 
+		ejoy2d_win_touch(x,y,TOUCH_BEGIN);
+		break;
+	}
+	case WM_MOUSEMOVE: {
+		int x,y;
+		get_xy(lParam, &x, &y); 
+		ejoy2d_win_touch(x,y,TOUCH_MOVE);
+		break;
+	}
 	}
 	return DefWindowProcW(hWnd, message, wParam, lParam);
 }

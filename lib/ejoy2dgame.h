@@ -11,5 +11,6 @@ lua_State *  ejoy2d_game_lua(struct game *);
 void ejoy2d_game_start(struct game *);
 void ejoy2d_game_update(struct game *, float dt);
 void ejoy2d_game_drawframe(struct game *);
+void ejoy2d_game_touch(struct game *, int id, float x, float y, int status);
 
 #endif

@@ -9,7 +9,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-static struct game *G = NULL;
+struct WINDOWGAME {
+	struct game *game;
+	int intouch;
+};
+
+static struct WINDOWGAME *G = NULL;
 
 static const char * startscript =
 "local path, script = ...\n"
@@ -18,10 +23,18 @@ static const char * startscript =
 "package.path = path .. [[\\?.lua;]] .. path .. [[\\?\\init.lua;.\\?.lua;.\\?\\init.lua]]\n"
 "dofile(script)\n";
 
+static struct WINDOWGAME *
+create_game() {
+	struct WINDOWGAME * g = malloc(sizeof(*g));
+	g->game = ejoy2d_game();
+	g->intouch = 0;
+	return g;
+}
+
 void
 ejoy2d_win_init(int argc, char *argv[]) {
-	G = ejoy2d_game();
-	lua_State *L = ejoy2d_game_lua(G);
+	G = create_game();
+	lua_State *L = ejoy2d_game_lua(G->game);
 	int err = luaL_loadstring(L, startscript);
 	if (err) {
 		const char *msg = lua_tostring(L,-1);
@@ -39,16 +52,37 @@ ejoy2d_win_init(int argc, char *argv[]) {
 	}
 
 	screen_init(WIDTH,HEIGHT,1.0f);
-	ejoy2d_game_start(G);
+	ejoy2d_game_start(G->game);
 }
 
 void 
 ejoy2d_win_update() {
-	ejoy2d_game_update(G, 0.01f);
+	ejoy2d_game_update(G->game, 0.01f);
 }
 
 void 
 ejoy2d_win_frame() {
 	glClear(GL_COLOR_BUFFER_BIT);
-	ejoy2d_game_drawframe(G);
+	ejoy2d_game_drawframe(G->game);
 }
+
+void 
+ejoy2d_win_touch(int x, int y,int touch) {
+	switch (touch) {
+	case TOUCH_BEGIN:
+		G->intouch = 1;
+		break;
+	case TOUCH_END:
+		G->intouch = 0;
+		break;
+	case TOUCH_MOVE:
+		if (!G->intouch) {
+			return;
+		}
+		break;
+	}
+	// windows only support one touch id (0)
+	int id = 0;
+	ejoy2d_game_touch(G->game, id, x,y,touch);
+}
+
