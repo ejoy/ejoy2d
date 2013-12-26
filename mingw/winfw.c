@@ -31,25 +31,42 @@ create_game() {
 	return g;
 }
 
+static int 
+traceback(lua_State *L) {
+	const char *msg = lua_tostring(L, 1);
+	if (msg)
+		luaL_traceback(L, L, msg, 1);
+	else if (!lua_isnoneornil(L, 1)) {
+	if (!luaL_callmeta(L, 1, "__tostring")) 
+		lua_pushliteral(L, "(no error message)");
+	}
+	return 1;
+}
+
 void
 ejoy2d_win_init(int argc, char *argv[]) {
 	G = create_game();
 	lua_State *L = ejoy2d_game_lua(G->game);
+	lua_pushcfunction(L, traceback);
+	int tb = lua_gettop(L);
 	int err = luaL_loadstring(L, startscript);
 	if (err) {
 		const char *msg = lua_tostring(L,-1);
 		fault("%s", msg);
 	}
+
 	int i;
 	for (i=0;i<argc;i++) {
 		lua_pushstring(L, argv[i]);
 	}
 
-	err = lua_pcall(L, argc, 0,0);
+	err = lua_pcall(L, argc, 0, tb);
 	if (err) {
 		const char *msg = lua_tostring(L,-1);
 		fault("%s", msg);
 	}
+
+	lua_pop(L,1);
 
 	screen_init(WIDTH,HEIGHT,1.0f);
 	ejoy2d_game_start(G->game);

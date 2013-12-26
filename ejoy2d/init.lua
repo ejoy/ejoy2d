@@ -17,7 +17,7 @@ function ejoy2d.start(callback)
 	fw.EJOY2D_UPDATE = assert(callback.update)
 	fw.EJOY2D_DRAWFRAME = assert(callback.drawframe)
 	fw.EJOY2D_TOUCH = function(x,y,what,id)
-		return callback.touch(x,y,touch[what],id)
+		return callback.touch(touch[what],x,y,id)
 	end
 	fw.inject()
 end

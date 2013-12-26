@@ -8,6 +8,7 @@
 
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 
 void
 sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const struct sprite_trans *arg) {
@@ -135,7 +136,8 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	s->t.mat = NULL;
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
-	s->visible = 1;
+	s->message = false;
+	s->visible = true;
 	s->name = NULL;
 	s->id = id;
 	s->type = pack->type[id];
@@ -208,6 +210,15 @@ sprite_component(struct sprite *s, int index) {
 	return ani->component[index].id;
 }
 
+const char * 
+sprite_childname(struct sprite *s, int index) {
+	if (s->type != TYPE_ANIMATION)
+		return NULL;
+	struct pack_animation *ani = s->s.ani;
+	if (index < 0 || index >= ani->component_number)
+		return NULL;
+	return ani->component[index].name;
+}
 
 // draw sprite
 
@@ -303,7 +314,7 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 		struct pack_part *pp = &pf->part[i];
 		int index = pp->component_id;
 		struct sprite * child = s->data.children[index];
-		if (child == NULL || child->visible == 0) {
+		if (child == NULL || child->visible == false) {
 			continue;
 		}
 		struct sprite_trans temp2;
@@ -318,6 +329,180 @@ sprite_draw(struct sprite *s, struct srt *srt) {
 	if (s->visible) {
 		draw_child(s, srt, NULL);
 	}
+}
+
+static int
+test_quad(struct pack_picture * pic, int x, int y) {
+	int p;
+	for (p=0;p<pic->n;p++) {
+		struct pack_quad *pq = &pic->rect[p];
+		int maxx,maxy,minx,miny;
+		minx= maxx = pq->screen_coord[0];
+		miny= maxy = pq->screen_coord[1];
+		int i;
+		for (i=2;i<8;i+=2) {
+			int x = pq->screen_coord[i];
+			int y = pq->screen_coord[i+1];
+			if (x<minx)
+				minx = x;
+			else if (x>maxx)
+				maxx = x;
+			if (y<miny)
+				miny = y;
+			else if (y>maxy)
+				maxy = y;
+		}
+		if (x>=minx && x<=maxx && y>=miny && y<=maxy)
+			return 1;
+	}
+	return 0;
+}
+
+static int
+test_polygon(struct pack_polygon * poly,  int x, int y) {
+	int p;
+	for (p=0;p<poly->n;p++) {
+		struct pack_poly *pp = &poly->poly[p];
+		int maxx,maxy,minx,miny;
+		minx= maxx = pp->screen_coord[0];
+		miny= maxy = pp->screen_coord[1];
+		int i;
+		for (i=1;i<pp->n;i++) {
+			int x = pp->screen_coord[i*2+0];
+			int y = pp->screen_coord[i*2+1];
+			if (x<minx)
+				minx = x;
+			else if (x>maxx)
+				maxx = x;
+			if (y<miny)
+				miny = y;
+			else if (y>maxy)
+				maxy = y;
+		}
+		if (x>=minx && x<=maxx && y>=miny && y<=maxy) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int
+test_label(struct pack_label *label, int x, int y) {
+	x /= SCREEN_SCALE;
+	y /= SCREEN_SCALE;
+	return x>=0 && x<label->width && y>=0 && y<label->height;
+}
+
+static int test_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, int x, int y, struct sprite ** touch);
+
+/*
+	return 1 : test succ
+		0 : test failed, but *touch capture the message
+ */
+static int
+test_animation(struct sprite *s, struct srt *srt, struct sprite_trans * t, int x, int y, struct sprite ** touch) {
+	struct pack_animation *ani = s->s.ani;
+	int frame = real_frame(s) + s->start_frame;
+	struct pack_frame * pf = &ani->frame[frame];
+	int i;
+	for (i=pf->n-1;i>=0;i--) {
+		struct pack_part *pp = &pf->part[i];
+		int index = pp->component_id;
+		struct sprite * child = s->data.children[index];
+		if (child == NULL) {
+			continue;
+		}
+		struct sprite_trans temp2;
+		struct matrix temp_matrix2;
+		struct sprite_trans *ct = trans_mul(&pp->t, t, &temp2, &temp_matrix2);
+		struct sprite *tmp = NULL;
+		int testin = test_child(child, srt, ct, x, y, &tmp);
+		if (testin) {
+			// if child capture message, return it
+			*touch = child;
+			return 1;
+		}
+		if (tmp) {
+			// if child not capture message, but grandson (tmp) capture it, mark it
+			*touch = tmp;
+		}
+	}
+	return 0;
+}
+
+static int
+test_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, int x, int y, struct sprite ** touch) {
+	struct sprite_trans temp;
+	struct matrix temp_matrix;
+	struct sprite_trans *t = trans_mul(&s->t, ts, &temp, &temp_matrix);
+	if (s->type == TYPE_ANIMATION) {
+		struct sprite *tmp = NULL;
+		int testin = test_animation(s , srt, t, x,y, &tmp);
+		if (testin) {
+			*touch = tmp;
+			return 1;
+		} else if (tmp) {
+			if (s->message) {
+				*touch = s;
+				return 1;
+			} else {
+				*touch = tmp;
+				return 0;
+			}
+		}
+	}
+	struct matrix mat;
+	if (t->mat == NULL) {
+		matrix_identity(&mat);
+	} else {
+		mat = *t->mat;
+	}
+	matrix_srt(&mat, srt);
+	struct matrix imat;
+	matrix_inverse(&mat, &imat);
+	int *m = imat.m;
+
+	int xx = (x * m[0] + y * m[2]) / 1024 + m[4];
+	int yy = (x * m[1] + y * m[3]) / 1024 + m[5];
+
+	int testin;
+	struct sprite * tmp = s;
+	switch (s->type) {
+	case TYPE_PICTURE:
+		testin = test_quad(s->s.pic, xx, yy);
+		break;
+	case TYPE_POLYGON:
+		testin = test_polygon(s->s.poly, xx, yy);
+		break;
+	case TYPE_LABEL:
+		testin = test_label(s->s.label, xx, yy);
+		break;
+	default:
+		// todo : invalid type
+		*touch = NULL;
+		return 0;
+	}
+
+	if (testin) {
+		*touch = tmp;
+		return s->message;
+	} else {
+		*touch = NULL;
+		return 0;
+	}
+}
+
+struct sprite * 
+sprite_test(struct sprite *s, struct srt *srt, int x, int y) {
+	struct sprite *tmp = NULL;
+	int testin = test_child(s, srt, NULL, x, y, &tmp);
+	if (testin) {
+		return tmp;
+	}
+	if (tmp) {
+		return s;
+	}
+	return NULL;
 }
 
 void

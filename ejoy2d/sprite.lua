@@ -3,7 +3,7 @@ local c = require "ejoy2d.sprite.c"
 local pack = require "ejoy2d.spritepack"
 
 local method = c.method
-method.mount = c.mount
+local method_fetch = method.fetch
 local fetch
 
 local get = c.get
@@ -34,12 +34,12 @@ function sprite_meta.__newindex(spr, key, v)
 		return
 	end
 	assert(debug.getmetatable(v) == sprite_meta, "Need a sprite")
-	c.mount(spr, key, v)
+	method.mount(spr, key, v)
 end
 
 -- local function
 function fetch(spr, child)
-	local cobj = c.fetch(spr, child)
+	local cobj = method_fetch(spr, child)
 	if cobj then
 		return debug.setmetatable(cobj, sprite_meta)
 	end

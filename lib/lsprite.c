@@ -23,7 +23,8 @@ newlabel(lua_State *L, struct pack_label *label) {
 	s->t.mat = NULL;
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
-	s->visible = 1;
+	s->message = false;
+	s->visible = true;
 	s->name = NULL;
 	s->id = 0;
 	s->type = TYPE_LABEL;
@@ -103,6 +104,7 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 			lua_setuservalue(L, -3);	// set uservalue for sprite
 		}
 		struct sprite *c = newsprite(L, pack, id);
+		c->name = sprite_childname(s, i);
 		sprite_mount(s, i, c);
 		if (c) {
 			lua_rawseti(L, -2, i+1);
@@ -141,51 +143,6 @@ readkey(lua_State *L, int idx, int key, double def) {
 	double ret = luaL_optnumber(L, -1, def);
 	lua_pop(L,1);
 	return ret;
-}
-
-/*
-	userdata sprite
-	table { .x .y .sx .sy .rot }
- */
-static int
-ldraw(lua_State *L) {
-	struct sprite * s = lua_touserdata(L,1);
-	if (s == NULL) {
-		return luaL_error(L, "Need a sprite"); 
-	}
-	luaL_checktype(L,2,LUA_TTABLE);
-	double x = readkey(L, 2, SRT_X, 0);
-	double y = readkey(L, 2, SRT_Y, 0);
-	double scale = readkey(L,2, SRT_SCALE, 0);
-	double sx;
-	double sy;
-	double rot = readkey(L, 2, SRT_ROT, 0);
-	if (scale > 0) {
-		sx = sy = scale;
-	} else {
-		sx = readkey(L, 2, SRT_SX, 1);
-		sy = readkey(L, 2, SRT_SY, 1);
-	}
-	struct srt srt;
-	srt.offx = x*8;
-	srt.offy = y*8;
-	srt.scalex = sx*1024;
-	srt.scaley = sy*1024;
-	srt.rot = rot * (1024.0 / 360.0);
-	sprite_draw(s, &srt);
-	return 0;
-}
-
-static void
-lmethod(lua_State *L) {
-	lua_createtable(L, 0, 1);
-	int i;
-	int nk = sizeof(srt_key)/sizeof(srt_key[0]);
-	for (i=0;i<nk;i++) {
-		lua_pushstring(L, srt_key[i]);
-	}
-	lua_pushcclosure(L, ldraw, nk);
-	lua_setfield(L, -2, "draw");
 }
 
 static struct sprite *
@@ -248,6 +205,20 @@ lsetvisible(lua_State *L) {
 }
 
 static int
+lgetmessage(lua_State *L) {
+	struct sprite *s = self(L);
+	lua_pushboolean(L, s->message);
+	return 1;
+}
+
+static int
+lsetmessage(lua_State *L) {
+	struct sprite *s = self(L);
+	s->message = lua_toboolean(L, 2);
+	return 0;
+}
+
+static int
 lsetmat(lua_State *L) {
 	struct sprite *s = self(L);
 	struct matrix *m = lua_touserdata(L, 2);
@@ -288,6 +259,36 @@ lgettext(lua_State *L) {
 	}
 	lua_settop(L,2);
 	lua_getuservalue(L, 1);
+	return 1;
+}
+
+static int
+lgetcolor(lua_State *L) {
+	struct sprite *s = self(L);
+	lua_pushunsigned(L, s->t.color);
+	return 1;
+}
+
+static int
+lsetcolor(lua_State *L) {
+	struct sprite *s = self(L);
+	uint32_t color = luaL_checkunsigned(L,1);
+	s->t.color = color;
+	return 0;
+}
+
+static int
+lgetadditive(lua_State *L) {
+	struct sprite *s = self(L);
+	lua_pushunsigned(L, s->t.additive);
+	return 1;
+}
+
+static int
+lsetadditive(lua_State *L) {
+	struct sprite *s = self(L);
+	uint32_t additive = luaL_checkunsigned(L,1);
+	s->t.additive = additive;
 	return 0;
 }
 
@@ -299,6 +300,9 @@ lgetter(lua_State *L) {
 		{"visible", lgetvisible },
 		{"name", lgetname },
 		{"text", lgettext},
+		{"color", lgetcolor },
+		{"additive", lgetadditive },
+		{"message", lgetmessage },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -312,6 +316,9 @@ lsetter(lua_State *L) {
 		{"visible", lsetvisible},
 		{"matrix" , lsetmat},
 		{"text", lsettext},
+		{"color", lsetcolor},
+		{"additive", lsetadditive },
+		{"message", lsetmessage },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -352,13 +359,120 @@ lmount(lua_State *L) {
 	return 0;
 }
 
+static void
+fill_srt(lua_State *L, struct srt *srt, int idx) {
+	luaL_checktype(L,idx,LUA_TTABLE);
+	double x = readkey(L, idx, SRT_X, 0);
+	double y = readkey(L, idx, SRT_Y, 0);
+	double scale = readkey(L, idx, SRT_SCALE, 0);
+	double sx;
+	double sy;
+	double rot = readkey(L, idx, SRT_ROT, 0);
+	if (scale > 0) {
+		sx = sy = scale;
+	} else {
+		sx = readkey(L, idx, SRT_SX, 1);
+		sy = readkey(L, idx, SRT_SY, 1);
+	}
+	srt->offx = x*8;
+	srt->offy = y*8;
+	srt->scalex = sx*1024;
+	srt->scaley = sy*1024;
+	srt->rot = rot * (1024.0 / 360.0);
+}
+
+/*
+	userdata sprite
+	table { .x .y .sx .sy .rot }
+ */
+static int
+ldraw(lua_State *L) {
+	struct sprite * s = lua_touserdata(L,1);
+	if (s == NULL) {
+		return luaL_error(L, "Need a sprite"); 
+	}
+	struct srt srt;
+	fill_srt(L,&srt,2);
+	sprite_draw(s, &srt);
+	return 0;
+}
+
+static int
+lookup(lua_State *L, struct sprite *root, struct sprite *spr) {
+	lua_checkstack(L,2);
+	int i;
+	lua_getuservalue(L,-1);
+	for (i=0;sprite_component(root, i)>=0;i++) {
+		struct sprite * child = root->data.children[i];
+		if (child && child->name) {
+			lua_rawgeti(L, -1, i+1);
+			if (child == spr) {
+				return 1;
+			} else {
+				if (lookup(L, child , spr))
+					return 1;
+				else {
+					lua_pop(L,1);
+				}
+			}
+		}
+	}
+	lua_pop(L,1);
+	return 0;
+}
+
+static int
+ltest(lua_State *L) {
+	struct sprite * s = lua_touserdata(L,1);
+	if (s == NULL) {
+		return luaL_error(L, "Need a sprite"); 
+	}
+	struct srt srt;
+	fill_srt(L,&srt,2);
+	float x = luaL_checknumber(L, 3);
+	float y = luaL_checknumber(L, 4);
+	struct sprite * m = sprite_test(s, &srt, x*SCREEN_SCALE, y*SCREEN_SCALE);
+	if (m == NULL)
+		return 0;
+	if (m==s) {
+		lua_settop(L,1);
+		return 1;
+	}
+	lua_settop(L,1);
+	if (!lookup(L, s, m)) {
+		return luaL_error(L, "find an invlid sprite");
+	}
+
+	return 1;
+}
+
+static void
+lmethod(lua_State *L) {
+	luaL_Reg l[] = {
+		{ "fetch", lfetch },
+		{ "mount", lmount },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L,l);
+
+	int i;
+	int nk = sizeof(srt_key)/sizeof(srt_key[0]);
+	for (i=0;i<nk;i++) {
+		lua_pushstring(L, srt_key[i]);
+	}
+	luaL_Reg l2[] = {
+		{ "draw", ldraw },
+		{ "test", ltest },
+		{ NULL, NULL, },
+	};
+	luaL_setfuncs(L,l2,nk);
+}
+
 int
 ejoy2d_sprite(lua_State *L) {
 	luaL_Reg l[] ={
 		{ "new", lnew },
 		{ "label", lnewlabel },
-		{ "fetch", lfetch },
-		{ "mount", lmount },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
