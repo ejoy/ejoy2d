@@ -6,17 +6,19 @@ local shader = require "ejoy2d.shader"
 pack.load {
 	pattern = [[e:\res\hayday\?.sc]],
 	"animals",
---	"nature_new",
+	"nature_new",
 	"hud",
 }
 
---local obj = ej.sprite("nature_new","crop_wheat")
+local obj2 = ej.sprite("nature_new","crop_wheat")
 --local obj = ej.sprite("hud","wheel_of_fortune_win")
 local obj = ej.sprite("hud","wheel_of_fortune_win")
 
 local game = {}
 
 obj.Text.text = "你好"
+--obj:mount("ItemIcon", obj2)
+obj.ItemIcon = obj2
 
 function game.update()
 	obj.frame = obj.frame + 1

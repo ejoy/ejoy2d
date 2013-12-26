@@ -9,7 +9,9 @@ local fetch
 local get = c.get
 local set = c.set
 
-function sprite_property_get(spr, key)
+local sprite_meta = {}
+
+function sprite_meta.__index(spr, key)
 	if method[key] then
 		return method[key]
 	end
@@ -25,19 +27,15 @@ function sprite_property_get(spr, key)
 	end
 end
 
-function sprite_property_set(spr, key, v)
+function sprite_meta.__newindex(spr, key, v)
 	local setter = set[key]
 	if setter then
 		setter(spr, v)
 		return
 	end
-	error("Unsupport set " .. key)
+	assert(debug.getmetatable(v) == sprite_meta, "Need a sprite")
+	c.mount(spr, key, v)
 end
-
-local sprite_meta = {
-	__index = sprite_property_get,
-	__newindex = sprite_property_set,
-}
 
 -- local function
 function fetch(spr, child)

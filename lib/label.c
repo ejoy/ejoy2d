@@ -221,7 +221,6 @@ label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct
 		cx = (l->width - w)/2;
 		break;
 	}
-	printf("width = %d/%d cx = %d\n", l->width, w, cx);
 
 	for (i=0;str[i];) {
 		int unicode;
