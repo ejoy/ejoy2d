@@ -387,10 +387,7 @@ fill_srt(lua_State *L, struct srt *srt, int idx) {
  */
 static int
 ldraw(lua_State *L) {
-	struct sprite * s = lua_touserdata(L,1);
-	if (s == NULL) {
-		return luaL_error(L, "Need a sprite");
-	}
+	struct sprite *s = self(L);
 	struct srt srt;
 
 	fill_srt(L,&srt,2);
@@ -400,18 +397,14 @@ ldraw(lua_State *L) {
 
 static int
 lmulti_draw(lua_State *L) {
-	struct  sprite * s = lua_touserdata(L,1);
-	if (s == NULL) {
-		return luaL_error(L, "Need a sprite");
-	}
+	struct sprite *s = self(L);
 	int cnt = luaL_checkinteger(L,3);
 	if (cnt == 0)
 		return 0;
-	if (!lua_istable(L, 4) || !lua_istable(L, 5)) {
-		return luaL_error(L, "need a matrix table and a color table");
-	}
-	if (lua_rawlen(L, 4) != lua_rawlen(L, 5)) {
-		return luaL_error(L, "matrix table and color table must have the same length");
+	luaL_checktype(L,4,LUA_TTABLE);
+	luaL_checktype(L,5,LUA_TTABLE);
+	if (lua_rawlen(L, 4) < cnt) {
+		return luaL_error(L, "matrix length less then particle count");
 	}
 
 	struct srt srt;
@@ -420,17 +413,16 @@ lmulti_draw(lua_State *L) {
 	int i;
 	for (i = 0; i < cnt; i++) {
 		lua_rawgeti(L, 4, i+1);
-		struct matrix * mat = lua_touserdata(L, -1);
-		s->t.mat = &s->mat;
-		s->mat = *mat;
-		lua_pop(L, 1);
-
 		lua_rawgeti(L, 5, i+1);
-		s->t.color = luaL_checkunsigned(L, -1);
-		lua_pop(L, 1);
+		struct matrix * mat = lua_touserdata(L, -2);
+		s->t.mat = mat;
+		s->t.color = lua_tounsigned(L, -1);
+		lua_pop(L, 2);
 
 		sprite_draw(s, &srt);
 	}
+
+	s->t.mat = NULL;
 
 	return 0;
 }
