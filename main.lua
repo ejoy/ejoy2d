@@ -16,19 +16,19 @@ local obj = ej.sprite("hud","wheel_of_fortune_win")
 local game = {}
 
 --obj:fetch("Text").text = "你好"
-obj.Text.message =true
-obj.JackpotStars.message = true
+--obj.Text.message =true
+--obj.JackpotStars.message = true
 obj.ItemIcon.message = true
 
 obj.Text.text = "你好"
 --obj:mount("ItemIcon", obj2)
---obj.ItemIcon = obj2
+obj.ItemIcon = obj2
 
 function game.update()
 --	obj.frame = obj.frame + 1
 end
 
-local pos = {x = 300, y= 300}
+local pos = {x = 300, y= 300 , rot= 30}
 --local texid = pack.texture "animals"
 --local text = sprite.label { width = 100, height = 16, text = "你好" }
 

@@ -34,12 +34,14 @@ struct import_stream {
 	struct sprite_pack *pack;
 	const char * stream;
 	size_t size;
+	// for debug
+	int current_id;
 };
 
 static int
 import_byte(struct import_stream *is) {
 	if (is->size == 0) {
-		luaL_error(is->alloc->L, "Invalid import stream");
+		luaL_error(is->alloc->L, "Invalid import stream (%d)", is->current_id);
 	}
 	uint8_t c = (uint8_t)*(is->stream);
 	++is->stream;
@@ -51,7 +53,7 @@ import_byte(struct import_stream *is) {
 static int
 import_word(struct import_stream *is) {
 	if (is->size < 2) {
-		luaL_error(is->alloc->L, "Invalid import stream");
+		luaL_error(is->alloc->L, "Invalid import stream (%d)", is->current_id);
 	}
 	uint8_t low = (uint8_t)*(is->stream);
 	uint8_t high = (uint8_t)*(is->stream+1);
@@ -64,7 +66,7 @@ import_word(struct import_stream *is) {
 static int32_t
 import_int32(struct import_stream *is) {
 	if (is->size < 4) {
-		luaL_error(is->alloc->L, "Invalid import stream");
+		luaL_error(is->alloc->L, "Invalid import stream (%d)",is->current_id);
 	}
 	uint8_t b[4];
 	b[0] = (uint8_t)*(is->stream);
@@ -80,7 +82,7 @@ import_int32(struct import_stream *is) {
 static uint32_t
 import_color(struct import_stream *is) {
 	if (is->size < 4) {
-		luaL_error(is->alloc->L, "Invalid import stream");
+		luaL_error(is->alloc->L, "Invalid import stream (%d) where import color", is->current_id);
 	}
 	uint8_t b[4];
 	b[0] = (uint8_t)*(is->stream);
@@ -141,7 +143,7 @@ import_string(struct import_stream *is) {
 		return NULL;
 	}
 	if (is->size < n) {
-		luaL_error(is->alloc->L, "Invalid stream : read string failed");
+		luaL_error(is->alloc->L, "Invalid stream (%d): read string failed", is->current_id);
 	}
 	char * buf = ialloc(is->alloc, (n+1+3) & ~3);
 	memcpy(buf, is->stream, n);
@@ -164,10 +166,10 @@ import_frame(struct pack_frame * pf, struct import_stream *is, int maxc) {
 		if (tag & TAG_ID) {
 			pp->component_id = import_word(is);
 			if (pp->component_id >= maxc) {
-				luaL_error(is->alloc->L, "Invalid stream : frame part has wrong component id");
+				luaL_error(is->alloc->L, "Invalid stream (%d): frame part has wrong component id", is->current_id);
 			}
 		} else {
-			luaL_error(is->alloc->L, "Invalid stream : frame part need an id");
+			luaL_error(is->alloc->L, "Invalid stream (%d): frame part need an id", is->current_id);
 		}
 		if (tag & TAG_MATRIX) {
 			pp->t.mat = ialloc(is->alloc, sizeof(struct matrix));
@@ -201,7 +203,7 @@ import_animation(struct import_stream *is) {
 	for (i=0;i<component;i++) {
 		int id = import_word(is);
 		if (id < 0 || id >= is->pack->n) {
-			luaL_error(is->alloc->L, "Invalid stream : wrong id %d", id);
+			luaL_error(is->alloc->L, "Invalid stream (%d): wrong id %d", is->current_id, id);
 		}
 		pa->component[i].id = id;
 		pa->component[i].name = import_string(is);
@@ -238,6 +240,7 @@ import_sprite(struct import_stream *is) {
 	if (id <0 || id >= is->pack->n) {
 		luaL_error(is->alloc->L, "Invalid stream : wrong id %d", id);
 	}
+	is->current_id = id;
 	int type = import_byte(is);
 	is->pack->type[id] = type;
 	if (is->pack->data[id]) {
@@ -258,7 +261,7 @@ import_sprite(struct import_stream *is) {
 		import_label(is);
 		break;
 	default:
-		luaL_error(is->alloc->L, "Invalid stream : Unknown type %d", type);
+		luaL_error(is->alloc->L, "Invalid stream : Unknown type %d, id=%d", type, id);
 		break;
 	}
 }
@@ -315,6 +318,7 @@ limport(lua_State *L) {
 	is.alloc = &alloc;
 	is.stream =luaL_checklstring(L, 4, &is.size);
 	is.pack = pack;
+	is.current_id = -1;
 
 	while (is.size != 0) {
 		import_sprite(&is);
