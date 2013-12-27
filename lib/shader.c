@@ -53,8 +53,7 @@ shader_init() {
 	memset(rs, 0 , sizeof(*rs));
 	rs->current_program = -1;
 	rs->blendchange = 0;
-
-	shader_defaultblend();
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
 	glGenBuffers(1, &rs->index_buffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rs->index_buffer);
