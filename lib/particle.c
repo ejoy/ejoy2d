@@ -1,9 +1,13 @@
 #include "particle.h"
+#include "matrix.h"
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "lua.h"
-#include "lauxlib.h"
+
+#include <lua.h>
+#include <lauxlib.h>
+
 #include <math.h>
 #include <string.h>
 
@@ -16,10 +20,6 @@
  converts radians to degrees
  */
 #define CC_RADIANS_TO_DEGREES(__ANGLE__) ((__ANGLE__) * 57.29577951f) // PI * 180
-
-struct matrix {
-	int m[6];
-};
 
 struct point {
 	float x;
@@ -317,7 +317,7 @@ _init_with_particles(struct particle_system *ps, int numberOfParticles) {
 	ps->matrix = (struct matrix *)(ps->particles + numberOfParticles);
 	ps->allocatedParticles = numberOfParticles;
 	ps->isActive = true;
-//	ps->positionType = PARTICLE_POSITION_TYPE_FREE;
+	ps->positionType = POSITION_TYPE_FREE;
 	ps->emitterMode = PARTICLE_MODE_GRAVITY;
 }
 
@@ -474,18 +474,6 @@ _stopSystem(struct particle_system *ps) {
 	ps->emitCounter = 0;
 }
 
-/*
-static void
-_resetSystem(struct particle_system *ps) {
-	ps->isActive = true;
-	ps->elapsed = 0;
-	int i;
-	for (i = 0; i < ps->particleCount; ++i) {
-		struct particle *p = &ps->particles[i];
-		p->timeToLive = 0;
-	}
-}
-*/
 static void
 _normalize_point(struct point *p, struct point *out) {
 	float l2 = p->x * p->x + p->y *p->y;
@@ -609,61 +597,16 @@ color4f(struct color4f *c4f) {
 	return (uint32_t)rr << 24 | (uint32_t)gg << 16 | (uint32_t)bb << 8 | aa;
 }
 
-static inline int
-icost(int dd) {
-  static int t[256] = {
-    1024,1023,1022,1021,1019,1016,1012,1008,1004,999,993,986,979,972,964,955,
-    946,936,925,914,903,890,878,865,851,837,822,807,791,775,758,741,
-    724,706,687,668,649,629,609,589,568,547,526,504,482,460,437,414,
-    391,368,344,321,297,273,248,224,199,175,150,125,100,75,50,25,
-    0,-25,-50,-75,-100,-125,-150,-175,-199,-224,-248,-273,-297,-321,-344,-368,
-    -391,-414,-437,-460,-482,-504,-526,-547,-568,-589,-609,-629,-649,-668,-687,-706,
-    -724,-741,-758,-775,-791,-807,-822,-837,-851,-865,-878,-890,-903,-914,-925,-936,
-    -946,-955,-964,-972,-979,-986,-993,-999,-1004,-1008,-1012,-1016,-1019,-1021,-1022,-1023,
-    -1024,-1023,-1022,-1021,-1019,-1016,-1012,-1008,-1004,-999,-993,-986,-979,-972,-964,-955,
-    -946,-936,-925,-914,-903,-890,-878,-865,-851,-837,-822,-807,-791,-775,-758,-741,
-    -724,-706,-687,-668,-649,-629,-609,-589,-568,-547,-526,-504,-482,-460,-437,-414,
-    -391,-368,-344,-321,-297,-273,-248,-224,-199,-175,-150,-125,-100,-75,-50,-25,
-    0,25,50,75,100,125,150,175,199,224,248,273,297,321,344,368,
-    391,414,437,460,482,504,526,547,568,589,609,629,649,668,687,706,
-    724,741,758,775,791,807,822,837,851,865,878,890,903,914,925,936,
-    946,955,964,972,979,986,993,999,1004,1008,1012,1016,1019,1021,1022,1023,
-  };
-  if (dd < 0) {
-    dd = 256 - (-dd % 256);
-  } else {
-    dd %= 256;
-  }
-
-  return t[dd];
-}
-
-static inline int
-icosd(float d) {
-  int dd = (int)(d*256/360);
-  return icost(dd);
-}
-
-static inline int
-isind(float d) {
-  int dd = 64 - (int)(d*256/360);
-  return icost(dd);
-}
-
 static void
 calc_mat(struct particle * p, struct matrix *m) {
-	int *mat = m->m;
-	int cosd = icosd(p->rotation);
-	int sind = isind(p->rotation);
-	int scale = (int)(p->size * 1024);
-	printf("size = %f scale = %d \n", p->size, scale);
-	mat[0] = scale * cosd / 1024;
-	mat[1] = - scale * sind / 1024;
-	mat[2] = - mat[1];
-	mat[3] = mat[0];
-	mat[4] = (int)((p->pos.x + p->startPos.x));
-	mat[5] = (int)((p->pos.y + p->startPos.y));
-  	printf("pos x:%d, posy:%d \n", mat[4], mat[5]);
+	matrix_identity(m);
+	struct srt srt;
+	srt.rot = p->rotation * 1024 / 360;
+	srt.scalex = p->size * 1024;
+	srt.scaley = srt.scalex;
+	srt.offx = (p->pos.x + p->startPos.x) * 1024;
+	srt.offy = (p->pos.x + p->startPos.x) * 1024;
+	matrix_srt(m, &srt);
 }
 
 // ----------------- lua interface

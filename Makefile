@@ -17,7 +17,8 @@ lib/lsprite.c \
 lib/matrix.c \
 lib/lmatrix.c \
 lib/dfont.c \
-lib/label.c
+lib/label.c \
+lib/particle.c
 
 mingw : TARGET := ej2d.exe
 mingw : CFLAGS += -I/usr/include -I/usr/local/include
