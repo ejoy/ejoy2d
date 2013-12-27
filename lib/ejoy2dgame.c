@@ -13,6 +13,7 @@
 #include "sprite.h"
 #include "lmatrix.h"
 #include "label.h"
+#include "particle.h"
 
 #define LOGIC_FRAME 30
 
@@ -85,6 +86,7 @@ ejoy2d_game() {
 	luaL_requiref(L, "ejoy2d.spritepack.c", ejoy2d_spritepack, 0);
 	luaL_requiref(L, "ejoy2d.sprite.c", ejoy2d_sprite, 0);
 	luaL_requiref(L, "ejoy2d.matrix.c", ejoy2d_matrix, 0);
+	luaL_requiref(L, "ejoy2d.particle.c", ejoy2d_particle, 0);
 
 	lua_settop(L,0);
 
@@ -94,7 +96,7 @@ ejoy2d_game() {
 	return G;
 }
 
-void 
+void
 ejoy2d_game_exit(struct game *G) {
 	label_unload();
 	texture_exit();
@@ -108,19 +110,19 @@ ejoy2d_game_lua(struct game *G) {
 	return G->L;
 }
 
-static int 
+static int
 traceback (lua_State *L) {
 	const char *msg = lua_tostring(L, 1);
 	if (msg)
 		luaL_traceback(L, L, msg, 1);
 	else if (!lua_isnoneornil(L, 1)) {
-	if (!luaL_callmeta(L, 1, "__tostring")) 
+	if (!luaL_callmeta(L, 1, "__tostring"))
 		lua_pushliteral(L, "(no error message)");
 	}
 	return 1;
 }
 
-void 
+void
 ejoy2d_game_start(struct game *G) {
 	lua_State *L = G->L;
 	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_INIT);
@@ -146,7 +148,7 @@ call(lua_State *L, int n, int r) {
 	case LUA_ERRERR:
 		fault("LUA_ERRERR : %s\n", lua_tostring(L,-1));
 		break;
-	case LUA_ERRGCMM: 
+	case LUA_ERRGCMM:
 		fault("LUA_ERRGCMM : %s\n", lua_tostring(L,-1));
 		break;
 	default:
@@ -176,7 +178,7 @@ ejoy2d_game_update(struct game *G, float time) {
 	}
 }
 
-void 
+void
 ejoy2d_game_drawframe(struct game *G) {
 	lua_pushvalue(G->L, DRAWFRAME_FUNCTION);
 	call(G->L, 0, 0);
@@ -185,7 +187,7 @@ ejoy2d_game_drawframe(struct game *G) {
 	label_flush();
 }
 
-void 
+void
 ejoy2d_game_touch(struct game *G, int id, float x, float y, int status) {
 	lua_getfield(G->L, LUA_REGISTRYINDEX, EJOY_TOUCH);
 	lua_pushnumber(G->L, x);
