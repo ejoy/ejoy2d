@@ -21,16 +21,16 @@ label_load() {
 	assert(Dfont == NULL);
 	Dfont = dfont_create(TEX_HEIGHT, TEX_WIDTH);
 	glPixelStorei(GL_UNPACK_ALIGNMENT,1);
-	
+
 	glGenTextures(1, &(Tex));
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, Tex);
-	
+
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-	
+
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, (GLsizei)TEX_WIDTH, (GLsizei)TEX_HEIGHT, 0, GL_ALPHA, GL_UNSIGNED_BYTE, NULL);
 }
 
@@ -89,7 +89,7 @@ gen_char(int unicode, const char * utf8, int size) {
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT,1);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, rect->x, rect->y, rect->w, rect->h, GL_ALPHA, GL_UNSIGNED_BYTE, buffer);
-	
+
 	return rect;
 }
 
@@ -99,7 +99,7 @@ set_point(float *v, int *m, int xx, int yy,int tx, int ty) {
 	v[0] = (xx * m[0] + yy * m[2]) / 1024 + m[4];
 	v[1] = (xx * m[1] + yy * m[3]) / 1024 + m[5];
 	screen_trans(&v[0],&v[1]);
-	
+
 	v[2] = (float)tx * (1.0f/TEX_WIDTH);
 	v[3] = (float)ty * (1.0f/TEX_HEIGHT);
 }
@@ -142,9 +142,9 @@ color_mul(uint32_t c1, uint32_t c2) {
 	int b2 = (c2 >> 24) & 0xff;
 	int a2 = c2 & 0xff;
 
-	return (r1 * r2 /255) << 24 | 
-		(g1 * g2 /255) << 16 | 
-		(b1 * b2 /255) << 8 | 
+	return (r1 * r2 /255) << 24 |
+		(g1 * g2 /255) << 16 |
+		(b1 * b2 /255) << 8 |
 		(a1 * a2 /255) ;
 }
 
@@ -170,15 +170,18 @@ draw_utf8(int unicode, int cx, int cy, int size, const struct srt *srt, uint32_t
 	return rect->w - 1;
 }
 
-void 
+void
 label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg) {
 	shader_texture(Tex);
 	shader_program(PROGRAM_TEXT, arg->additive);
 	uint32_t color;
 	if (arg->color == 0xffffffff) {
+		color = l->color;
+	}
+	else if (l->color == 0xffffffff){
 		color = arg->color;
 	} else {
-		color_mul(l->color, arg->color);
+		color = color_mul(l->color, arg->color);
 	}
 
 	char utf8[7];
