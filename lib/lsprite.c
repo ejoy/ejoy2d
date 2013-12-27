@@ -29,7 +29,7 @@ newlabel(lua_State *L, struct pack_label *label) {
 	s->id = 0;
 	s->type = TYPE_LABEL;
 	s->start_frame = 0;
-	s->total_frame = 0; 
+	s->total_frame = 0;
 	s->frame = 0;
 	s->data.text = NULL;
 	return s;
@@ -91,7 +91,7 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 	if (sz == 0) {
 		return NULL;
 	}
-	struct sprite * s = lua_newuserdata(L, sz);	
+	struct sprite * s = lua_newuserdata(L, sz);
 	sprite_init(s, pack, id, sz);
 	int i;
 	for (i=0;;i++) {
@@ -272,7 +272,7 @@ lgetcolor(lua_State *L) {
 static int
 lsetcolor(lua_State *L) {
 	struct sprite *s = self(L);
-	uint32_t color = luaL_checkunsigned(L,1);
+	uint32_t color = luaL_checkunsigned(L,2);
 	s->t.color = color;
 	return 0;
 }
@@ -287,7 +287,7 @@ lgetadditive(lua_State *L) {
 static int
 lsetadditive(lua_State *L) {
 	struct sprite *s = self(L);
-	uint32_t additive = luaL_checkunsigned(L,1);
+	uint32_t additive = luaL_checkunsigned(L,2);
 	s->t.additive = additive;
 	return 0;
 }
@@ -389,9 +389,10 @@ static int
 ldraw(lua_State *L) {
 	struct sprite * s = lua_touserdata(L,1);
 	if (s == NULL) {
-		return luaL_error(L, "Need a sprite"); 
+		return luaL_error(L, "Need a sprite");
 	}
 	struct srt srt;
+
 	fill_srt(L,&srt,2);
 	sprite_draw(s, &srt);
 	return 0;
@@ -425,7 +426,7 @@ static int
 ltest(lua_State *L) {
 	struct sprite * s = lua_touserdata(L,1);
 	if (s == NULL) {
-		return luaL_error(L, "Need a sprite"); 
+		return luaL_error(L, "Need a sprite");
 	}
 	struct srt srt;
 	fill_srt(L,&srt,2);

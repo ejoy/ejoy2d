@@ -1,5 +1,6 @@
 #include "particle.h"
 #include "matrix.h"
+#include "spritepack.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -594,7 +595,7 @@ color4f(struct color4f *c4f) {
 	uint8_t gg = (int)(c4f->g*255);
 	uint8_t bb = (int)(c4f->b*255);
 	uint8_t aa = (int)(c4f->a*255);
-	return (uint32_t)rr << 24 | (uint32_t)gg << 16 | (uint32_t)bb << 8 | aa;
+	return (uint32_t)aa << 24 | (uint32_t)rr << 16 | (uint32_t)gg << 8 | bb;
 }
 
 static void
@@ -604,8 +605,8 @@ calc_mat(struct particle * p, struct matrix *m) {
 	srt.rot = p->rotation * 1024 / 360;
 	srt.scalex = p->size * 1024;
 	srt.scaley = srt.scalex;
-	srt.offx = (p->pos.x + p->startPos.x) * 1024;
-	srt.offy = (p->pos.x + p->startPos.x) * 1024;
+	srt.offx = (p->pos.x + p->startPos.x) * SCREEN_SCALE;
+	srt.offy = (p->pos.y + p->startPos.y) * SCREEN_SCALE;
 	matrix_srt(m, &srt);
 }
 
@@ -646,6 +647,9 @@ ldata(lua_State *L) {
 	for (i=0;i<n;i++) {
 		struct particle *p = &ps->particles[i];
 		calc_mat(p,&ps->matrix[i]);
+
+		printf("%d %d\n", ps->matrix[i].m[4], ps->matrix[i].m[5]);
+
 		lua_pushlightuserdata(L, &ps->matrix[i]);
 		lua_rawseti(L, 2, i+1);
 

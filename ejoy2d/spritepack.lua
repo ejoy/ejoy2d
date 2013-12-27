@@ -66,6 +66,14 @@ local function pack_polygon(src, ret)
 	return pack.polygon_size(n, total_point) , maxid
 end
 
+local function is_identity( mat )
+	if mat == nil then
+		return false
+	end
+	return mat[1] == 1024 and mat[2] == 0 and mat[3] == 0
+			and mat[4] == 1024 and mat[5] == 0 and mat[6] == 0
+end
+
 local function pack_part(data, ret)
 	if type(data) == "number" then
 		table.insert(ret, pack.frametag "i")
@@ -75,7 +83,11 @@ local function pack_part(data, ret)
 	else
 		local tag = "i"
 		assert(data.index, "frame need an index")
-		if data.mat then
+		local mat = data.mat
+		if is_identity(mat) then
+			mat = nil
+		end
+		if mat then
 			tag = tag .. "m"
 		end
 		if data.color and data.color ~= 0xffffffff then
@@ -87,9 +99,9 @@ local function pack_part(data, ret)
 		table.insert(ret, pack.frametag(tag))
 
 		table.insert(ret, pack.word(data.index))
-		if data.mat then
+		if mat then
 			for i=1,6 do
-				table.insert(ret, pack.int32(data.mat[i]))
+				table.insert(ret, pack.int32(mat[i]))
 			end
 		end
 		if data.color and data.color ~= 0xffffffff then
@@ -99,7 +111,7 @@ local function pack_part(data, ret)
 			table.insert(ret, pack.color(data.add))
 		end
 
-		return pack.part_size(data.mat)
+		return pack.part_size(mat)
 	end
 end
 
