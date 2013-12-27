@@ -49,5 +49,6 @@ function shader.init()
 end
 
 shader.draw = s.draw
+shader.blend = s.blend
 
 return shader
