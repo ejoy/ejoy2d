@@ -36,7 +36,7 @@ mingw : $(SRC) ej2d
 
 linux : TARGET := ej2d
 linux : CFLAGS += -I/usr/include -I/usr/local/include
-linux : LDFLAGS +=  -lGLEW -lGL -lX11 -llua 
+linux : LDFLAGS +=  -lGLEW -lGL -lX11 -llua -lm
 linux : SRC += linux/window.c linux/winfw.c linux/winfont.c
 
 linux : $(SRC) ej2d
