@@ -12,6 +12,8 @@
 
 #define UPDATE_INTERVAL 1       /* 10ms */
 
+void font_init();
+
 struct X_context {
     Display *display;
     int screen_num;
@@ -139,6 +141,7 @@ main(int argc, char *argv[]) {
     XEvent event;
     uint32_t timestamp = 0;
     init_x();
+    font_init();
 
     ejoy2d_win_init(argc, argv);
 
@@ -157,6 +160,9 @@ main(int argc, char *argv[]) {
                 ejoy2d_win_touch(event.xbutton.x, event.xbutton.y, TOUCH_BEGIN);
                 break;
             case ButtonRelease:
+                ejoy2d_win_touch(event.xbutton.x,event.xbutton.y,TOUCH_END);
+                break;
+            case MotionNotify:
                 ejoy2d_win_touch(event.xbutton.x,event.xbutton.y,TOUCH_MOVE);
                 break;
             }
