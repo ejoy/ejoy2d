@@ -38,7 +38,6 @@ struct render_state {
 	struct program program[MAX_PROGRAM];
 	int tex;
 	int object;
-	int blend;
 	GLuint vertex_buffer;
 	GLuint index_buffer;
 	struct quad vb[MAX_COMMBINE];
@@ -47,14 +46,25 @@ struct render_state {
 static struct render_state *RS = NULL;
 
 void
+shader_defaultblend() {
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void
+shader_blend(int m1, int m2) {
+	if (m1 != GL_ONE || m2 != GL_ONE_MINUS_SRC_ALPHA) {
+		glBlendFunc(m1,m2);
+	}
+}
+
+void
 shader_init() {
 	assert(RS == NULL);
 	struct render_state * rs = malloc(sizeof(*rs));
 	memset(rs, 0 , sizeof(*rs));
 	rs->current_program = -1;
-	rs->blend = GL_ONE_MINUS_SRC_ALPHA;
 
-	glBlendFunc(GL_ONE, rs->blend);
+	shader_defaultblend();
 
 	glGenBuffers(1, &rs->index_buffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rs->index_buffer);

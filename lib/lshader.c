@@ -75,12 +75,25 @@ ldraw(lua_State *L) {
 	return 0;
 }
 
+static int
+lblend(lua_State *L) {
+	if (lua_isnoneornil(L,1)) {
+		shader_defaultblend();
+	} else {
+		int m1 = luaL_checkinteger(L,1);
+		int m2 = luaL_checkinteger(L,2);
+		shader_blend(m1,m2);
+	}
+	return 0;
+}
+
 int 
 ejoy2d_shader(lua_State *L) {
 	luaL_Reg l[] = {
 		{"load", lload},
 		{"unload", lunload},
 		{"draw", ldraw},
+		{"blend", lblend},
 		{NULL,NULL},
 	};
 	luaL_newlib(L,l);
