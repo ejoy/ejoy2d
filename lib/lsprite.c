@@ -399,6 +399,43 @@ ldraw(lua_State *L) {
 }
 
 static int
+lmulti_draw(lua_State *L) {
+	struct  sprite * s = lua_touserdata(L,1);
+	if (s == NULL) {
+		return luaL_error(L, "Need a sprite");
+	}
+	int cnt = luaL_checkinteger(L,3);
+	if (cnt == 0)
+		return 0;
+	if (!lua_istable(L, 4) || !lua_istable(L, 5)) {
+		return luaL_error(L, "need a matrix table and a color table");
+	}
+	if (lua_rawlen(L, 4) != lua_rawlen(L, 5)) {
+		return luaL_error(L, "matrix table and color table must have the same length");
+	}
+
+	struct srt srt;
+	fill_srt(L, &srt, 2);
+
+	int i;
+	for (i = 0; i < cnt; i++) {
+		lua_rawgeti(L, 4, i+1);
+		struct matrix * mat = lua_touserdata(L, -1);
+		s->t.mat = &s->mat;
+		s->mat = *mat;
+		lua_pop(L, 1);
+
+		lua_rawgeti(L, 5, i+1);
+		s->t.color = luaL_checkunsigned(L, -1);
+		lua_pop(L, 1);
+
+		sprite_draw(s, &srt);
+	}
+
+	return 0;
+}
+
+static int
 lookup(lua_State *L, struct sprite *root, struct sprite *spr) {
 	lua_checkstack(L,2);
 	int i;
@@ -463,6 +500,7 @@ lmethod(lua_State *L) {
 	}
 	luaL_Reg l2[] = {
 		{ "draw", ldraw },
+		{ "multi_draw", lmulti_draw },
 		{ "test", ltest },
 		{ NULL, NULL, },
 	};
