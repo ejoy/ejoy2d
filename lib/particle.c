@@ -258,10 +258,10 @@ _init_from_table(struct particle_system *ps, struct lua_State *L) {
 	ps->endColorVar.b = dict_float(L, "finishColorVarianceBlue");
 	ps->endColorVar.a = dict_float(L, "finishColorVarianceAlpha");
 
-	ps->startSize = dict_float(L, "startParticleSize") / 32.0;
-	ps->startSizeVar = dict_float(L, "startParticleSizeVariance") / 100.0;
-	ps->endSize = dict_float(L, "finishParticleSize") / 32.0;
-	ps->endSizeVar = dict_float(L, "finishParticleSizeVariance") / 100.0;
+	ps->startSize = dict_float(L, "startParticleSize");
+	ps->startSizeVar = dict_float(L, "startParticleSizeVariance");
+	ps->endSize = dict_float(L, "finishParticleSize");
+	ps->endSizeVar = dict_float(L, "finishParticleSizeVariance");
 
 	ps->sourcePosition.x = dict_float(L, "sourcePositionx");
 	ps->sourcePosition.y = dict_float(L, "sourcePositiony");
@@ -278,8 +278,8 @@ _init_from_table(struct particle_system *ps, struct lua_State *L) {
 
 	// Mode A: Gravity + tangential accel + radial accel
 	if (ps->emitterMode == PARTICLE_MODE_GRAVITY) {
-		ps->mode.A.gravity.x = dict_float(L, "gravityx") / 100;
-		ps->mode.A.gravity.y = dict_float(L, "gravityy") / 100;
+		ps->mode.A.gravity.x = dict_float(L, "gravityx");
+		ps->mode.A.gravity.y = -dict_float(L, "gravityy");
 
 		ps->mode.A.speed = dict_float(L, "speed");
 		ps->mode.A.speedVar = dict_float(L, "speedVariance");
@@ -404,6 +404,7 @@ _initParticle(struct particle_system *ps, struct particle* particle) {
 		}
 		particle->deltaSize = (endS - startS) / particle->timeToLive;
 	}
+
 
 	// rotation
 	float startA = ps->startSpin + ps->startSpinVar * RANDOM_M11(&RANDSEED);
@@ -534,6 +535,10 @@ _update_particle(struct particle_system *ps, struct particle *p, float dt) {
 		p->pos.y = - sinf(p->mode.B.angle) * p->mode.B.radius;
 	}
 
+	p->size += (p->deltaSize * dt);
+	if (p->size < 0)
+		p->size = 0;
+
 	p->color.r += (p->deltaColor.r * dt);
 	p->color.g += (p->deltaColor.g * dt);
 	p->color.b += (p->deltaColor.b * dt);
@@ -603,7 +608,7 @@ calc_mat(struct particle * p, struct matrix *m) {
 	matrix_identity(m);
 	struct srt srt;
 	srt.rot = p->rotation * 1024 / 360;
-	srt.scalex = p->size * 1024;
+	srt.scalex = p->size * SCREEN_SCALE;
 	srt.scaley = srt.scalex;
 	srt.offx = (p->pos.x + p->startPos.x) * SCREEN_SCALE;
 	srt.offy = (p->pos.y + p->startPos.y) * SCREEN_SCALE;
@@ -647,8 +652,6 @@ ldata(lua_State *L) {
 	for (i=0;i<n;i++) {
 		struct particle *p = &ps->particles[i];
 		calc_mat(p,&ps->matrix[i]);
-
-		printf("%d %d\n", ps->matrix[i].m[4], ps->matrix[i].m[5]);
 
 		lua_pushlightuserdata(L, &ps->matrix[i]);
 		lua_rawseti(L, 2, i+1);
