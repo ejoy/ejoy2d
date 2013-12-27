@@ -16,8 +16,6 @@ void main() {
 ]]
 
 local sprite_vs = [[
-precision lowp float;
-
 attribute vec4 position;
 attribute vec2 texcoord;
 attribute vec4 color;
@@ -33,7 +31,6 @@ void main() {
 ]]
 
 local text_fs = [[
-precision lowp float;
 varying vec2 v_texcoord;
 varying vec4 v_color;
 
