@@ -38,6 +38,7 @@ struct render_state {
 	struct program program[MAX_PROGRAM];
 	int tex;
 	int object;
+	int blendchange;
 	GLuint vertex_buffer;
 	GLuint index_buffer;
 	struct quad vb[MAX_COMMBINE];
@@ -46,23 +47,12 @@ struct render_state {
 static struct render_state *RS = NULL;
 
 void
-shader_defaultblend() {
-	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-}
-
-void
-shader_blend(int m1, int m2) {
-	if (m1 != GL_ONE || m2 != GL_ONE_MINUS_SRC_ALPHA) {
-		glBlendFunc(m1,m2);
-	}
-}
-
-void
 shader_init() {
 	assert(RS == NULL);
 	struct render_state * rs = malloc(sizeof(*rs));
 	memset(rs, 0 , sizeof(*rs));
 	rs->current_program = -1;
+	rs->blendchange = 0;
 
 	shader_defaultblend();
 
@@ -287,4 +277,21 @@ shader_drawpolygon(int n, const float *vb, uint32_t color) {
 void 
 shader_flush() {
 	rs_commit();
+}
+
+void
+shader_defaultblend() {
+	if (RS->blendchange) {
+		rs_commit();
+		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	}
+}
+
+void
+shader_blend(int m1, int m2) {
+	if (m1 != GL_ONE || m2 != GL_ONE_MINUS_SRC_ALPHA) {
+		rs_commit();
+		RS->blendchange = 1;
+		glBlendFunc(m1,m2);
+	}
 }
