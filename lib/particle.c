@@ -2,6 +2,13 @@
 #include "matrix.h"
 #include "spritepack.h"
 
+/*
+	This particle system is come from cocos2d-x ( https://github.com/cocos2d/cocos2d-x )
+	The origin source is :
+		https://github.com/cocos2d/cocos2d-x/blob/develop/cocos/2d/CCParticleSystem.cpp
+	Need rewrite later :) 
+ */
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -12,14 +19,7 @@
 #include <math.h>
 #include <string.h>
 
-/** @def CC_DEGREES_TO_RADIANS
- converts degrees to radians
- */
 #define CC_DEGREES_TO_RADIANS(__ANGLE__) ((__ANGLE__) * 0.01745329252f) // PI / 180
-
-/** @def CC_RADIANS_TO_DEGREES
- converts radians to degrees
- */
 #define CC_RADIANS_TO_DEGREES(__ANGLE__) ((__ANGLE__) * 57.29577951f) // PI * 180
 
 struct point {
