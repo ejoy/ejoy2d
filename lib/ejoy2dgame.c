@@ -71,10 +71,22 @@ ejoy2d_framework(lua_State *L) {
 	return 1;
 }
 
+static void
+checkluaversion(lua_State *L) {
+	const lua_Number *v = lua_version(L);
+	if (v != lua_version(NULL))
+		fault("multiple Lua VMs detected");
+	else if (*v != LUA_VERSION_NUM) {
+		fault("Lua version mismatch: app. needs %f, Lua core provides %f",
+			LUA_VERSION_NUM, *v);
+	}
+}
+
 struct game *
 ejoy2d_game() {
 	struct game *G = malloc(sizeof(*G));
 	lua_State *L = luaL_newstate();
+	checkluaversion(L);
 	G->L = L;
 	G->real_time = 0;
 	G->logic_time = 0;
