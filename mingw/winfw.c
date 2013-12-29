@@ -4,6 +4,7 @@
 #include "screen.h"
 #include "winfw.h"
 
+#include <windows.h>
 #include <lauxlib.h>
 
 #include <stdlib.h>
@@ -55,8 +56,14 @@ ejoy2d_win_init(int argc, char *argv[]) {
 		fault("%s", msg);
 	}
 
+	char modname[1024];
+
+	int sz = GetModuleFileNameA(0,  modname, 1024);
+
+	lua_pushlstring(L, modname, sz);
+
 	int i;
-	for (i=0;i<argc;i++) {
+	for (i=1;i<argc;i++) {
 		lua_pushstring(L, argv[i]);
 	}
 
