@@ -90,12 +90,13 @@ compile(const char * source, int type) {
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 	
 	if (status == GL_FALSE) {
-        char buf[1024];
-        GLint len;
-        glGetShaderInfoLog(shader, 1024, &len, buf);
+		char buf[1024];
+		GLint len;
+		glGetShaderInfoLog(shader, 1024, &len, buf);
 
-        printf("compil failed:%s\n", buf);
-        printf("source:\n %s\n", source);
+		fault("compile failed:%s\n"
+			"source:\n %s\n",
+			buf, source);
 		glDeleteShader(shader);
 		return 0;
 	}
