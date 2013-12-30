@@ -173,39 +173,41 @@ function spritepack.pack( data )
 	local ani_maxid = 0
 
 	for _,v in ipairs(data) do
-		local id = assert(tonumber(v.id))
-		if id > ret.maxid then
-			ret.maxid = id
-		end
-		local exportname = v.export
-		if exportname then
-			assert(ret.export[exportname] == nil, "Duplicate export name")
-			ret.export[exportname] = id
-		end
-		table.insert(ret.data, pack.word(id))
-		if v.type == "picture" then
-			local sz, texid = pack_picture(v, ret.data)
-			ret.size = ret.size + sz
-			if texid > ret.texture then
-				ret.texture = texid
+		if v.type ~= "particle" then
+			local id = assert(tonumber(v.id))
+			if id > ret.maxid then
+				ret.maxid = id
 			end
-		elseif v.type == "animation" then
-			local sz , maxid = pack_animation(v, ret.data)
-			ret.size = ret.size + sz
-			if maxid > ani_maxid then
-				ani_maxid = maxid
+			local exportname = v.export
+			if exportname then
+				assert(ret.export[exportname] == nil, "Duplicate export name")
+				ret.export[exportname] = id
 			end
-		elseif v.type == "polygon" then
-			local sz, texid = pack_polygon(v, ret.data)
-			ret.size = ret.size + sz
-			if texid > ret.texture then
-				ret.texture = texid
+			table.insert(ret.data, pack.word(id))
+			if v.type == "picture" then
+				local sz, texid = pack_picture(v, ret.data)
+				ret.size = ret.size + sz
+				if texid > ret.texture then
+					ret.texture = texid
+				end
+			elseif v.type == "animation" then
+				local sz , maxid = pack_animation(v, ret.data)
+				ret.size = ret.size + sz
+				if maxid > ani_maxid then
+					ani_maxid = maxid
+				end
+			elseif v.type == "polygon" then
+				local sz, texid = pack_polygon(v, ret.data)
+				ret.size = ret.size + sz
+				if texid > ret.texture then
+					ret.texture = texid
+				end
+			elseif v.type == "label" then
+				local sz = pack_label(v, ret.data)
+				ret.size = ret.size + sz
+			else
+				error ("Unknown type " .. tostring(v.type))
 			end
-		elseif v.type == "label" then
-			local sz = pack_label(v, ret.data)
-			ret.size = ret.size + sz
-		else
-			error ("Unknown type " .. tostring(v.type))
 		end
 	end
 
