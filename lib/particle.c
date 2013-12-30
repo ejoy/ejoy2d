@@ -37,43 +37,43 @@ static void
 _initParticle(struct particle_system *ps, struct particle* particle) {
 	uint32_t RANDSEED = rand();
 
-	particle->timeToLive = ps->life + ps->lifeVar * RANDOM_M11(&RANDSEED);
+	particle->timeToLive = ps->config->life + ps->config->lifeVar * RANDOM_M11(&RANDSEED);
 	if (particle->timeToLive <= 0) {
 		return;
 	}
 
-	particle->startPos = ps->sourcePosition;
-	particle->pos.x = ps->posVar.x * RANDOM_M11(&RANDSEED);
-	particle->pos.y = ps->posVar.y * RANDOM_M11(&RANDSEED);
+	particle->startPos = ps->config->sourcePosition;
+	particle->pos.x = ps->config->posVar.x * RANDOM_M11(&RANDSEED);
+	particle->pos.y = ps->config->posVar.y * RANDOM_M11(&RANDSEED);
 
 	struct color4f *start = &particle->color;
-	start->r = clampf(ps->startColor.r + ps->startColorVar.r * RANDOM_M11(&RANDSEED));
-	start->g = clampf(ps->startColor.g + ps->startColorVar.g * RANDOM_M11(&RANDSEED));
-	start->b = clampf(ps->startColor.b + ps->startColorVar.b * RANDOM_M11(&RANDSEED));
-	start->a = clampf(ps->startColor.a + ps->startColorVar.a * RANDOM_M11(&RANDSEED));
+	start->r = clampf(ps->config->startColor.r + ps->config->startColorVar.r * RANDOM_M11(&RANDSEED));
+	start->g = clampf(ps->config->startColor.g + ps->config->startColorVar.g * RANDOM_M11(&RANDSEED));
+	start->b = clampf(ps->config->startColor.b + ps->config->startColorVar.b * RANDOM_M11(&RANDSEED));
+	start->a = clampf(ps->config->startColor.a + ps->config->startColorVar.a * RANDOM_M11(&RANDSEED));
 
 	struct color4f end;
-	end.r = clampf(ps->endColor.r + ps->endColorVar.r * RANDOM_M11(&RANDSEED));
-	end.g = clampf(ps->endColor.g + ps->endColorVar.g * RANDOM_M11(&RANDSEED));
-	end.b = clampf(ps->endColor.b + ps->endColorVar.b * RANDOM_M11(&RANDSEED));
-	end.a = clampf(ps->endColor.a + ps->endColorVar.a * RANDOM_M11(&RANDSEED));
+	end.r = clampf(ps->config->endColor.r + ps->config->endColorVar.r * RANDOM_M11(&RANDSEED));
+	end.g = clampf(ps->config->endColor.g + ps->config->endColorVar.g * RANDOM_M11(&RANDSEED));
+	end.b = clampf(ps->config->endColor.b + ps->config->endColorVar.b * RANDOM_M11(&RANDSEED));
+	end.a = clampf(ps->config->endColor.a + ps->config->endColorVar.a * RANDOM_M11(&RANDSEED));
 
 	particle->deltaColor.r = (end.r - start->r) / particle->timeToLive;
 	particle->deltaColor.g = (end.g - start->g) / particle->timeToLive;
 	particle->deltaColor.b = (end.b - start->b) / particle->timeToLive;
 	particle->deltaColor.a = (end.a - start->a) / particle->timeToLive;
 
-	float startS = ps->startSize + ps->startSizeVar * RANDOM_M11(&RANDSEED);
+	float startS = ps->config->startSize + ps->config->startSizeVar * RANDOM_M11(&RANDSEED);
 	if (startS < 0) {
 		startS = 0;
 	}
 
 	particle->size = startS;
 
-	if (ps->endSize == START_SIZE_EQUAL_TO_END_SIZE) {
+	if (ps->config->endSize == START_SIZE_EQUAL_TO_END_SIZE) {
 		particle->deltaSize = 0;
 	} else {
-		float endS = ps->endSize + ps->endSizeVar * RANDOM_M11(&RANDSEED);
+		float endS = ps->config->endSize + ps->config->endSizeVar * RANDOM_M11(&RANDSEED);
 		if (endS < 0) {
 			endS = 0;
 		}
@@ -82,34 +82,34 @@ _initParticle(struct particle_system *ps, struct particle* particle) {
 
 
 	// rotation
-	float startA = ps->startSpin + ps->startSpinVar * RANDOM_M11(&RANDSEED);
-	float endA = ps->endSpin + ps->endSpinVar * RANDOM_M11(&RANDSEED);
+	float startA = ps->config->startSpin + ps->config->startSpinVar * RANDOM_M11(&RANDSEED);
+	float endA = ps->config->endSpin + ps->config->endSpinVar * RANDOM_M11(&RANDSEED);
 	particle->rotation = startA;
 	particle->deltaRotation = (endA - startA) / particle->timeToLive;
 
 	// direction
-	float a = CC_DEGREES_TO_RADIANS( ps->angle + ps->angleVar * RANDOM_M11(&RANDSEED) );
+	float a = CC_DEGREES_TO_RADIANS( ps->config->angle + ps->config->angleVar * RANDOM_M11(&RANDSEED) );
 
 	// Mode Gravity: A
-	if (ps->emitterMode == PARTICLE_MODE_GRAVITY) {
+	if (ps->config->emitterMode == PARTICLE_MODE_GRAVITY) {
 		struct point v;
 		v.x = cosf(a);
 		v.y = sinf(a);
-		float s = ps->mode.A.speed + ps->mode.A.speedVar * RANDOM_M11(&RANDSEED);
+		float s = ps->config->mode.A.speed + ps->config->mode.A.speedVar * RANDOM_M11(&RANDSEED);
 
 		// direction
 		particle->mode.A.dir.x = v.x * s ;
 		particle->mode.A.dir.y = v.y * s ;
 
 		// radial accel
-		particle->mode.A.radialAccel = ps->mode.A.radialAccel + ps->mode.A.radialAccelVar * RANDOM_M11(&RANDSEED);
+		particle->mode.A.radialAccel = ps->config->mode.A.radialAccel + ps->config->mode.A.radialAccelVar * RANDOM_M11(&RANDSEED);
 
 
 		// tangential accel
-		particle->mode.A.tangentialAccel = ps->mode.A.tangentialAccel + ps->mode.A.tangentialAccelVar * RANDOM_M11(&RANDSEED);
+		particle->mode.A.tangentialAccel = ps->config->mode.A.tangentialAccel + ps->config->mode.A.tangentialAccelVar * RANDOM_M11(&RANDSEED);
 
 		// rotation is dir
-		if(ps->mode.A.rotationIsDir) {
+		if(ps->config->mode.A.rotationIsDir) {
 			struct point *p = &(particle->mode.A.dir);
 			particle->rotation = -CC_RADIANS_TO_DEGREES(atan2f(p->y,p->x));
 		}
@@ -117,25 +117,25 @@ _initParticle(struct particle_system *ps, struct particle* particle) {
 	// Mode Radius: B
 	else {
 		// Set the default diameter of the particle from the source position
-		float startRadius = ps->mode.B.startRadius + ps->mode.B.startRadiusVar * RANDOM_M11(&RANDSEED);
-		float endRadius = ps->mode.B.endRadius + ps->mode.B.endRadiusVar * RANDOM_M11(&RANDSEED);
+		float startRadius = ps->config->mode.B.startRadius + ps->config->mode.B.startRadiusVar * RANDOM_M11(&RANDSEED);
+		float endRadius = ps->config->mode.B.endRadius + ps->config->mode.B.endRadiusVar * RANDOM_M11(&RANDSEED);
 
 		particle->mode.B.radius = startRadius;
 
-		if (ps->mode.B.endRadius == START_RADIUS_EQUAL_TO_END_RADIUS) {
+		if (ps->config->mode.B.endRadius == START_RADIUS_EQUAL_TO_END_RADIUS) {
 			particle->mode.B.deltaRadius = 0;
 		} else {
 			particle->mode.B.deltaRadius = (endRadius - startRadius) / particle->timeToLive;
 		}
 
 		particle->mode.B.angle = a;
-		particle->mode.B.degreesPerSecond = CC_DEGREES_TO_RADIANS(ps->mode.B.rotatePerSecond + ps->mode.B.rotatePerSecondVar * RANDOM_M11(&RANDSEED));
+		particle->mode.B.degreesPerSecond = CC_DEGREES_TO_RADIANS(ps->config->mode.B.rotatePerSecond + ps->config->mode.B.rotatePerSecondVar * RANDOM_M11(&RANDSEED));
 	}
 }
 
 static void
 _addParticle(struct particle_system *ps) {
-	if (ps->particleCount == ps->totalParticles) {
+	if (ps->particleCount == ps->config->totalParticles) {
 		return;
 	}
 
@@ -147,7 +147,7 @@ _addParticle(struct particle_system *ps) {
 static void
 _stopSystem(struct particle_system *ps) {
 	ps->isActive = false;
-	ps->elapsed = ps->duration;
+	ps->elapsed = ps->config->duration;
 	ps->emitCounter = 0;
 }
 
@@ -166,11 +166,11 @@ _normalize_point(struct point *p, struct point *out) {
 
 static void
 _update_particle(struct particle_system *ps, struct particle *p, float dt) {
-	if (ps->positionType == POSITION_TYPE_RELATIVE) {
-		p->startPos = ps->sourcePosition;
+	if (ps->config->positionType == POSITION_TYPE_RELATIVE) {
+		p->startPos = ps->config->sourcePosition;
 	}
 	// Mode A: gravity, direction, tangential accel & radial accel
-	if (ps->emitterMode == PARTICLE_MODE_GRAVITY) {
+	if (ps->config->emitterMode == PARTICLE_MODE_GRAVITY) {
 		struct point tmp, radial, tangential;
 
 		radial.x = 0;
@@ -189,8 +189,8 @@ _update_particle(struct particle_system *ps, struct particle *p, float dt) {
 		tangential.y = newy * p->mode.A.tangentialAccel;
 
 		// (gravity + radial + tangential) * dt
-		tmp.x = radial.x + tangential.x + ps->mode.A.gravity.x;
-		tmp.y = radial.y + tangential.y + ps->mode.A.gravity.y;
+		tmp.x = radial.x + tangential.x + ps->config->mode.A.gravity.x;
+		tmp.y = radial.y + tangential.y + ps->config->mode.A.gravity.y;
 		tmp.x *= dt;
 		tmp.y *= dt;
 		p->mode.A.dir.x += tmp.x;
@@ -232,13 +232,14 @@ _remove_particle(struct particle_system *ps, int idx) {
 
 void
 init_with_particles(struct particle_system *ps, int numberOfParticles) {
-	ps->totalParticles = numberOfParticles;
 	ps->particles = (struct particle *)(ps+1);
 	ps->matrix = (struct matrix *)(ps->particles + numberOfParticles);
+	ps->config = (struct particle_config*)(ps->matrix + numberOfParticles);
 	ps->allocatedParticles = numberOfParticles;
 	ps->isActive = true;
-	ps->positionType = POSITION_TYPE_FREE;
-	ps->emitterMode = PARTICLE_MODE_GRAVITY;
+	ps->config->totalParticles = numberOfParticles;
+	ps->config->positionType = POSITION_TYPE_FREE;
+	ps->config->emitterMode = PARTICLE_MODE_GRAVITY;
 }
 
 void
@@ -256,20 +257,20 @@ calc_particle_system_mat(struct particle * p, struct matrix *m) {
 void
 particle_system_update(struct particle_system *ps, float dt) {
 	if (ps->isActive) {
-		float rate = ps->emissionRate;
+		float rate = ps->config->emissionRate;
 
 		// emitCounter should not increase where ps->particleCount == ps->totalParticles
-		if (ps->particleCount < ps->totalParticles)	{
+		if (ps->particleCount < ps->config->totalParticles)	{
 			ps->emitCounter += dt;
 		}
 
-		while (ps->particleCount < ps->totalParticles && ps->emitCounter > rate) {
+		while (ps->particleCount < ps->config->totalParticles && ps->emitCounter > rate) {
 			_addParticle(ps);
 			ps->emitCounter -= rate;
 		}
 
 		ps->elapsed += dt;
-		if (ps->duration != DURATION_INFINITY && ps->duration < ps->elapsed) {
+		if (ps->config->duration != DURATION_INFINITY && ps->config->duration < ps->elapsed) {
 			_stopSystem(ps);
 		}
 	}

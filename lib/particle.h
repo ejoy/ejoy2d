@@ -9,15 +9,24 @@
 #include "matrix.h"
 
 
-/** @def CC_DEGREES_TO_RADIANS
- converts degrees to radians
- */
 #define CC_DEGREES_TO_RADIANS(__ANGLE__) ((__ANGLE__) * 0.01745329252f) // PI / 180
-
-/** @def CC_RADIANS_TO_DEGREES
- converts radians to degrees
- */
 #define CC_RADIANS_TO_DEGREES(__ANGLE__) ((__ANGLE__) * 57.29577951f) // PI * 180
+
+#define PARTICLE_MODE_GRAVITY 0
+#define PARTICLE_MODE_RADIUS 1
+
+#define POSITION_TYPE_FREE 0
+#define POSITION_TYPE_RELATIVE 1
+#define POSTTION_TYPE_GROUPED 2
+
+/** The Particle emitter lives forever */
+#define DURATION_INFINITY (-1)
+
+/** The starting size of the particle is equal to the ending size */
+#define START_SIZE_EQUAL_TO_END_SIZE (-1)
+
+/** The starting radius of the particle is equal to the ending radius */
+#define START_RADIUS_EQUAL_TO_END_RADIUS (-1)
 
 struct point {
 	float x;
@@ -64,27 +73,7 @@ struct particle {
 	} mode;
 };
 
-#define PARTICLE_MODE_GRAVITY 0
-#define PARTICLE_MODE_RADIUS 1
-
-#define POSITION_TYPE_FREE 0
-#define POSITION_TYPE_RELATIVE 1
-#define POSTTION_TYPE_GROUPED 2
-
-/** The Particle emitter lives forever */
-#define DURATION_INFINITY (-1)
-
-/** The starting size of the particle is equal to the ending size */
-#define START_SIZE_EQUAL_TO_END_SIZE (-1)
-
-/** The starting radius of the particle is equal to the ending radius */
-#define START_RADIUS_EQUAL_TO_END_RADIUS (-1)
-
-
-struct particle_system {
-	//! time elapsed since the start of the system (in seconds)
-	float elapsed;
-
+struct particle_config {
 	/** Switch between different kind of emitter modes:
 	 - kParticleModeGravity: uses gravity, speed, radial and tangential acceleration
 	 - kParticleModeRadius: uses radius movement + rotation
@@ -130,30 +119,12 @@ struct particle_system {
 		} B;
 	} mode;
 
-	//! Array of particles
-	struct particle *particles;
-	struct matrix *matrix;
-
 	//Emitter name
 //    std::string _configName;
 
 	// color modulate
 	//    BOOL colorModulate;
 
-	//! How many particles can be emitted per second
-	float emitCounter;
-
-	//!  particle idx
-	int particleIdx;
-
-	// Number of allocated particles
-	int allocatedParticles;
-
-	/** Is the emitter active */
-	bool isActive;
-
-	/** Quantity of particles that are being simulated at the moment */
-	int particleCount;
 	/** How many seconds the emitter will run. -1 means 'forever' */
 	float duration;
 	/** sourcePosition of the emitter */
@@ -202,7 +173,7 @@ struct particle_system {
 	/** conforms to CocosNodeTexture protocol */
 //	BlendFunc _blendFunc;
 	/** does the alpha value modify color */
-	bool opacityModifyRGB;
+//	bool opacityModifyRGB;
 	/** does FlippedY variance of each particle */
 //	int yCoordFlipped;
 
@@ -210,6 +181,31 @@ struct particle_system {
 	 @since v0.8
 	 */
 	int positionType;
+};
+
+struct particle_system {
+	//! time elapsed since the start of the system (in seconds)
+	float elapsed;
+	//! Array of particles
+	struct particle *particles;
+	struct matrix *matrix;
+
+	//! How many particles can be emitted per second
+	float emitCounter;
+
+	//!  particle idx
+	int particleIdx;
+
+	// Number of allocated particles
+	int allocatedParticles;
+
+	/** Is the emitter active */
+	bool isActive;
+
+	/** Quantity of particles that are being simulated at the moment */
+	int particleCount;
+
+	struct particle_config *config;
 };
 
 
