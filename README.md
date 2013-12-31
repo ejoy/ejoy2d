@@ -19,6 +19,15 @@ For Linux ,
 * make or make linux
 * ./ej2d examples/ex01.lua to test
 
+For Mac OS ,
+
+* Install Lua 5.2.3
+* Install glew 1.9
+* Install freetype 2
+* Install XQuartz
+* make or make macos
+* ./ej2d exaples/ex01.lua to test
+
 Question?
 =======
 
