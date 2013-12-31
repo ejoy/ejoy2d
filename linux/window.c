@@ -140,11 +140,13 @@ int
 main(int argc, char *argv[]) {
     XEvent event;
     uint32_t timestamp = 0;
+    printf("main begin\n");
     init_x();
+    printf("init font\n");
     font_init();
-
+    printf("init ejoy2d win\n");
     ejoy2d_win_init(argc, argv);
-
+    printf("enter main loop!\n");
     for (;;) {
         
         while(XPending(g_X.display) > 0) {  
