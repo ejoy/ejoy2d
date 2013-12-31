@@ -26,7 +26,7 @@ For Mac OS ,
 * Install freetype 2
 * Install XQuartz
 * make or make macos
-* ./ej2d exaples/ex01.lua to test
+* ./ej2d examples/ex01.lua to test
 
 Question?
 =======
