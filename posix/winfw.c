@@ -49,14 +49,10 @@ traceback(lua_State *L) {
 
 static int
 read_exepath(char * buf, int bufsz) {
-    int  count;
-    char tmp[BUFSIZE];
-    count = readlink("/proc/self/exe", tmp, bufsz);
-
-    if (count < 0)
+    const char *path = getenv("_");
+    if (!path)
         return -1;
-    tmp[count] = '\0';
-    return snprintf(buf, bufsz, "local path = '%s'\n", tmp);
+    return snprintf(buf, bufsz, "local path = '%s'\n", path);
 }
 
 void
