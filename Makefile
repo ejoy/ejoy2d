@@ -44,14 +44,14 @@ mingw : $(SRC) ej2d
 linux : TARGET := ej2d
 linux : CFLAGS += -I/usr/include -I/usr/local/include $(shell freetype-config --cflags)
 linux : LDFLAGS +=  -lGLEW -lGL -lX11 -lfreetype -llua -lm
-linux : SRC += xinux/window.c xinux/winfw.c xinux/winfont.c
+linux : SRC += posix/window.c posix/winfw.c posix/winfont.c
 
 linux : $(SRC) ej2d
 
 macos : TARGET := ej2d
-macos : CFLAGS += -I/usr/include -I/usr/local/include $(shell freetype-config --cflags)
+macos : CFLAGS += -L/usr/X11R6/include -I/usr/include -I/usr/local/include $(shell freetype-config --cflags)
 macos : LDFLAGS += -L/usr/X11R6/lib  -lGLEW -lGL -lX11 -lfreetype -llua -lm
-macos : SRC += xinux/window.c xinux/winfw.c xinux/winfont.c
+macos : SRC += posix/window.c posix/winfw.c posix/winfont.c
 
 macos : $(SRC) ej2d
 
