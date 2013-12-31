@@ -374,8 +374,8 @@ fill_srt(lua_State *L, struct srt *srt, int idx) {
 		sx = readkey(L, idx, SRT_SX, 1);
 		sy = readkey(L, idx, SRT_SY, 1);
 	}
-	srt->offx = x*8;
-	srt->offy = y*8;
+	srt->offx = x*SCREEN_SCALE;
+	srt->offy = y*SCREEN_SCALE;
 	srt->scalex = sx*1024;
 	srt->scaley = sy*1024;
 	srt->rot = rot * (1024.0 / 360.0);
