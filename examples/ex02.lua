@@ -15,6 +15,7 @@ function game.update()
 end
 
 function game.drawframe()
+	-- use shader.draw to draw a polygon to screen (for debug use)
 	shader.draw(TEXID, {
 		88, 0, 88, 45, 147, 45, 147, 0,	-- texture coord
 		-958, -580, -958, 860, 918, 860, 918, -580, -- screen coord, 16x pixel, (0,0) is center of screen
