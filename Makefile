@@ -1,7 +1,7 @@
 .PHONY : mingw ej2d linux undefined
 
 CFLAGS := -g -Wall -Ilib
-LDFLAGS := 
+LDFLAGS :=
 
 SRC := \
 lib/shader.c \
@@ -18,7 +18,8 @@ lib/matrix.c \
 lib/lmatrix.c \
 lib/dfont.c \
 lib/label.c \
-lib/particle.c
+lib/particle.c \
+lib/lparticle.c
 
 UNAME=$(shell uname)
 SYS=$(if $(filter Linux%,$(UNAME)),linux,\
@@ -55,9 +56,9 @@ macos : SRC += posix/window.c posix/winfw.c posix/winfont.c
 
 macos : $(SRC) ej2d
 
-ej2d : 
+ej2d :
 	gcc $(CFLAGS) -o $(TARGET) $(SRC) $(LDFLAGS)
 
-clean : 
+clean :
 	-rm -f ej2d.exe
 	-rm -f ej2d

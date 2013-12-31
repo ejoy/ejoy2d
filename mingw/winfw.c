@@ -22,7 +22,9 @@ static const char * startscript =
 "assert(script, 'I need a script name')\n"
 "path = string.match(path,[[(.*)\\[^\\]*$]])\n"
 "package.path = path .. [[\\?.lua;]] .. path .. [[\\?\\init.lua;.\\?.lua;.\\?\\init.lua]]\n"
-"dofile(script)\n";
+"local f = loadfile(script)\n"
+"f(script)\n"
+;
 
 static struct WINDOWGAME *
 create_game() {

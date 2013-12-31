@@ -102,7 +102,7 @@ init_x() {
 
     
     win=XCreateSimpleWindow(dis,DefaultRootWindow(dis),0,0,
-                            1024, 680, 5,white, black);
+                            WIDTH, HEIGHT, 5,white, black);
 
     XSetStandardProperties(dis,win,"ejoy2d",NULL,None,NULL,0,NULL);
     XSelectInput(dis, win,

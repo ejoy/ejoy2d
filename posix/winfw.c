@@ -5,7 +5,7 @@
 #include "winfw.h"
 
 #include <lauxlib.h>
-
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -14,15 +14,18 @@ struct WINDOWGAME {
 	int intouch;
 };
 
+static const int BUFSIZE = 2048;
+
 static struct WINDOWGAME *G = NULL;
 
 static const char * startscript =
-"local path, script = ...\n"
+"local _,script = ...\n"
 "assert(script, 'I need a script name')\n"
-/* "path = string.match(path,[[(.*)\\[^\\]*$]])\n" */
-"path = '.'"
-"package.path = path .. [[/?.lua;]] .. path .. [[/init.lua;./?.lua;./?/init.lua]]\n"
-"dofile(script)\n";
+"path = string.match(path,[[(.*)/[^/]*$]])\n"
+"package.path = path .. [[/?.lua;]] .. path .. [[/?/init.lua]]\n"
+"local f = loadfile(script)\n"
+"f(script)\n"
+;
 
 static struct WINDOWGAME *
 create_game() {
@@ -44,13 +47,33 @@ traceback(lua_State *L) {
 	return 1;
 }
 
+static int
+read_exepath(char * buf, int bufsz) {
+    int  count;
+    char tmp[BUFSIZE];
+    count = readlink("/proc/self/exe", tmp, bufsz);
+
+    if (count < 0)
+        return -1;
+    tmp[count] = '\0';
+    return snprintf(buf, bufsz, "local path = '%s'\n", tmp);
+}
+
 void
 ejoy2d_win_init(int argc, char *argv[]) {
 	G = create_game();
 	lua_State *L = ejoy2d_game_lua(G->game);
 	lua_pushcfunction(L, traceback);
 	int tb = lua_gettop(L);
-	int err = luaL_loadstring(L, startscript);
+
+    char buf[BUFSIZE];
+    int cnt = read_exepath(buf, BUFSIZE);
+    if (cnt < 0)
+        fault("can't read exepath");
+    char * bufp = buf + cnt;
+    snprintf(bufp, BUFSIZE - cnt, startscript);
+
+	int err = luaL_loadstring(L, buf);
 	if (err) {
 		const char *msg = lua_tostring(L,-1);
 		fault("%s", msg);
