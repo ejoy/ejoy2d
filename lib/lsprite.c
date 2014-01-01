@@ -233,6 +233,17 @@ lsetmat(lua_State *L) {
 }
 
 static int
+lsetprogram(lua_State *L) {
+	struct sprite *s = self(L);
+	if (lua_isnoneornil(L,2)) {
+		s->t.program = PROGRAM_DEFAULT;
+	} else {
+		s->t.program = luaL_checkinteger(L,2);
+	}
+	return 0;
+}
+
+static int
 lgetname(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->name == NULL)
@@ -321,6 +332,7 @@ lsetter(lua_State *L) {
 		{"color", lsetcolor},
 		{"additive", lsetadditive },
 		{"message", lsetmessage },
+		{ "program", lsetprogram },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -357,17 +369,6 @@ lmount(lua_State *L) {
 		sprite_mount(s, index, child);
 		lua_pushvalue(L, 3);
 		lua_rawseti(L, -2, index+1);
-	}
-	return 0;
-}
-
-static int
-lprogram(lua_State *L) {
-	struct sprite *s = self(L);
-	if (lua_isnoneornil(L,2)) {
-		s->t.program = PROGRAM_DEFAULT;
-	} else {
-		s->t.program = luaL_checkinteger(L,2);
 	}
 	return 0;
 }
@@ -494,7 +495,6 @@ lmethod(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "fetch", lfetch },
 		{ "mount", lmount },
-		{ "program", lprogram },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);

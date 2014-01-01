@@ -50,17 +50,17 @@ void main() {
 
 local gray_fs = [[
 varying vec2 v_texcoord;
+varying vec4 v_color;
 uniform sampler2D texture0;
-uniform vec4 color;
 uniform vec3 additive;
 
 void main()
 {
 	vec4 tmp = texture2D(texture0, v_texcoord);
 	vec4 c;
-	c.xyz = tmp.xyz * color.xyz;
+	c.xyz = tmp.xyz * v_color.xyz;
 	c.w = tmp.w;
-	c *= color.w;
+	c *= v_color.w;
 	c.xyz += additive.xyz * tmp.w;
 	float g = dot(c.rgb , vec3(0.299, 0.587, 0.114));
 	gl_FragColor = vec4(g,g,g,c.a);
@@ -85,7 +85,8 @@ shader.draw = s.draw
 shader.blend = s.blend
 
 function shader.id(name)
-	return assert(shader_name[name] , "Invalid shader name")
+	local id = assert(shader_name[name] , "Invalid shader name")
+	return id
 end
 
 return shader

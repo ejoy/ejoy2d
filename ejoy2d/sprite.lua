@@ -1,6 +1,7 @@
 local debug = debug
 local c = require "ejoy2d.sprite.c"
 local pack = require "ejoy2d.spritepack"
+local shader = require "ejoy2d.shader"
 
 local method = c.method
 local method_fetch = method.fetch
@@ -8,6 +9,16 @@ local fetch
 
 local get = c.get
 local set = c.set
+
+local set_program = set.program
+
+function set:program(prog)
+	if prog == nil then
+		set_program(self)
+	else
+		set_program(self, shader.id(prog))
+	end
+end
 
 local sprite_meta = {}
 
@@ -68,5 +79,6 @@ function sprite.label(tbl)
 		return l
 	end
 end
+
 
 return sprite

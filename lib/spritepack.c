@@ -159,7 +159,7 @@ static void
 import_frame(struct pack_frame * pf, struct import_stream *is, int maxc) {
 	int n = import_byte(is);
 	int i;
-	pf->part = (pack_part *)ialloc(is->alloc, n * sizeof(struct pack_part));
+	pf->part = (struct pack_part *)ialloc(is->alloc, n * sizeof(struct pack_part));
 	pf->n = n;
 	for (i=0;i<n;i++) {
 		struct pack_part *pp = &pf->part[i];
@@ -173,7 +173,7 @@ import_frame(struct pack_frame * pf, struct import_stream *is, int maxc) {
 			luaL_error(is->alloc->L, "Invalid stream (%d): frame part need an id", is->current_id);
 		}
 		if (tag & TAG_MATRIX) {
-			pp->t.mat = (matrix *)ialloc(is->alloc, sizeof(struct matrix));
+			pp->t.mat = (struct matrix *)ialloc(is->alloc, sizeof(struct matrix));
 			int32_t *m = pp->t.mat->m;
 			int j;
 			for (j=0;j<6;j++) {
