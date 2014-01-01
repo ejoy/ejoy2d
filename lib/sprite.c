@@ -93,7 +93,7 @@ sprite_size(struct sprite_pack *pack, int id) {
 		return 0;
 	int type = pack->type[id];
 	if (type == TYPE_ANIMATION) {
-		struct pack_animation * ani = pack->data[id];
+		struct pack_animation * ani = (struct pack_animation *)pack->data[id];
 		return sizeof(struct sprite) + (ani->component_number - 1) * sizeof(struct sprite *);
 	} else {
 		return sizeof(struct sprite);
@@ -142,7 +142,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	s->id = id;
 	s->type = pack->type[id];
 	if (s->type == TYPE_ANIMATION) {
-		struct pack_animation * ani = pack->data[id];
+		struct pack_animation * ani = (struct pack_animation *)pack->data[id];
 		s->s.ani = ani;
 		s->frame = 0;
 		sprite_action(s, NULL);
@@ -153,7 +153,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 			s->data.children[i] = NULL;
 		}
 	} else {
-		s->s.pic = pack->data[id];
+		s->s.pic = (struct pack_picture *)pack->data[id];
 		s->start_frame = 0;
 		s->total_frame = 0;
 		s->frame = 0;
