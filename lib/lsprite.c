@@ -1,6 +1,7 @@
 #include "spritepack.h"
 #include "sprite.h"
 #include "label.h"
+#include "shader.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -23,6 +24,7 @@ newlabel(lua_State *L, struct pack_label *label) {
 	s->t.mat = NULL;
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
+	s->t.program = PROGRAM_DEFAULT;
 	s->message = false;
 	s->visible = true;
 	s->name = NULL;
@@ -359,6 +361,17 @@ lmount(lua_State *L) {
 	return 0;
 }
 
+static int
+lprogram(lua_State *L) {
+	struct sprite *s = self(L);
+	if (lua_isnoneornil(L,2)) {
+		s->t.program = PROGRAM_DEFAULT;
+	} else {
+		s->t.program = luaL_checkinteger(L,2);
+	}
+	return 0;
+}
+
 static void
 fill_srt(lua_State *L, struct srt *srt, int idx) {
 	luaL_checktype(L,idx,LUA_TTABLE);
@@ -481,6 +494,7 @@ lmethod(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "fetch", lfetch },
 		{ "mount", lmount },
+		{ "program", lprogram },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);

@@ -8,7 +8,8 @@
 #include <assert.h>
 
 #define MAX_COMMBINE 64
-#define MAX_PROGRAM 2
+#define MAX_PROGRAM 3
+
 #define ATTRIB_VERTEX 0
 #define ATTRIB_TEXTCOORD 1
 #define ATTRIB_COLOR 2

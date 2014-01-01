@@ -21,7 +21,7 @@ struct sprite {
 	struct matrix mat;
 	int start_frame;
 	int total_frame; 
-	int frame;	
+	int frame;
 	bool visible;
 	bool message;
 	const char *name;	// name for parent

@@ -49,6 +49,7 @@ struct sprite_trans {
 	struct matrix * mat;
 	uint32_t color;
 	uint32_t additive;
+	int program;
 };
 
 struct pack_part {

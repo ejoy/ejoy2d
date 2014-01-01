@@ -1,5 +1,6 @@
 #include "spritepack.h"
 #include "matrix.h"
+#include "shader.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -191,6 +192,8 @@ import_frame(struct pack_frame * pf, struct import_stream *is, int maxc) {
 		} else {
 			pp->t.additive = 0;
 		}
+		// todo: support other program
+		pp->t.program = PROGRAM_DEFAULT;
 	}
 }
 

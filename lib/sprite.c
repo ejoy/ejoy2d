@@ -22,7 +22,6 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 	}
 	matrix_srt(&tmp, srt);
 	int *m = tmp.m;
-	shader_program(PROGRAM_PICTURE, arg->additive);
 	for (i=0;i<picture->n;i++) {
 		struct pack_quad *q = &picture->rect[i];
 		int glid = texture_glid(q->texid);
@@ -59,7 +58,6 @@ sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struc
 	}
 	matrix_srt(&tmp, srt);
 	int *m = tmp.m;
-	shader_program(PROGRAM_PICTURE, arg->additive);
 	for (i=0;i<poly->n;i++) {
 		struct pack_poly *p = &poly->poly[i];
 		int glid = texture_glid(p->texid);
@@ -136,6 +134,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	s->t.mat = NULL;
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
+	s->t.program = PROGRAM_DEFAULT;
 	s->message = false;
 	s->visible = true;
 	s->name = NULL;
@@ -279,7 +278,19 @@ trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_trans *t
 	} else if (b->additive != 0) {
 		t->additive = color_add(t->additive, b->additive);
 	}
+	if (t->program == PROGRAM_DEFAULT) {
+		t->program = b->program;
+	}
 	return t;
+}
+
+static void
+switch_program(struct sprite_trans *t, int def) {
+	int prog = t->program;
+	if (prog == PROGRAM_DEFAULT) {
+		prog = def;
+	}
+	shader_program(prog, t->additive);
 }
 
 static void 
@@ -289,13 +300,17 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 	struct sprite_trans *t = trans_mul(&s->t, ts, &temp, &temp_matrix);
 	switch (s->type) {
 	case TYPE_PICTURE:
+		switch_program(t, PROGRAM_PICTURE);
 		sprite_drawquad(s->s.pic, srt, t);
 		return;
 	case TYPE_POLYGON:
+		switch_program(t, PROGRAM_PICTURE);
 		sprite_drawpolygon(s->s.poly, srt, t);
 		return;
 	case TYPE_LABEL:
 		if (s->data.text) {
+			// todo: use s->t.program
+			switch_program(t, PROGRAM_TEXT);
 			label_draw(s->data.text, s->s.label,srt,t);
 		}
 		return;

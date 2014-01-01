@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <lua.h>
 
+#define PROGRAM_DEFAULT -1
 #define PROGRAM_PICTURE 0
 #define PROGRAM_TEXT 1
 

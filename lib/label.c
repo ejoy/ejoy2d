@@ -173,7 +173,6 @@ draw_utf8(int unicode, int cx, int cy, int size, const struct srt *srt, uint32_t
 void
 label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg) {
 	shader_texture(Tex);
-	shader_program(PROGRAM_TEXT, arg->additive);
 	uint32_t color;
 	if (arg->color == 0xffffffff) {
 		color = l->color;
