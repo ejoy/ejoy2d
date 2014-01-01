@@ -84,7 +84,7 @@ checkluaversion(lua_State *L) {
 
 struct game *
 ejoy2d_game() {
-	struct game *G = malloc(sizeof(*G));
+	struct game *G = (struct game *)malloc(sizeof(*G));
 	lua_State *L = luaL_newstate();
 	checkluaversion(L);
 	G->L = L;

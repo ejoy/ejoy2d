@@ -85,7 +85,7 @@ ppm_data(struct ppm *ppm, FILE *f, int id, int skip) {
 		}
 		break;
 	case '6':	// RGB binary
-		tmp = malloc(n * 3);
+		tmp = (uint8_t *)malloc(n * 3);
 		if (fread(tmp, n*3, 1, f)==0) {
 			free(tmp);
 			return 0;
@@ -98,7 +98,7 @@ ppm_data(struct ppm *ppm, FILE *f, int id, int skip) {
 		free(tmp);
 		break;
 	case '5':	// ALPHA binary
-		tmp = malloc(n);
+		tmp = (uint8_t *)malloc(n);
 		if (fread(tmp, n, 1, f)==0) {
 			free(tmp);
 			return 0;
@@ -144,7 +144,7 @@ loadppm_from_file(FILE *rgb, FILE *alpha, struct ppm *ppm) {
 		}
 		ppm->step += 1;
 	}
-	ppm->buffer = malloc(ppm->height * ppm->width * ppm->step);
+	ppm->buffer = (uint8_t *)malloc(ppm->height * ppm->width * ppm->step);
 	if (rgb) {
 		if (!ppm_data(ppm, rgb, rgb_id, 0))
 			return 0;
@@ -264,7 +264,7 @@ loadtexture(lua_State *L) {
 	} else {
 		if (ppm.step == 4) {
 			type = Texture2DPixelFormat_RGBA4444;
-			uint16_t * tmp = malloc(ppm.width * ppm.height * sizeof(uint16_t));
+			uint16_t * tmp = (uint16_t * )malloc(ppm.width * ppm.height * sizeof(uint16_t));
 			int i;
 			for (i=0;i<ppm.width * ppm.height;i++) {
 				uint32_t r = ppm.buffer[i*4+0];
@@ -277,7 +277,7 @@ loadtexture(lua_State *L) {
 			ppm.buffer = (uint8_t*)tmp;
 		} else if (ppm.step == 3) {
 			type = Texture2DPixelFormat_RGB565;
-			uint16_t * tmp = malloc(ppm.width * ppm.height * sizeof(uint16_t));
+			uint16_t * tmp = (uint16_t *)malloc(ppm.width * ppm.height * sizeof(uint16_t));
 			int i;
 			for (i=0;i<ppm.width * ppm.height;i++) {
 				uint32_t r = ppm.buffer[i*3+0];
@@ -382,7 +382,7 @@ save_rgb(lua_State *L, int step, int depth) {
 		"%d\n"
 		, width, height, depth);
 	int i;
-	uint8_t *buffer = malloc(width * height * 3);
+	uint8_t *buffer = (uint8_t *)malloc(width * height * 3);
 	for (i=0;i<width * height;i++) {
 		lua_rawgeti(L, 5, i*step+1);
 		lua_rawgeti(L, 5, i*step+2);
@@ -418,7 +418,7 @@ save_alpha(lua_State *L, int step, int depth, int offset) {
 		"%d\n"
 		, width, height, depth);
 	int i;
-	uint8_t *buffer = malloc(width * height);
+	uint8_t *buffer = (uint8_t *)malloc(width * height);
 	for (i=0;i<width * height;i++) {
 		lua_rawgeti(L, 5, i*step+1+offset);
 		buffer[i] = (uint8_t)lua_tointeger(L, -1);

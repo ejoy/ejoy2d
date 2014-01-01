@@ -29,7 +29,7 @@ static const char * startscript =
 
 static struct WINDOWGAME *
 create_game() {
-	struct WINDOWGAME * g = malloc(sizeof(*g));
+	struct WINDOWGAME * g = (struct WINDOWGAME *)malloc(sizeof(*g));
 	g->game = ejoy2d_game();
 	g->intouch = 0;
 	return g;

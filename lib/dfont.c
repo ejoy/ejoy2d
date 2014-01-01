@@ -61,7 +61,7 @@ dfont_create(int width, int height) {
 	int max_char = max_line * width / TINY_FONT;
 	size_t ssize = max_char * sizeof(struct hash_rect);
 	size_t lsize = max_line * sizeof(struct font_line);
-	struct dfont *df = malloc(sizeof(struct dfont) + ssize + lsize);
+	struct dfont *df = (struct dfont *)malloc(sizeof(struct dfont) + ssize + lsize);
 	df->width = width;
 	df->height = height;
 	df->max_line = 0;
