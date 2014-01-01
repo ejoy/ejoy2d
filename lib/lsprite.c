@@ -16,7 +16,7 @@
 static struct sprite *
 newlabel(lua_State *L, struct pack_label *label) {
 	int sz = sizeof(struct sprite) + sizeof(struct pack_label);
-	struct sprite *s = lua_newuserdata(L, sz);
+	struct sprite *s = (struct sprite *)lua_newuserdata(L, sz);
 	// label never has a child
 	struct pack_label * pl = (struct pack_label *)(s+1);
 	*pl = *label;
@@ -93,7 +93,7 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 	if (sz == 0) {
 		return NULL;
 	}
-	struct sprite * s = lua_newuserdata(L, sz);
+	struct sprite * s = (struct sprite *)lua_newuserdata(L, sz);
 	sprite_init(s, pack, id, sz);
 	int i;
 	for (i=0;;i++) {
@@ -126,7 +126,7 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
  */
 static int
 lnew(lua_State *L) {
-	struct sprite_pack * pack = lua_touserdata(L,1);
+	struct sprite_pack * pack = (struct sprite_pack *)lua_touserdata(L, 1);
 	if (pack == NULL) {
 		return luaL_error(L, "Need a sprite pack");
 	}
@@ -149,7 +149,7 @@ readkey(lua_State *L, int idx, int key, double def) {
 
 static struct sprite *
 self(lua_State *L) {
-	struct sprite * s = lua_touserdata(L, 1);
+	struct sprite * s = (struct sprite *)lua_touserdata(L, 1);
 	if (s == NULL) {
 		luaL_error(L, "Need sprite");
 	}
@@ -223,7 +223,7 @@ lsetmessage(lua_State *L) {
 static int
 lsetmat(lua_State *L) {
 	struct sprite *s = self(L);
-	struct matrix *m = lua_touserdata(L, 2);
+	struct matrix *m = (struct matrix *)lua_touserdata(L, 2);
 	if (m == NULL)
 		return luaL_error(L, "Need a matrix");
 	s->t.mat = &s->mat;
@@ -348,7 +348,7 @@ lmount(lua_State *L) {
 		return luaL_error(L, "No child name %s", name);
 	}
 	lua_getuservalue(L, 1);
-	struct sprite * child = lua_touserdata(L, 3);
+	struct sprite * child = (struct sprite *)lua_touserdata(L, 3);
 	if (child == NULL) {
 		sprite_mount(s, index, NULL);
 		lua_pushnil(L);
@@ -427,7 +427,7 @@ lmulti_draw(lua_State *L) {
 	for (i = 0; i < cnt; i++) {
 		lua_rawgeti(L, 4, i+1);
 		lua_rawgeti(L, 5, i+1);
-		struct matrix * mat = lua_touserdata(L, -2);
+		struct matrix * mat = (struct matrix *)lua_touserdata(L, -2);
 		s->t.mat = mat;
 		s->t.color = lua_tounsigned(L, -1);
 		lua_pop(L, 2);
@@ -466,7 +466,7 @@ lookup(lua_State *L, struct sprite *root, struct sprite *spr) {
 
 static int
 ltest(lua_State *L) {
-	struct sprite * s = lua_touserdata(L,1);
+	struct sprite * s = (struct sprite *)lua_touserdata(L, 1);
 	if (s == NULL) {
 		return luaL_error(L, "Need a sprite");
 	}

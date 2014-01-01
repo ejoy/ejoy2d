@@ -6,7 +6,7 @@
 
 static int
 lnew(lua_State *L) {
-	struct matrix *m = lua_newuserdata(L, sizeof(*m));
+	struct matrix *m = (struct matrix *)lua_newuserdata(L, sizeof(*m));
 	int *mat = m->m;
 	if (lua_istable(L,1) && lua_rawlen(L,1)==6) {
 		int i;
@@ -28,8 +28,8 @@ lnew(lua_State *L) {
 
 static int
 lmul(lua_State *L) {
-	struct matrix *m1 = lua_touserdata(L,1);
-	struct matrix *m2 = lua_touserdata(L,2);
+	struct matrix *m1 = (struct matrix *)lua_touserdata(L, 1);
+	struct matrix *m2 = (struct matrix *)lua_touserdata(L, 2);
 	struct matrix source = *m1;
 	matrix_mul(m1, &source, m2);
 	lua_settop(L,1);
@@ -38,7 +38,7 @@ lmul(lua_State *L) {
 
 static int
 linverse(lua_State *L) {
-	struct matrix *m = lua_touserdata(L,1);
+	struct matrix *m = (struct matrix *)lua_touserdata(L, 1);
 	struct matrix source = *m;
 	matrix_inverse(&source, m);
 	lua_settop(L,1);
@@ -47,7 +47,7 @@ linverse(lua_State *L) {
 
 static int
 ltrans(lua_State *L) {
-	struct matrix *m = lua_touserdata(L,1);
+	struct matrix *m = (struct matrix *)lua_touserdata(L, 1);
 	double x = luaL_checknumber(L,2);
 	double y = luaL_checknumber(L,3);
 	m->m[4] += x * 8;
@@ -59,7 +59,7 @@ ltrans(lua_State *L) {
 
 static int
 lscale(lua_State *L) {
-	struct matrix *m = lua_touserdata(L,1);
+	struct matrix *m = (struct matrix *)lua_touserdata(L, 1);
 	double sx = luaL_checknumber(L,2);
 	double sy = luaL_optnumber(L,3,sx);
 	matrix_scale(m, sx * 1024, sy * 1024);
@@ -70,7 +70,7 @@ lscale(lua_State *L) {
 
 static int
 lrot(lua_State *L) {
-	struct matrix *m = lua_touserdata(L,1);
+	struct matrix *m = (struct matrix *)lua_touserdata(L, 1);
 	double r = luaL_checknumber(L,2);
 	matrix_rot(m, r * (1024.0 / 360.0));
 
@@ -80,7 +80,7 @@ lrot(lua_State *L) {
 
 static int
 ltostring(lua_State *L) {
-	struct matrix *mat = lua_touserdata(L,1);
+	struct matrix *mat = (struct matrix *)lua_touserdata(L, 1);
 	int *m = mat->m;
 	lua_pushfstring(L, "Mat(%d,%d,%d,%d,%d,%d)",
 		m[0],m[1],m[2],m[3],m[4],m[5]);

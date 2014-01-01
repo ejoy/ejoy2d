@@ -76,7 +76,7 @@ font_glyph(const char * str, int unicode, void * buffer, struct font_context *ct
 	int w = (gm.gmBlackBoxX + 3) & ~3;
 	int h = gm.gmBlackBoxY;
 
-	uint8_t * buf = buffer;
+	uint8_t * buf = (uint8_t *)buffer;
 	int offx = gm.gmptGlyphOrigin.x;
 	int offy = ctx->ascent - gm.gmptGlyphOrigin.y;
 	assert(offx >= 0);
