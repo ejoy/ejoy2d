@@ -82,11 +82,18 @@ checkluaversion(lua_State *L) {
 	}
 }
 
+#define STR_VALUE(arg)	#arg
+#define _OS_STRING(name) STR_VALUE(name)
+#define OS_STRING _OS_STRING(EJOY2D_OS)
+
 struct game *
 ejoy2d_game() {
 	struct game *G = (struct game *)malloc(sizeof(*G));
 	lua_State *L = luaL_newstate();
 	checkluaversion(L);
+	lua_pushliteral(L, OS_STRING);
+	lua_setglobal(L , "OS");
+
 	G->L = L;
 	G->real_time = 0;
 	G->logic_time = 0;

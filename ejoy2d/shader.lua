@@ -1,5 +1,12 @@
 local s = require "ejoy2d.shader.c"
 
+local PRECISION = "precision lowp float;\n"
+
+if OS == "LINUX" then
+	-- some linux opengl driver can't compile the shader with precision
+	PRECISION = ""
+end
+
 local sprite_fs = [[
 varying vec2 v_texcoord;
 varying vec4 v_color;
@@ -44,8 +51,8 @@ void main() {
 local shader = {}
 
 function shader.init()
-	s.load(0, sprite_fs, sprite_vs)
-	s.load(1, text_fs, sprite_vs)
+	s.load(0, PRECISION .. sprite_fs, PRECISION .. sprite_vs)
+	s.load(1, PRECISION .. text_fs, PRECISION .. sprite_vs)
 end
 
 shader.draw = s.draw
