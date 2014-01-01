@@ -11,6 +11,7 @@ local turret = obj.turret
 
 local obj2 = ej.sprite("sample","mine")
 obj2.resource.frame = 70
+obj2.label.text = "Hello World"
 
 local game = {}
 

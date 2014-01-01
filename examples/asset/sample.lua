@@ -729,9 +729,17 @@ return {
 		{id = 36 },
 		{id = 37 },
 		{id = 23, name = 'resource' },
+		{id = 39 , name = 'label' },
 	},
 	{
-		{	0,1,2,3,4,5	},
+		{	0,1,2,3,4,5,
+			{ index = 6, mat = {1024,0,0,1024,-800,800}},
+		},
 	},
+},
+{
+	type = "label",
+	id = 39,
+	font = "", color = 0xffffffff, align = 2, size = 20, width = 100, height = 20,
 },
 }

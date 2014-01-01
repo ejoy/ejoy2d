@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <assert.h>
+#include <string.h>
 
 void
 font_create(int font_size, struct font_context *ctx) {
@@ -57,6 +58,7 @@ font_size(const char *str, int unicode, struct font_context *ctx) {
 void 
 font_glyph(const char * str, int unicode, void * buffer, struct font_context *ctx) {
 	GLYPHMETRICS gm;
+	memset(&gm,0,sizeof(gm));
 
 	uint8_t tmp[ctx->w * ctx->h];
 	memset(tmp,0, ctx->w * ctx->h);
