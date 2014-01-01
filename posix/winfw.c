@@ -47,6 +47,15 @@ traceback(lua_State *L) {
 	return 1;
 }
 
+#ifdef __APPLE__
+static int
+read_exepath(char * buf, int bufsz) {
+    const char *path = getenv("_");
+    if (!path)
+        return -1;
+    return snprintf(buf, bufsz, "local path = '%s'\n", path);
+}
+#else
 static int
 read_exepath(char * buf, int bufsz) {
     int  count;
@@ -58,6 +67,8 @@ read_exepath(char * buf, int bufsz) {
     tmp[count] = '\0';
     return snprintf(buf, bufsz, "local path = '%s'\n", tmp);
 }
+#endif
+
 
 void
 ejoy2d_win_init(int argc, char *argv[]) {
