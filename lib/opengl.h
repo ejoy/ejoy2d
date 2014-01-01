@@ -3,7 +3,7 @@
 
 #ifdef __APPLE__
 
-#include <OpenGLES/ES2/gl.h>
+#include <OpenGL/gl.h>
 
 #else
 
