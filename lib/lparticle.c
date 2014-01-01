@@ -115,7 +115,7 @@ static struct particle_system *
 _new(struct lua_State *L) {
 	int maxParticles = dict_int(L,"maxParticles");
 	int totalsize = maxParticles * (sizeof(struct particle) + sizeof(struct matrix) + sizeof(struct particle_config));
-	struct particle_system * ps = lua_newuserdata(L, totalsize);
+	struct particle_system * ps = (struct particle_system *)lua_newuserdata(L, totalsize);
 	lua_insert(L, -2);
 	memset(ps, 0, totalsize);
 	init_with_particles(ps, maxParticles);
@@ -139,7 +139,7 @@ lnew(lua_State *L) {
 static int
 lupdate(lua_State *L) {
 	luaL_checktype(L,1,LUA_TUSERDATA);
-	struct particle_system *ps = lua_touserdata(L,1);
+	struct particle_system *ps = (struct particle_system *)lua_touserdata(L, 1);
 	float dt = luaL_checknumber(L,2);
 	// float x = luaL_checknumber(L,3);
 	// float y = luaL_checknumber(L,4);
@@ -156,7 +156,7 @@ ldata(lua_State *L) {
 	luaL_checktype(L,1,LUA_TUSERDATA);
 	luaL_checktype(L,2,LUA_TTABLE);
 	luaL_checktype(L,3,LUA_TTABLE);
-	struct particle_system *ps = lua_touserdata(L,1);
+	struct particle_system *ps = (struct particle_system *)lua_touserdata(L, 1);
 	int n = ps->particleCount;
 	int i;
 	for (i=0;i<n;i++) {
