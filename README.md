@@ -7,6 +7,7 @@ Make
 For Windows , you need mingw32 .
 
 * Install Lua 5.2.3
+* Copy lua52.dll to /usr/local/bin
 * Install glew 1.9
 * make or make mingw
 * ej2d examples/ex01.lua to test
