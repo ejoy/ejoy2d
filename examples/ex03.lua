@@ -8,6 +8,7 @@ pack.load {
 	"sample",
 }
 particle.preload(fw.WorkDir.."examples/asset/particle")
+
 local ps = particle.new("ps")
 
 local obj = ej.sprite("sample","cannon")
