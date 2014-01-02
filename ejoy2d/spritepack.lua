@@ -14,6 +14,7 @@ local TYPE_PICTURE = assert(pack.TYPE_PICTURE)
 local TYPE_ANIMATION = assert(pack.TYPE_ANIMATION)
 local TYPE_POLYGON = assert(pack.TYPE_POLYGON)
 local TYPE_LABEL = assert(pack.TYPE_LABEL)
+local TYPE_PANNEL = assert(pack.TYPE_PANNEL)
 
 local function pack_picture(src, ret)
 	table.insert(ret , pack.byte(TYPE_PICTURE))
@@ -134,6 +135,14 @@ local function pack_label(data, ret)
 	return pack.label_size()
 end
 
+local function pack_pannel(data, ret)
+	table.insert(ret, pack.byte(TYPE_PANNEL))
+	table.insert(ret, pack.int32(data.width))
+	table.insert(ret, pack.int32(data.height))
+	table.insert(ret, pack.byte(data.scissor and 1 or 0))
+	return pack.pannel_size()
+end
+
 local function pack_animation(data, ret)
 	local size = 0
 	local max_id = 0
@@ -204,6 +213,9 @@ function spritepack.pack( data )
 				end
 			elseif v.type == "label" then
 				local sz = pack_label(v, ret.data)
+				ret.size = ret.size + sz
+			elseif v.type == "pannel" then
+				local sz = pack_pannel(v, ret.data)
 				ret.size = ret.size + sz
 			else
 				error ("Unknown type " .. tostring(v.type))

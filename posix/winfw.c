@@ -24,7 +24,7 @@ static const char * startscript =
 "assert(script, 'I need a script name')\n"
 "path = string.match(path,[[(.*)/[^/]*$]])\n"
 "package.path = path .. [[/?.lua;]] .. path .. [[/?/init.lua]]\n"
-"local f = loadfile(script)\n"
+"local f = assert(loadfile(script))\n"
 "f(script)\n"
 ;
 

@@ -17,6 +17,7 @@ struct sprite {
 		struct pack_picture *pic;
 		struct pack_polygon *poly;
 		struct pack_label *label;
+		struct pack_pannel *pannel;
 	} s;
 	struct matrix mat;
 	int start_frame;
@@ -28,6 +29,7 @@ struct sprite {
 	union {
 		struct sprite * children[1];
 		const char * text;
+		int scissor;
 	} data;
 };
 

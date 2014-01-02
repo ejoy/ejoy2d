@@ -244,6 +244,16 @@ lsetprogram(lua_State *L) {
 }
 
 static int
+lsetscissor(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_PANNEL) {
+		return luaL_error(L, "Only pannel can set scissor");
+	}
+	s->data.scissor = lua_toboolean(L,2);
+	return 0;
+}
+
+static int
 lgetname(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->name == NULL)
@@ -332,7 +342,8 @@ lsetter(lua_State *L) {
 		{"color", lsetcolor},
 		{"additive", lsetadditive },
 		{"message", lsetmessage },
-		{ "program", lsetprogram },
+		{"program", lsetprogram },
+		{"scissor", lsetscissor },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
