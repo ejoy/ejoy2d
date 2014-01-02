@@ -27,7 +27,7 @@ struct vertex {
 	float vy;
 	float tx;
 	float ty;
-	uint32_t color;
+	uint8_t argb[4];
 };
 
 struct quad {
@@ -205,7 +205,7 @@ rs_commit() {
 	glEnableVertexAttribArray(ATTRIB_TEXTCOORD);
 	glVertexAttribPointer(ATTRIB_TEXTCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), BUFFER_OFFSET(8));
 	glEnableVertexAttribArray(ATTRIB_COLOR);
-	glVertexAttribPointer(ATTRIB_COLOR, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(struct vertex), BUFFER_OFFSET(16));
+	glVertexAttribPointer(ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(struct vertex), BUFFER_OFFSET(16));
 	glDrawElements(GL_TRIANGLES, 6 * RS->object, GL_UNSIGNED_BYTE, 0);
 	RS->object = 0;
 }
@@ -243,7 +243,10 @@ shader_draw(const float vb[16], uint32_t color) {
 		q->p[i].vy = vb[i*4+1];
 		q->p[i].tx = vb[i*4+2];
 		q->p[i].ty = vb[i*4+3];
-		q->p[i].color = color;
+		q->p[i].argb[0] = (color >> 24) & 0xff;
+		q->p[i].argb[1] = (color >> 16) & 0xff;
+		q->p[i].argb[2] = (color >> 8) & 0xff;
+		q->p[i].argb[3] = (color) & 0xff;
 	}
 	if (++RS->object >= MAX_COMMBINE) {
 		rs_commit();
@@ -260,7 +263,10 @@ shader_drawpolygon(int n, const float *vb, uint32_t color) {
 		p[i].vy = vb[i*4+1];
 		p[i].tx = vb[i*4+2];
 		p[i].ty = vb[i*4+3];
-		p[i].color = color;
+		p[i].argb[0] = (color >> 24) & 0xff;
+		p[i].argb[1] = (color >> 16) & 0xff;
+		p[i].argb[2] = (color >> 8) & 0xff;
+		p[i].argb[3] = (color) & 0xff;
 	}
 	
 	glBindBuffer(GL_ARRAY_BUFFER, RS->vertex_buffer);
