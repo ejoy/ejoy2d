@@ -2,8 +2,8 @@ local s = require "ejoy2d.shader.c"
 
 local PRECISION = "precision lowp float;\n"
 
-if OS == "LINUX" then
-	-- some linux opengl driver can't compile the shader with precision
+if OS == "LINUX" or OS == "MACOSX" then
+	-- some linux and macosx opengl driver can't compile the shader with precision
 	PRECISION = ""
 end
 
