@@ -12,7 +12,7 @@ lnew(lua_State *L) {
 		int i;
 		for (i=0;i<6;i++) {
 			lua_rawgeti(L,1,i+1);
-			mat[i] = lua_tointeger(L,-1);
+			mat[i] = (int)lua_tointeger(L,-1);
 			lua_pop(L,1);
 		}
 	} else {

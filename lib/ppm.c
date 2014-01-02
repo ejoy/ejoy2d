@@ -224,7 +224,7 @@ loadppm(lua_State *L) {
 
 static int
 loadtexture(lua_State *L) {
-	int id = luaL_checkinteger(L,1);
+	int id = (int)luaL_checkinteger(L,1);
 	size_t sz = 0;
 	const char * filename = luaL_checklstring(L, 2, &sz);
 	char tmp[sz + 5];
@@ -369,8 +369,8 @@ save_rgb(lua_State *L, int step, int depth) {
 	size_t sz = 0;
 	const char * filename = lua_tolstring(L, 1, &sz);
 	char tmp[sz + 5];
-	int width = lua_tointeger(L, 3);
-	int height = lua_tointeger(L, 4);
+	int width = (int)lua_tointeger(L, 3);
+	int height = (int)lua_tointeger(L, 4);
 	sprintf(tmp, "%s.ppm", filename);
 	FILE *f = fopen(tmp,"wb");
 	if (f == NULL) {
@@ -405,8 +405,8 @@ save_alpha(lua_State *L, int step, int depth, int offset) {
 	size_t sz = 0;
 	const char * filename = lua_tolstring(L, 1, &sz);
 	char tmp[sz + 5];
-	int width = lua_tointeger(L, 3);
-	int height = lua_tointeger(L, 4);
+	int width = (int)lua_tointeger(L, 3);
+	int height = (int)lua_tointeger(L, 4);
 	sprintf(tmp, "%s.pgm", filename);
 	FILE *f = fopen(tmp,"wb");
 	if (f == NULL) {
@@ -437,8 +437,8 @@ saveppm(lua_State *L) {
 	struct ppm ppm;
 	luaL_checktype(L,1,LUA_TSTRING);
 	ppm_type(L, luaL_checkstring(L, 2), &ppm);
-	ppm.width = luaL_checkinteger(L, 3);
-	ppm.height = luaL_checkinteger(L, 4);
+	ppm.width = (int)luaL_checkinteger(L, 3);
+	ppm.height = (int)luaL_checkinteger(L, 4);
 	luaL_checktype(L, 5, LUA_TTABLE);
 	int n = (int)lua_rawlen(L,5);
 	if (n != ppm.width * ppm.height * ppm.step) {

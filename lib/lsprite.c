@@ -49,10 +49,10 @@ newlabel(lua_State *L, struct pack_label *label) {
 static int
 lnewlabel(lua_State *L) {
 	struct pack_label label;
-	label.width = luaL_checkinteger(L,1);
-	label.height = luaL_checkinteger(L,2);
-	label.size = luaL_checkinteger(L,3);
-	label.color = luaL_optunsigned(L,4,0xffffffff);
+	label.width = (int)luaL_checkinteger(L,1);
+	label.height = (int)luaL_checkinteger(L,2);
+	label.size = (int)luaL_checkinteger(L,3);
+	label.color = (uint32_t)luaL_optunsigned(L,4,0xffffffff);
 	const char * align = lua_tostring(L,5);
 	if (align == NULL) {
 		label.align = LABEL_ALIGN_LEFT;
@@ -130,7 +130,7 @@ lnew(lua_State *L) {
 	if (pack == NULL) {
 		return luaL_error(L, "Need a sprite pack");
 	}
-	int id = luaL_checkinteger(L, 2);
+	int id = (int)luaL_checkinteger(L, 2);
 	struct sprite * s = newsprite(L, pack, id);
 	if (s) {
 		return 1;
@@ -168,7 +168,7 @@ lgetframe(lua_State *L) {
 static int
 lsetframe(lua_State *L) {
 	struct sprite * s = self(L);
-	int frame = luaL_checkinteger(L,2);
+	int frame = (int)luaL_checkinteger(L,2);
 	sprite_setframe(s, frame);
 	return 0;
 }
@@ -238,7 +238,7 @@ lsetprogram(lua_State *L) {
 	if (lua_isnoneornil(L,2)) {
 		s->t.program = PROGRAM_DEFAULT;
 	} else {
-		s->t.program = luaL_checkinteger(L,2);
+		s->t.program = (int)luaL_checkinteger(L,2);
 	}
 	return 0;
 }
@@ -423,7 +423,7 @@ ldraw(lua_State *L) {
 static int
 lmulti_draw(lua_State *L) {
 	struct sprite *s = self(L);
-	int cnt = luaL_checkinteger(L,3);
+	int cnt = (int)luaL_checkinteger(L,3);
 	if (cnt == 0)
 		return 0;
 	luaL_checktype(L,4,LUA_TTABLE);
@@ -441,7 +441,7 @@ lmulti_draw(lua_State *L) {
 		lua_rawgeti(L, 5, i+1);
 		struct matrix * mat = (struct matrix *)lua_touserdata(L, -2);
 		s->t.mat = mat;
-		s->t.color = lua_tounsigned(L, -1);
+		s->t.color = (uint32_t)lua_tounsigned(L, -1);
 		lua_pop(L, 2);
 
 		sprite_draw(s, &srt);
