@@ -28,7 +28,7 @@ color4f(struct color4f *c4f) {
 	uint8_t gg = (int)(c4f->g*255);
 	uint8_t bb = (int)(c4f->b*255);
 	uint8_t aa = (int)(c4f->a*255);
-	return (uint32_t)aa << 24 | (uint32_t)rr << 16 | (uint32_t)gg << 8 | bb;
+	return (uint32_t)rr << 24 | (uint32_t)gg << 16 | (uint32_t)bb << 8 | aa;
 }
 
 static int
