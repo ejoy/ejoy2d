@@ -26,7 +26,7 @@ For Mac OS ,
 * Install glew 1.9
 * Install freetype 2
 * Install XQuartz
-* make or make macos
+* make or make macosx
 * ./ej2d examples/ex01.lua to test
 
 Question?

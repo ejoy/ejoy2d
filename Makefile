@@ -19,7 +19,8 @@ lib/lmatrix.c \
 lib/dfont.c \
 lib/label.c \
 lib/particle.c \
-lib/lparticle.c
+lib/lparticle.c \
+lib/scissor.c
 
 UNAME=$(shell uname)
 SYS=$(if $(filter Linux%,$(UNAME)),linux,\

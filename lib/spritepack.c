@@ -238,6 +238,14 @@ import_label(struct import_stream *is) {
 }
 
 static void
+import_pannel(struct import_stream *is) {
+	struct pack_pannel *pp = (struct pack_pannel *)ialloc(is->alloc, sizeof(struct pack_pannel));
+	pp->width = import_int32(is);
+	pp->height = import_int32(is);
+	pp->scissor = import_byte(is);
+}
+
+static void
 import_sprite(struct import_stream *is) {
 	int id = import_word(is);
 	if (id <0 || id >= is->pack->n) {
@@ -262,6 +270,9 @@ import_sprite(struct import_stream *is) {
 		break;
 	case TYPE_LABEL:
 		import_label(is);
+		break;
+	case TYPE_PANNEL:
+		import_pannel(is);
 		break;
 	default:
 		luaL_error(is->alloc->L, "Invalid stream : Unknown type %d, id=%d", type, id);
@@ -520,6 +531,12 @@ llabel_size(lua_State *L) {
 	return 1;
 }
 
+static int
+lpannel_size(lua_State *L) {
+	lua_pushinteger(L, sizeof(struct pack_pannel));
+	return 1;
+}
+
 void 
 dump_pack(struct sprite_pack *pack) {
 	if (pack == NULL)
@@ -561,6 +578,7 @@ ejoy2d_spritepack(lua_State *L) {
 		{ "part_size", lpart_size },
 		{ "string_size" , lstring_size },
 		{ "label_size", llabel_size },
+		{ "pannel_size", lpannel_size },
 		{ "import", limport },
 		{ "dump", ldumppack },
 		{ NULL, NULL },
@@ -576,6 +594,8 @@ ejoy2d_spritepack(lua_State *L) {
 	lua_setfield(L, -2, "TYPE_POLYGON");
 	lua_pushinteger(L, TYPE_LABEL);
 	lua_setfield(L, -2, "TYPE_LABEL");
+	lua_pushinteger(L, TYPE_PANNEL);
+	lua_setfield(L, -2, "TYPE_PANNEL");
 
 	return 1;
 }
