@@ -19,7 +19,7 @@ static struct WINDOWGAME *G = NULL;
 
 static const char * startscript =
 "local path, script = ...\n"
-"require(\"ejoy2d.framework\").WorkDir = path\n"
+"require(\"ejoy2d.framework\").WorkDir = path..'/'\n"
 "assert(script, 'I need a script name')\n"
 "script = path..[[/]]..script\n"
 "package.path = path .. [[/?.lua;]] .. path .. [[/?/init.lua;./?.lua;./?/init.lua]]\n"
@@ -34,13 +34,13 @@ create_game() {
 	return g;
 }
 
-static int 
+static int
 traceback(lua_State *L) {
 	const char *msg = lua_tostring(L, 1);
 	if (msg)
 		luaL_traceback(L, L, msg, 1);
 	else if (!lua_isnoneornil(L, 1)) {
-	if (!luaL_callmeta(L, 1, "__tostring")) 
+	if (!luaL_callmeta(L, 1, "__tostring"))
 		lua_pushliteral(L, "(no error message)");
 	}
 	return 1;
@@ -57,7 +57,7 @@ ejoy2d_win_init(int orix, int oriy, int width, int height, float scale, const ch
 		const char *msg = lua_tostring(L,-1);
 		fault("%s", msg);
 	}
-  
+
   lua_pushstring(L, folder);
   lua_pushstring(L, "examples/ex03.lua");
 
@@ -73,18 +73,18 @@ ejoy2d_win_init(int orix, int oriy, int width, int height, float scale, const ch
 	ejoy2d_game_start(G->game);
 }
 
-void 
+void
 ejoy2d_win_update() {
 	ejoy2d_game_update(G->game, 0.01f);
 }
 
-void 
+void
 ejoy2d_win_frame() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	ejoy2d_game_drawframe(G->game);
 }
 
-void 
+void
 ejoy2d_win_touch(int x, int y,int touch) {
 	switch (touch) {
 	case TOUCH_BEGIN:

@@ -4,11 +4,10 @@ local fw = require "ejoy2d.framework"
 local particle = require "ejoy2d.particle"
 
 pack.load {
-	pattern = fw.WorkDir..[[/examples/asset/?]],
+	pattern = fw.WorkDir..[[examples/asset/?]],
 	"sample",
 }
-
-particle.preload(fw.WorkDir.."/examples/asset/particle")
+particle.preload(fw.WorkDir.."examples/asset/particle")
 local ps = particle.new("ps")
 
 local obj = ej.sprite("sample","cannon")
