@@ -202,6 +202,9 @@ struct particle_system {
 	/** Is the emitter active */
 	bool isActive;
 
+	/* Is the system has particle alive */
+	bool isAlive;
+
 	/** Quantity of particles that are being simulated at the moment */
 	int particleCount;
 

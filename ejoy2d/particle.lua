@@ -10,8 +10,18 @@ local particle = {}
 
 local particle_meta = {__index = {mat = {}, col = {}}}
 
-function particle_meta.__index:update(dt, x, y)
-	c.update(self.particle, dt, x, y)
+function particle_meta.__index:update(dt)
+	if not self.is_active then
+		return false
+	end
+
+	self.is_active = c.update(self.particle, dt)
+
+	if not self.is_active and self.end_callback ~= nil then
+		self.end_callback()
+		self.end_callback = nil
+	end
+	return self.is_active
 end
 
 function particle_meta.__index:data()
@@ -39,7 +49,7 @@ function particle.preload(config_path)
 	end
 end
 
-function particle.new(name)
+function particle.new(name, callback)
 	local config = rawget(particle_configs, name)
 	local texid = config.picture
 	local cobj = c.new(config)
@@ -47,6 +57,8 @@ function particle.new(name)
 	if cobj then
 		return debug.setmetatable({particle = cobj,
 			sprite = ej.sprite("particle", texid),
+			end_callback = callback,
+			is_active = true,
 			src_blend = config.blendFuncSource,
 			dst_blend = config.blendFuncDestination},
 			particle_meta)

@@ -291,5 +291,7 @@ particle_system_update(struct particle_system *ps, float dt) {
 			_remove_particle(ps, i);
 		}
 	}
+
+	ps->isAlive = ps->particleCount > 0;
 }
 

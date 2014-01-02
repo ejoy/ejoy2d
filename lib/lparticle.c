@@ -147,7 +147,7 @@ lupdate(lua_State *L) {
 	// ps->sourcePosition.y = y;
 	particle_system_update(ps, dt);
 
-	lua_pushboolean(L, ps->isActive);
+	lua_pushboolean(L, ps->isActive || ps->isAlive);
 	return 1;
 }
 
