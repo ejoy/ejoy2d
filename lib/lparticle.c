@@ -17,7 +17,7 @@ dict_float(lua_State *L, const char *key) {
 static int
 dict_int(lua_State *L, const char *key) {
 	lua_getfield(L, -1, key);
-	int v = lua_tointeger(L, -1);
+	int v = (int)lua_tointeger(L, -1);
 	lua_pop(L,1);
 	return v;
 }
