@@ -1,20 +1,21 @@
 //
 //  EJAppDelegate.m
-//  example
+//  sample
 //
-//  Created by Lei Yu on 14-1-2.
-//  Copyright (c) 2014年 ejoy2d. All rights reserved.
+//  Created by Lei Yu on 13-12-31.
+//  Copyright (c) 2013年 ejoy2d. All rights reserved.
 //
 
 #import "EJAppDelegate.h"
+#import "EJViewController.h"
 
 @implementation EJAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    // Override point for customization after application launch.
-    self.window.backgroundColor = [UIColor whiteColor];
+    self.viewController = [[EJViewController alloc] init];
+    self.window.rootViewController = self.viewController;
     [self.window makeKeyAndVisible];
     return YES;
 }
