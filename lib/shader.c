@@ -149,11 +149,12 @@ program_init(struct program * p, const char *FS, const char *VS) {
 		glAttachShader(p->prog, vs);
 	}
 
-	link(p);
-	
 	glBindAttribLocation(p->prog, ATTRIB_VERTEX, "position");
 	glBindAttribLocation(p->prog, ATTRIB_TEXTCOORD, "texcoord");
 	glBindAttribLocation(p->prog, ATTRIB_COLOR, "color");
+
+	link(p);
+
 	p->additive = glGetUniformLocation(p->prog, "additive");
 	p->arg = 0;
 	set_color(p->additive, 0);
