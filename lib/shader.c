@@ -278,7 +278,7 @@ shader_drawpolygon(int n, const float *vb, uint32_t color) {
 	glEnableVertexAttribArray(ATTRIB_TEXTCOORD);
 	glVertexAttribPointer(ATTRIB_TEXTCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), BUFFER_OFFSET(8));
 	glEnableVertexAttribArray(ATTRIB_COLOR);
-	glVertexAttribPointer(ATTRIB_COLOR, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(struct vertex), BUFFER_OFFSET(16));
+	glVertexAttribPointer(ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(struct vertex), BUFFER_OFFSET(16));
 	glDrawArrays(GL_TRIANGLE_FAN, 0, n);
 }
 
