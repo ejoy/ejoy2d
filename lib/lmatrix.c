@@ -69,6 +69,21 @@ lscale(lua_State *L) {
 }
 
 static int
+lidentity(lua_State *L) {
+	struct matrix *m = (struct matrix *)lua_touserdata(L,1);
+    int *mat = m->m;
+    mat[0] = 1024;
+    mat[1] = 0;
+    mat[2] = 0;
+    mat[3] = 1024;
+    mat[4] = 0;
+    mat[5] = 0;
+	
+	lua_settop(L,1);
+	return 1;
+}
+
+static int
 lrot(lua_State *L) {
 	struct matrix *m = (struct matrix *)lua_touserdata(L, 1);
 	double r = luaL_checknumber(L,2);
@@ -97,6 +112,7 @@ ejoy2d_matrix(lua_State *L) {
 		{ "inverse", linverse },
 		{ "mul", lmul },
 		{ "tostring", ltostring },
+        {"identity", lidentity},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
