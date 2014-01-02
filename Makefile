@@ -53,7 +53,7 @@ linux : $(SRC) ej2d
 
 macosx : OS := MACOSX
 macosx : TARGET := ej2d
-macosx : CFLAGS += -L/usr/X11R6/include -I/usr/include -I/usr/local/include $(shell freetype-config --cflags)
+macosx : CFLAGS += -L/usr/X11R6/include -I/usr/include -I/usr/local/include $(shell freetype-config --cflags) -D __MACOSX
 macosx : LDFLAGS += -L/usr/X11R6/lib  -lGLEW -lGL -lX11 -lfreetype -llua -lm
 macosx : SRC += posix/window.c posix/winfw.c posix/winfont.c
 

@@ -75,6 +75,9 @@ static const struct dfont_rect *
 gen_char(int unicode, const char * utf8, int size) {
 	struct font_context ctx;
 	font_create(size, &ctx);
+  if (ctx.font == NULL) {
+    return NULL;
+  }
 	font_size(utf8, unicode, &ctx);
 	const struct dfont_rect * rect = dfont_insert(Dfont, unicode, size, ctx.w,ctx.h);
 	if (rect == NULL) {
