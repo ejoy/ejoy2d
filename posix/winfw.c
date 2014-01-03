@@ -19,7 +19,7 @@ static const int BUFSIZE = 2048;
 static struct WINDOWGAME *G = NULL;
 
 static const char * startscript =
-"local _,script = ...\n"
+"local path,script = ...\n"
 "require(\"ejoy2d.framework\").WorkDir = ''\n"
 "assert(script, 'I need a script name')\n"
 "path = string.match(path,[[(.*)/[^/]*$]])\n"
@@ -49,24 +49,19 @@ traceback(lua_State *L) {
 }
 
 #ifdef __APPLE__
-static int
+const char*
 read_exepath(char * buf, int bufsz) {
-    const char *path = getenv("_");
-    if (!path)
-        return -1;
-    return snprintf(buf, bufsz, "local path = '%s'\n", path);
+    return getenv("_");
 }
 #else
-static int
+const char*
 read_exepath(char * buf, int bufsz) {
     int  count;
-    char tmp[BUFSIZE];
-    count = readlink("/proc/self/exe", tmp, bufsz);
+    count = readlink("/proc/self/exe", buf, bufsz);
 
     if (count < 0)
-        return -1;
-    tmp[count] = '\0';
-    return snprintf(buf, bufsz, "local path = '%s'\n", tmp);
+        return NULL;
+    return buf;
 }
 #endif
 
@@ -79,20 +74,19 @@ ejoy2d_win_init(int argc, char *argv[]) {
 	int tb = lua_gettop(L);
 
     char buf[BUFSIZE];
-    int cnt = read_exepath(buf, BUFSIZE);
-    if (cnt < 0)
+    const char *pathbuf = read_exepath(buf, BUFSIZE);
+    if (pathbuf == NULL)
         fault("can't read exepath");
-    char * bufp = buf + cnt;
-    snprintf(bufp, BUFSIZE - cnt, startscript);
 
-	int err = luaL_loadstring(L, buf);
+	int err = luaL_loadstring(L, startscript);
 	if (err) {
 		const char *msg = lua_tostring(L,-1);
 		fault("%s", msg);
 	}
 
+    lua_pushstring(L, pathbuf);
 	int i;
-	for (i=0;i<argc;i++) {
+	for (i=1;i<argc;i++) {
 		lua_pushstring(L, argv[i]);
 	}
 

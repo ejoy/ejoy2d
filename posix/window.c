@@ -24,10 +24,6 @@ static GC gc;
 static GLXContext g_context = 0;
 struct X_context g_X;
 
-void init_x();
-void close_x();
-void redraw();
-
 static uint32_t
 _gettime(void) {
 	uint32_t t;
@@ -88,7 +84,7 @@ glx_init(struct X_context *X)
 	return 0;
 }
 
-void
+static void
 init_x() {
     unsigned long black,white;
     Display *dis;
@@ -128,14 +124,6 @@ init_x() {
 	}
 };
 
-void close_x() {
-    Display *dis = g_X.display;
-    XFreeGC(dis, gc);
-    XDestroyWindow(dis, g_X.wnd);
-    XCloseDisplay(dis); 
-    exit(1);    
-}
-
 int
 main(int argc, char *argv[]) {
     XEvent event;
@@ -146,7 +134,6 @@ main(int argc, char *argv[]) {
     ejoy2d_win_init(argc, argv);
 
     for (;;) {
-        
         while(XPending(g_X.display) > 0) {  
             XNextEvent(g_X.display, &event);
             if (XFilterEvent(&event,None))
