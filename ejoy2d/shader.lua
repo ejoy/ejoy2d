@@ -44,7 +44,10 @@ varying vec4 v_color;
 uniform sampler2D texture0;
 
 void main() {
-	gl_FragColor = v_color * texture2D(texture0, v_texcoord).w;
+	float c = texture2D(texture0, v_texcoord).w;
+	gl_FragColor.xyz = v_color.xyz * c;
+	gl_FragColor.w = c;
+	gl_FragColor *= v_color.w;
 }
 ]]
 
