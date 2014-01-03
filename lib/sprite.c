@@ -172,6 +172,7 @@ sprite_mount(struct sprite *parent, int index, struct sprite *child) {
 	struct pack_animation *ani = parent->s.ani;
 	assert(index >= 0 && index < ani->component_number);
 	parent->data.children[index] = child;
+	child->name = ani->component[index].name;
 }
 
 static int
