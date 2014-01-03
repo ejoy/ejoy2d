@@ -488,7 +488,7 @@ check_child(struct sprite *s, struct srt *srt, struct sprite_trans * t, struct p
 	int testin = test_child(child, srt, ct, x, y, &tmp);
 	if (testin) {
 		// if child capture message, return it
-		*touch = child;
+		*touch = tmp;
 		return 1;
 	}
 	if (tmp) {
