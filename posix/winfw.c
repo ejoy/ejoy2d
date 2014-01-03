@@ -49,12 +49,14 @@ traceback(lua_State *L) {
 }
 
 #ifdef __APPLE__
-const char*
-read_exepath(char * buf, int bufsz) {
+static const char*
+_read_exepath() {
     return getenv("_");
 }
+#define read_exepath(buf,bufsz) _read_exepath()
+
 #else
-const char*
+static const char*
 read_exepath(char * buf, int bufsz) {
     int  count;
     count = readlink("/proc/self/exe", buf, bufsz);
