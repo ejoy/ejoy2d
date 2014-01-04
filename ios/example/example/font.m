@@ -1,5 +1,5 @@
 #import <UIKit/UIKit.h>
-#include "font.h"
+#include "label.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <assert.h>
@@ -11,7 +11,6 @@ font_create(int font_size, struct font_context *ctx) {
   UIFont* font = [UIFont fontWithName:@"Helvetica" size:font_size];
 	ctx->font = (__bridge void *)font;
 	ctx->dc = NULL;
-  ctx->size = font_size;
 }
 
 void
@@ -21,14 +20,10 @@ font_release(struct font_context *ctx) {
 void 
 font_size(const char *str, int unicode, struct font_context *ctx) {
   NSString * tmp = [NSString stringWithUTF8String: str];
+  //TODO handle ios 7 for deprecated method
   CGSize sz = [tmp sizeWithFont:(__bridge UIFont *)(ctx->font)];
-  if(!(ctx->size & 0x01)){
-    ctx->w = (int)sz.width+4;
-    ctx->h = (int)sz.height+4;
-  }else{
-    ctx->w = (int)sz.width;
-    ctx->h = (int)sz.height;
-  }
+  ctx->w = (int)sz.width;
+  ctx->h = (int)sz.height;
 }
 
 static inline void
