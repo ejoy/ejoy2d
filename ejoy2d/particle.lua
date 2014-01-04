@@ -12,6 +12,10 @@ local particle_meta = {__index = {mat = {}, col = {}}}
 
 function particle_meta.__index:update(dt)
 	if not self.is_active then
+		if self.end_callback ~= nil then
+			self.end_callback()
+			self.end_callback = nil
+		end
 		return false
 	end
 
@@ -25,15 +29,25 @@ function particle_meta.__index:update(dt)
 end
 
 function particle_meta.__index:data()
+	if not self.is_active then
+		return 0
+	end
 	return c.data(self.particle, self.mat, self.col)
 end
 
 function particle_meta.__index:draw(pos)
 	local cnt = self:data()
 
-	shader.blend(self.src_blend,self.dst_blend)
-	self.sprite:multi_draw(pos, cnt, self.mat, self.col)
-	shader.blend()
+	if cnt > 0 then
+		shader.blend(self.src_blend,self.dst_blend)
+		self.sprite:multi_draw(pos, cnt, self.mat, self.col)
+		shader.blend()
+	end
+end
+
+function particle_meta.__index:reset()
+	self.is_active = true
+	c.reset(self.particle)
 end
 
 function particle.preload(config_path)

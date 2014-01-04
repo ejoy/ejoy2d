@@ -194,7 +194,7 @@ struct particle_system {
 	float emitCounter;
 
 	//!  particle idx
-	int particleIdx;
+	//int particleIdx;
 
 	// Number of allocated particles
 	int allocatedParticles;
@@ -215,6 +215,7 @@ struct particle_system {
 void init_with_particles(struct particle_system *ps, int numberOfParticles);
 void particle_system_update(struct particle_system *ps, float dt);
 void calc_particle_system_mat(struct particle * p, struct matrix *m);
+void particle_system_reset(struct particle_system *ps);
 
 int ejoy2d_particle(lua_State *L);
 

@@ -137,6 +137,15 @@ lnew(lua_State *L) {
 }
 
 static int
+lreset(lua_State *L) {
+	luaL_checktype(L,1,LUA_TUSERDATA);
+	struct particle_system *ps = (struct particle_system *)lua_touserdata(L, 1);
+	particle_system_reset(ps);
+
+	return 1;
+}
+
+static int
 lupdate(lua_State *L) {
 	luaL_checktype(L,1,LUA_TUSERDATA);
 	struct particle_system *ps = (struct particle_system *)lua_touserdata(L, 1);
@@ -179,6 +188,7 @@ int
 ejoy2d_particle(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "new", lnew },
+		{ "reset", lreset },
 		{ "update", lupdate },
 		{ "data", ldata },
 		{ NULL, NULL },
