@@ -87,6 +87,12 @@ lblend(lua_State *L) {
 	return 0;
 }
 
+static int
+lversion(lua_State *L) {
+	lua_pushinteger(L, OPENGLES);
+	return 1;
+}
+
 int 
 ejoy2d_shader(lua_State *L) {
 	luaL_Reg l[] = {
@@ -94,6 +100,7 @@ ejoy2d_shader(lua_State *L) {
 		{"unload", lunload},
 		{"draw", ldraw},
 		{"blend", lblend},
+		{"version", lversion},
 		{NULL,NULL},
 	};
 	luaL_newlib(L,l);

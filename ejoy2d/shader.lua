@@ -1,10 +1,10 @@
 local s = require "ejoy2d.shader.c"
 
-local PRECISION = "precision lowp float;\n"
+local PRECISION = ""
 
-if OS == "LINUX" or OS == "MACOSX" then
-	-- some linux and macosx opengl driver can't compile the shader with precision
-	PRECISION = ""
+if s.version() == 2 then
+	-- Opengl ES 2.0 need float precision specifiers
+	PRECISION = "precision lowp float;\n"
 end
 
 local sprite_fs = [[
