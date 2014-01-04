@@ -10,13 +10,19 @@
 
 FT_Library  library;
 
+#ifdef __APPLE__
+static const char* TTFONT = "/System/Library/Fonts/STHeiti Light.ttc";
+#else
 static const char* TTFONT = "/usr/share/fonts/wenquanyi/wqy-zenhei/wqy-zenhei.ttc";
+#endif
 
-static void _fault(int errcode, const char * msg) {
+#define _fault(errcode, msg) __fault(errcode, msg, __FILE__, __LINE__)
+
+static void __fault(int errcode, const char * msg, const char *file, int line) {
     if (errcode) 
-        printf("err(%d): %s\n\n\t have a look at fterrdef.h\n",errcode, msg);
+        printf("err(%d): %s, error occured in file %s, line %d\n\n\t have a look at fterrdef.h\n",errcode, msg, file, line);
     else
-        printf("err: %s\n", msg);
+        printf("err: %s, occured in file %s, line %d\n", msg, file, line);
     exit(1);
 }
 struct bitmap {
@@ -63,7 +69,7 @@ font_create(int font_size, struct font_context *ctx) {
     int err = FT_New_Face(library, TTFONT, 0, &face);
     if (err) {
         if (err == 1)
-            _fault(err, "set your own vector font");
+            _fault(err, "set your own vector font resource path");
         else
             _fault(err, "new face failed");
     }
