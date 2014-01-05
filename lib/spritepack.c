@@ -12,6 +12,7 @@
 #define TAG_COLOR 2
 #define TAG_ADDITIVE 4
 #define TAG_MATRIX 8
+#define TAG_TOUCH 16
 
 struct import_alloc {
 	lua_State *L;
@@ -192,6 +193,12 @@ import_frame(struct pack_frame * pf, struct import_stream *is, int maxc) {
 		} else {
 			pp->t.additive = 0;
 		}
+		if (tag & TAG_TOUCH) {
+			import_word(is);
+			pp->touchable = 1;
+		} else {
+			pp->touchable = 0;
+		}
 		// todo: support other program
 		pp->t.program = PROGRAM_DEFAULT;
 	}
@@ -290,7 +297,7 @@ import_sprite(struct import_stream *is) {
  */
 static int
 limport(lua_State *L) {
-	int max_id = (int)luaL_checkinteger(L, 2); 
+	int max_id = (int)luaL_checkinteger(L, 2);
 	int size = (int)luaL_checkinteger(L, 3);
 	int tex;
 	int tt = lua_type(L,1);
@@ -358,9 +365,9 @@ lpackword(lua_State *L) {
 	if (n < 0 || n > 0xffff) {
 		return luaL_error(L, "pack word %d", n);
 	}
-	uint8_t buf[2] = { 
-		(uint8_t)n&0xff , 
-		(uint8_t)((n>>8) & 0xff) , 
+	uint8_t buf[2] = {
+		(uint8_t)n&0xff ,
+		(uint8_t)((n>>8) & 0xff) ,
 	};
 	lua_pushlstring(L, (char *)buf, 2);
 	return 1;
@@ -370,11 +377,11 @@ static int
 lpackint32(lua_State *L) {
 	int32_t sn = (int32_t)luaL_checkinteger(L, 1);
 	uint32_t n = (uint32_t) sn;
-	uint8_t buf[4] = { 
-		(uint8_t)n&0xff , 
-		(uint8_t)((n>>8) & 0xff) , 
-		(uint8_t)((n>>16) & 0xff) , 
-		(uint8_t)((n>>24) & 0xff) , 
+	uint8_t buf[4] = {
+		(uint8_t)n&0xff ,
+		(uint8_t)((n>>8) & 0xff) ,
+		(uint8_t)((n>>16) & 0xff) ,
+		(uint8_t)((n>>24) & 0xff) ,
 	};
 	lua_pushlstring(L, (char *)buf, 4);
 	return 1;
@@ -384,11 +391,11 @@ static int
 lpackcolor(lua_State *L) {
 	uint32_t n = luaL_checkunsigned(L,1);
 
-	uint8_t buf[4] = { 
-		(uint8_t)n&0xff , 
-		(uint8_t)((n>>8) & 0xff) , 
-		(uint8_t)((n>>16) & 0xff) , 
-		(uint8_t)((n>>24) & 0xff) , 
+	uint8_t buf[4] = {
+		(uint8_t)n&0xff ,
+		(uint8_t)((n>>8) & 0xff) ,
+		(uint8_t)((n>>16) & 0xff) ,
+		(uint8_t)((n>>24) & 0xff) ,
 	};
 	lua_pushlstring(L, (char *)buf, 4);
 	return 1;
@@ -432,6 +439,10 @@ lpackframetag(lua_State *L) {
 		case 'm':
 			tag |= TAG_MATRIX;
 			break;
+		case 't':
+			tag |= TAG_TOUCH;
+			break;
+
 		default:
 			return luaL_error(L, "Invalid tag %s", tagstr);
 			break;
@@ -454,7 +465,7 @@ static int
 lpolygon_size(lua_State *L) {
 	int n = (int)luaL_checkinteger(L,1);
 	int pn = (int)luaL_checkinteger(L,2);
-	int sz = sizeof(struct pack_polygon) 
+	int sz = sizeof(struct pack_polygon)
 		+ (n-1) * sizeof(struct pack_poly)
 		+ 12 * pn;
 	lua_pushinteger(L, sz);
@@ -466,9 +477,9 @@ lpack_size(lua_State *L) {
 	int max_id = (int)luaL_checkinteger(L,1);
 	int tex = (int)luaL_checkinteger(L,2);
 	int align_n = (max_id + 1 + 3) & ~3;
-	int size = sizeof(struct sprite_pack) 
-		+ align_n * sizeof(uint8_t) 
-		+ (max_id+1) * sizeof(void *) 
+	int size = sizeof(struct sprite_pack)
+		+ align_n * sizeof(uint8_t)
+		+ (max_id+1) * sizeof(void *)
 		+ (tex-1) * sizeof(int);
 
 	lua_pushinteger(L, size);
@@ -489,7 +500,7 @@ lanimation_size(lua_State *L) {
 	int component = (int)luaL_checkinteger(L,2);
 	int action = (int)luaL_checkinteger(L,3);
 
-	int size = sizeof(struct pack_animation) 
+	int size = sizeof(struct pack_animation)
 		+ frame * sizeof(struct pack_frame)
 		+ action * sizeof(struct pack_action)
 		+ (component-1) * sizeof(struct pack_component);
@@ -537,7 +548,7 @@ lpannel_size(lua_State *L) {
 	return 1;
 }
 
-void 
+void
 dump_pack(struct sprite_pack *pack) {
 	if (pack == NULL)
 		return;

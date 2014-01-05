@@ -97,6 +97,9 @@ local function pack_part(data, ret)
 		if data.add and data.add ~= 0 then
 			tag = tag .. "a"
 		end
+		if data.touch and data.touch == 1 then
+			tag = tag .. "t"
+		end
 		table.insert(ret, pack.frametag(tag))
 
 		table.insert(ret, pack.word(data.index))
@@ -111,7 +114,9 @@ local function pack_part(data, ret)
 		if data.add and data.add ~= 0 then
 			table.insert(ret, pack.color(data.add))
 		end
-
+		if data.touch and data.touch == 1 then
+			table.insert(ret, pack.word(1))
+		end
 		return pack.part_size(mat)
 	end
 end
@@ -120,7 +125,9 @@ local function pack_frame(data, ret)
 	local size = 0
 	table.insert(ret, pack.byte(#data))
 	for _,v in ipairs(data) do
-		size = size + pack_part(v, ret)
+		local psize = pack_part(v, ret)
+		print(tostring(psize))
+		size = size + psize
 	end
 	return size
 end

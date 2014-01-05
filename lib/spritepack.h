@@ -62,6 +62,7 @@ struct sprite_trans {
 struct pack_part {
 	int component_id;
 	struct sprite_trans t;
+	int touchable;
 };
 
 struct pack_frame {

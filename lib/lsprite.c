@@ -87,6 +87,27 @@ static const char * srt_key[] = {
 	"scale",
 };
 
+
+static void
+update_message(struct sprite * s, struct sprite_pack * pack, int parentid, int frame){
+  if (s->type != TYPE_ANIMATION) {
+    return;
+  }
+  struct pack_animation * ani = (struct pack_animation *)pack->data[parentid];
+  if (frame < 0 || frame >= ani->frame_number) {
+    return;
+  }
+  struct pack_frame pframe = ani->frame[frame];
+  int i = 0;
+  for (; i < pframe.n; i++) {
+    if (pframe.part[i].component_id == s->id && pframe.part[i].touchable) {
+    	s->message = true;
+    	return;
+    }
+  }
+}
+
+
 static struct sprite *
 newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 	int sz = sprite_size(pack, id);
@@ -97,17 +118,18 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 	sprite_init(s, pack, id, sz);
 	int i;
 	for (i=0;;i++) {
-		int id = sprite_component(s, i);
-		if (id < 0)
+		int childid = sprite_component(s, i);
+		if (childid < 0)
 			break;
 		if (i==0) {
 			lua_newtable(L);
 			lua_pushvalue(L,-1);
 			lua_setuservalue(L, -3);	// set uservalue for sprite
 		}
-		struct sprite *c = newsprite(L, pack, id);
+		struct sprite *c = newsprite(L, pack, childid);
 		c->name = sprite_childname(s, i);
 		sprite_mount(s, i, c);
+		update_message(c, pack, id, s->frame);
 		if (c) {
 			lua_rawseti(L, -2, i+1);
 		}

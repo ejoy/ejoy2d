@@ -22,13 +22,13 @@ screen_init(float w, float h, float scale) {
 	glViewport(0,0,w * scale,h * scale);
 }
 
-void 
+void
 screen_trans(float *x, float *y) {
 	*x *= SCREEN.invw;
 	*y *= SCREEN.invh;
 }
 
-void 
+void
 screen_scissor(int x, int y, int w, int h) {
 	y = SCREEN.height - y - h;
 	if (x<0) {
