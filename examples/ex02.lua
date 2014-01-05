@@ -1,13 +1,14 @@
 -- This example show how low level api works
 
 local ej = require "ejoy2d"
+local fw = require "ejoy2d.framework"
 local shader = require "ejoy2d.shader"
 local ppm = require "ejoy2d.ppm"
 
 local TEXID = 0
 
 -- load ppm/pgm file into texture slot TEXID
-ppm.texture(TEXID,"examples/asset/sample.1")
+ppm.texture(TEXID,fw.WorkDir.."examples/asset/sample.1")
 
 local game = {}
 
