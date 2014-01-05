@@ -89,7 +89,7 @@ static const char * srt_key[] = {
 
 
 static void
-update_message(struct sprite * s, struct sprite_pack * pack, int parentid, int frame){
+update_message(struct sprite * s, struct sprite_pack * pack, int parentid, int componentid, int frame){
   if (s->type != TYPE_ANIMATION) {
     return;
   }
@@ -100,7 +100,7 @@ update_message(struct sprite * s, struct sprite_pack * pack, int parentid, int f
   struct pack_frame pframe = ani->frame[frame];
   int i = 0;
   for (; i < pframe.n; i++) {
-    if (pframe.part[i].component_id == s->id && pframe.part[i].touchable) {
+    if (pframe.part[i].component_id == componentid && pframe.part[i].touchable) {
     	s->message = true;
     	return;
     }
@@ -129,7 +129,7 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 		struct sprite *c = newsprite(L, pack, childid);
 		c->name = sprite_childname(s, i);
 		sprite_mount(s, i, c);
-		update_message(c, pack, id, s->frame);
+		update_message(c, pack, id, i, s->frame);
 		if (c) {
 			lua_rawseti(L, -2, i+1);
 		}
@@ -481,7 +481,9 @@ lookup(lua_State *L, struct sprite *root, struct sprite *spr) {
 	lua_getuservalue(L,-1);
 	for (i=0;sprite_component(root, i)>=0;i++) {
 		struct sprite * child = root->data.children[i];
-		if (child && child->name) {
+//FIXME ignore name check temp
+//    if (child && child->name)
+		if (child) {
 			lua_rawgeti(L, -1, i+1);
 			if (child == spr) {
 				return 1;
