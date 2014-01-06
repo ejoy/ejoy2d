@@ -170,7 +170,6 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 void 
 sprite_mount(struct sprite *parent, int index, struct sprite *child) {
 	assert(parent->type == TYPE_ANIMATION);
-	assert(child->parent == NULL);
 	struct pack_animation *ani = parent->s.ani;
 	assert(index >= 0 && index < ani->component_number);
 	struct sprite * oldc = parent->data.children[index];
@@ -178,8 +177,11 @@ sprite_mount(struct sprite *parent, int index, struct sprite *child) {
 		oldc->parent = NULL;
 	}
 	parent->data.children[index] = child;
-	child->name = ani->component[index].name;
-	child->parent = parent;
+	if (child) {
+		assert(child->parent == NULL);
+		child->name = ani->component[index].name;
+		child->parent = parent;
+	}
 }
 
 static int
