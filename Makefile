@@ -47,7 +47,7 @@ mingw : $(SRC) ej2d
 linux : OS := LINUX
 linux : TARGET := ej2d
 linux : CFLAGS += -I/usr/include -I/usr/local/include $(shell freetype-config --cflags)
-linux : LDFLAGS +=  -lGLEW -lGL -lX11 -lfreetype -llua -lm
+linux : LDFLAGS +=  -lGLEW -lGL -lX11 -lfreetype -llua -lm -Wl,-E
 linux : SRC += posix/window.c posix/winfw.c posix/winfont.c
 
 linux : $(SRC) ej2d
@@ -55,7 +55,7 @@ linux : $(SRC) ej2d
 macosx : OS := MACOSX
 macosx : TARGET := ej2d
 macosx : CFLAGS += -I/usr/X11R6/include -I/usr/include -I/usr/local/include $(shell freetype-config --cflags) -D __MACOSX
-macosx : LDFLAGS += -L/usr/X11R6/lib  -lGLEW -lGL -lX11 -lfreetype -llua -lm
+macosx : LDFLAGS += -L/usr/X11R6/lib  -lGLEW -lGL -lX11 -lfreetype -llua -lm -Wl,-E -ldl
 macosx : SRC += posix/window.c posix/winfw.c posix/winfont.c
 
 macosx : $(SRC) ej2d
