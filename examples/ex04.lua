@@ -28,7 +28,7 @@ function game.touch(what, x, y)
 	if what == "END" then
 		local touched = sprite.retrieve(obj:test(pos,x,y))
 		if touched then
-			if touched.name == "lable" then
+			if touched.name == "label" then
 				touched.text = "label touched"
 			end
 			if touched.name == "panel" then
