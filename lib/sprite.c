@@ -132,6 +132,7 @@ void
 sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	if (id < 0 || id >=	pack->n)
 		return;
+	s->parent = NULL;
 	s->t.mat = NULL;
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
@@ -169,10 +170,16 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 void 
 sprite_mount(struct sprite *parent, int index, struct sprite *child) {
 	assert(parent->type == TYPE_ANIMATION);
+	assert(child->parent == NULL);
 	struct pack_animation *ani = parent->s.ani;
 	assert(index >= 0 && index < ani->component_number);
+	struct sprite * oldc = parent->data.children[index];
+	if (oldc) {
+		oldc->parent = NULL;
+	}
 	parent->data.children[index] = child;
 	child->name = ani->component[index].name;
+	child->parent = parent;
 }
 
 static int

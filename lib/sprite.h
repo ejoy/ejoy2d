@@ -9,6 +9,7 @@
 #include <stdbool.h>
 
 struct sprite {
+	struct sprite * parent;
 	uint16_t type;
 	uint16_t id;
 	struct sprite_trans t;
