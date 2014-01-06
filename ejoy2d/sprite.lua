@@ -68,6 +68,13 @@ function sprite.new(packname, name)
 	end
 end
 
+function sprite.retrieve(cobj)
+  if cobj == nil then
+    return nil
+  end
+  return debug.setmetatable(cobj, sprite_meta)
+end
+
 function sprite.label(tbl)
 	local size = tbl.size or tbl.height - 2
 	local l = (c.label(tbl.width, tbl.height, size, tbl.color, tbl.align))

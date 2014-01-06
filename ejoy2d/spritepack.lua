@@ -126,7 +126,6 @@ local function pack_frame(data, ret)
 	table.insert(ret, pack.byte(#data))
 	for _,v in ipairs(data) do
 		local psize = pack_part(v, ret)
-		print(tostring(psize))
 		size = size + psize
 	end
 	return size

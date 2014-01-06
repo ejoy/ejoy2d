@@ -730,7 +730,7 @@ return {
 		{id = 37 },
 		{id = 23, name = 'resource' },
 		{id = 39, name = 'label' },
-		{id = 40, name = 'pannel' },
+		{id = 40, name = 'panel' },
 	},
 	{
 		{

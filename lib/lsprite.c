@@ -89,10 +89,7 @@ static const char * srt_key[] = {
 
 
 static void
-update_message(struct sprite * s, struct sprite_pack * pack, int parentid, int componentid, int frame){
-  if (s->type != TYPE_ANIMATION) {
-    return;
-  }
+update_message(struct sprite * s, struct sprite_pack * pack, int parentid, int componentid, int frame) {
   struct pack_animation * ani = (struct pack_animation *)pack->data[parentid];
   if (frame < 0 || frame >= ani->frame_number) {
     return;
@@ -481,11 +478,10 @@ lookup(lua_State *L, struct sprite *root, struct sprite *spr) {
 	lua_getuservalue(L,-1);
 	for (i=0;sprite_component(root, i)>=0;i++) {
 		struct sprite * child = root->data.children[i];
-//FIXME ignore name check temp
-//    if (child && child->name)
-		if (child) {
+    
+    if (child) {
 			lua_rawgeti(L, -1, i+1);
-			if (child == spr) {
+			if (child == spr && child->name) {
 				return 1;
 			} else {
 				if (lookup(L, child , spr))
