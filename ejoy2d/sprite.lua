@@ -5,7 +5,9 @@ local shader = require "ejoy2d.shader"
 
 local method = c.method
 local method_fetch = method.fetch
+local method_test = method.test
 local fetch
+local test
 
 local get = c.get
 local set = c.set
@@ -56,7 +58,16 @@ function fetch(spr, child)
 	end
 end
 
+-- local function
+function test(...)
+	local cobj = method_test(...)
+	if cobj then
+		return debug.setmetatable(cobj, sprite_meta)
+	end
+end
+
 method.fetch = fetch
+method.test = test
 
 local sprite = {}
 
@@ -66,13 +77,6 @@ function sprite.new(packname, name)
 	if cobj then
 		return debug.setmetatable(cobj, sprite_meta)
 	end
-end
-
-function sprite.retrieve(cobj)
-  if cobj == nil then
-    return nil
-  end
-  return debug.setmetatable(cobj, sprite_meta)
 end
 
 function sprite.label(tbl)
