@@ -478,7 +478,7 @@ lmulti_draw(lua_State *L) {
 static struct sprite *
 lookup(lua_State *L, struct sprite * spr) {
 	int i;
-	struct sprite * root = lua_touserdata(L, -1);
+	struct sprite * root = (struct sprite *)lua_touserdata(L, -1);
 	lua_getuservalue(L,-1);
 	for (i=0;sprite_component(root, i)>=0;i++) {
 		struct sprite * child = root->data.children[i];
@@ -536,7 +536,7 @@ ltest(lua_State *L) {
 	int i;
 	lua_pushvalue(L,1);
 	for (i=depth+1;i>1;i--) {
-		struct sprite * tmp = lua_touserdata(L, i);
+		struct sprite * tmp = (struct sprite *)lua_touserdata(L, i);
 		tmp = lookup(L, tmp);
 		if (tmp == NULL) {
 			return luaL_error(L, "find an invalid sprite");
