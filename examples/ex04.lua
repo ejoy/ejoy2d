@@ -13,6 +13,7 @@ local obj = ej.sprite("sample","mine")
 obj.resource.frame = 70
 obj.label.text = "Hello World"
 obj:ps(500,300)
+local screencoord = { scale = 0.5 }
 
 local game = {}
 
@@ -21,12 +22,12 @@ function game.update()
 end
 
 function game.drawframe()
-	obj:draw()
+	obj:draw(screencoord)
 end
 
 function game.touch(what, x, y)
 	if what == "END" then
-		local touched = obj:test(x,y)
+		local touched = obj:test(x,y,screencoord)
 		if touched then
 			if touched.name == "label" then
 				touched.text = "label touched"

@@ -609,6 +609,36 @@ lps(lua_State *L) {
 	return 0;
 }
 
+static int
+lsr(lua_State *L) {
+	struct sprite *s = self(L);
+	struct matrix *m = &s->mat;
+	if (s->t.mat == NULL) {
+		matrix_identity(m);
+		s->t.mat = m;
+	}
+	int sx=1024,sy=1024,r=0;
+	int n = lua_gettop(L);
+	switch (n) {
+	case 4:
+		// sx,sy,rot
+		r = luaL_checknumber(L,4) * (1024.0 / 360.0);
+		// go through
+	case 3:
+		// sx, sy
+		sx = luaL_checknumber(L,2) * 1024;
+		sy = luaL_checknumber(L,3) * 1024;
+		break;
+	case 2:
+		// rot
+		r = luaL_checknumber(L,2) * (1024.0 / 360.0);
+		break;
+	}
+	matrix_sr(m, sx, sy, r);
+
+	return 0;
+}
+
 static void
 lmethod(lua_State *L) {
 	luaL_Reg l[] = {
@@ -625,6 +655,7 @@ lmethod(lua_State *L) {
 	}
 	luaL_Reg l2[] = {
 		{ "ps", lps },
+		{ "sr", lsr },
 		{ "draw", ldraw },
 		{ "multi_draw", lmulti_draw },
 		{ "test", ltest },
