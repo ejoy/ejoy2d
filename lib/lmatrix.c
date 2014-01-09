@@ -1,5 +1,6 @@
 #include "lmatrix.h"
 #include "matrix.h"
+#include "spritepack.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -71,14 +72,38 @@ lscale(lua_State *L) {
 static int
 lidentity(lua_State *L) {
 	struct matrix *m = (struct matrix *)lua_touserdata(L,1);
-    int *mat = m->m;
-    mat[0] = 1024;
-    mat[1] = 0;
-    mat[2] = 0;
-    mat[3] = 1024;
-    mat[4] = 0;
-    mat[5] = 0;
-	
+	if (m == NULL) {
+		return luaL_error(L, "Need a matrix");
+	}
+	int n = lua_gettop(L);
+	int *mat = m->m;
+	int scale=1024;
+	int x=0,y=0;
+	switch(n) {
+	case 4:
+		scale = luaL_checknumber(L,4) * 1024;
+		// x,y,scale
+		// go though
+	case 3:
+		// x,y
+		x = luaL_checknumber(L,2) * SCREEN_SCALE;
+		y = luaL_checknumber(L,3) * SCREEN_SCALE;
+		break;
+	case 2:
+		// scale
+		scale = luaL_checknumber(L,2) * 1024;
+		break;
+	case 1:
+		break;
+	default:
+		return luaL_error(L, "Invalid parameter");
+	}
+	mat[0] = scale;
+	mat[1] = 0;
+	mat[2] = 0;
+	mat[3] = scale;
+	mat[4] = x;
+	mat[5] = y;
 	lua_settop(L,1);
 	return 1;
 }
@@ -112,7 +137,7 @@ ejoy2d_matrix(lua_State *L) {
 		{ "inverse", linverse },
 		{ "mul", lmul },
 		{ "tostring", ltostring },
-        {"identity", lidentity},
+		{ "identity", lidentity},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);

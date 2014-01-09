@@ -253,6 +253,17 @@ lsetmat(lua_State *L) {
 }
 
 static int
+lgetmat(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->t.mat == NULL) {
+		s->t.mat = &s->mat;
+		matrix_identity(&s->mat);
+	}
+	lua_pushlightuserdata(L, s->t.mat);
+	return 1;
+}
+
+static int
 lsetprogram(lua_State *L) {
 	struct sprite *s = self(L);
 	if (lua_isnoneornil(L,2)) {
@@ -346,6 +357,7 @@ lgetter(lua_State *L) {
 		{"color", lgetcolor },
 		{"additive", lgetadditive },
 		{"message", lgetmessage },
+		{"matrix", lgetmat },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -513,10 +525,7 @@ unwind(lua_State *L, struct sprite *root, struct sprite *spr) {
 
 static int
 ltest(lua_State *L) {
-	struct sprite * s = (struct sprite *)lua_touserdata(L, 1);
-	if (s == NULL) {
-		return luaL_error(L, "Need a sprite");
-	}
+	struct sprite *s = self(L);
 	struct srt srt;
 	fill_srt(L,&srt,2);
 	float x = luaL_checknumber(L, 3);
@@ -547,6 +556,51 @@ ltest(lua_State *L) {
 	return 1;
 }
 
+static int
+lps(lua_State *L) {
+	struct sprite *s = self(L);
+	struct matrix *m = &s->mat;
+	if (s->t.mat == NULL) {
+		matrix_identity(m);
+		s->t.mat = m;
+	}
+	int *mat = m->m;
+	int n = lua_gettop(L);
+	int x,y,scale;
+	switch (n) {
+	case 4:
+		// x,y,scale
+		x = luaL_checknumber(L,2) * SCREEN_SCALE;
+		y = luaL_checknumber(L,3) * SCREEN_SCALE;
+		scale = luaL_checknumber(L,4) * 1024;
+		mat[0] = scale;
+		mat[1] = 0;
+		mat[2] = 0;
+		mat[3] = scale;
+		mat[4] = x;
+		mat[5] = y;
+		break;
+	case 3:
+		// x,y
+		x = luaL_checknumber(L,2) * SCREEN_SCALE;
+		y = luaL_checknumber(L,3) * SCREEN_SCALE;
+		mat[4] = x;
+		mat[5] = y;
+		break;
+	case 2:
+		// scale
+		scale = luaL_checknumber(L,2) * 1024;
+		mat[0] = scale;
+		mat[1] = 0;
+		mat[2] = 0;
+		mat[3] = scale;
+		break;
+	default:
+		return luaL_error(L, "Invalid parm");
+	}
+	return 0;
+}
+
 static void
 lmethod(lua_State *L) {
 	luaL_Reg l[] = {
@@ -562,6 +616,7 @@ lmethod(lua_State *L) {
 		lua_pushstring(L, srt_key[i]);
 	}
 	luaL_Reg l2[] = {
+		{ "ps", lps },
 		{ "draw", ldraw },
 		{ "multi_draw", lmulti_draw },
 		{ "test", ltest },
