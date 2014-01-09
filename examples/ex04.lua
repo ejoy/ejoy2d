@@ -26,7 +26,7 @@ end
 
 function game.touch(what, x, y)
 	if what == "END" then
-		local touched = obj:test(pos,x,y)
+		local touched = obj:test(x,y)
 		if touched then
 			if touched.name == "label" then
 				touched.text = "label touched"

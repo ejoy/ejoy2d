@@ -535,9 +535,9 @@ static int
 ltest(lua_State *L) {
 	struct sprite *s = self(L);
 	struct srt srt;
-	fill_srt(L,&srt,2);
-	float x = luaL_checknumber(L, 3);
-	float y = luaL_checknumber(L, 4);
+	fill_srt(L,&srt,4);
+	float x = luaL_checknumber(L, 2);
+	float y = luaL_checknumber(L, 3);
 	struct sprite * m = sprite_test(s, &srt, x*SCREEN_SCALE, y*SCREEN_SCALE);
 	if (m == NULL)
 		return 0;
