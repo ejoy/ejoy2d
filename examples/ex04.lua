@@ -12,6 +12,7 @@ local scissor = false
 local obj = ej.sprite("sample","mine")
 obj.resource.frame = 70
 obj.label.text = "Hello World"
+obj:ps(500,300)
 
 local game = {}
 
@@ -19,10 +20,8 @@ function game.update()
 	obj.frame = obj.frame + 1
 end
 
-local pos = { x = 500, y = 300 }
-
 function game.drawframe()
-	obj:draw(pos)
+	obj:draw()
 end
 
 function game.touch(what, x, y)

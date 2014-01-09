@@ -421,6 +421,14 @@ lmount(lua_State *L) {
 
 static void
 fill_srt(lua_State *L, struct srt *srt, int idx) {
+	if (lua_isnoneornil(L, idx)) {
+		srt->offx = 0;
+		srt->offy = 0;
+		srt->rot = 0;
+		srt->scalex = 1024;
+		srt->scaley = 1024;
+		return;
+	}
 	luaL_checktype(L,idx,LUA_TTABLE);
 	double x = readkey(L, idx, SRT_X, 0);
 	double y = readkey(L, idx, SRT_Y, 0);
