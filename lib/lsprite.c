@@ -253,6 +253,17 @@ lsetmat(lua_State *L) {
 }
 
 static int
+lgetmat(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->t.mat == NULL) {
+		s->t.mat = &s->mat;
+		matrix_identity(&s->mat);
+	}
+	lua_pushlightuserdata(L, s->t.mat);
+	return 1;
+}
+
+static int
 lsetprogram(lua_State *L) {
 	struct sprite *s = self(L);
 	if (lua_isnoneornil(L,2)) {
@@ -346,6 +357,7 @@ lgetter(lua_State *L) {
 		{"color", lgetcolor },
 		{"additive", lgetadditive },
 		{"message", lgetmessage },
+		{"matrix", lgetmat },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -409,6 +421,14 @@ lmount(lua_State *L) {
 
 static void
 fill_srt(lua_State *L, struct srt *srt, int idx) {
+	if (lua_isnoneornil(L, idx)) {
+		srt->offx = 0;
+		srt->offy = 0;
+		srt->rot = 0;
+		srt->scalex = 1024;
+		srt->scaley = 1024;
+		return;
+	}
 	luaL_checktype(L,idx,LUA_TTABLE);
 	double x = readkey(L, idx, SRT_X, 0);
 	double y = readkey(L, idx, SRT_Y, 0);
@@ -478,7 +498,7 @@ lmulti_draw(lua_State *L) {
 static struct sprite *
 lookup(lua_State *L, struct sprite * spr) {
 	int i;
-	struct sprite * root = lua_touserdata(L, -1);
+	struct sprite * root = (struct sprite *)lua_touserdata(L, -1);
 	lua_getuservalue(L,-1);
 	for (i=0;sprite_component(root, i)>=0;i++) {
 		struct sprite * child = root->data.children[i];
@@ -513,14 +533,11 @@ unwind(lua_State *L, struct sprite *root, struct sprite *spr) {
 
 static int
 ltest(lua_State *L) {
-	struct sprite * s = (struct sprite *)lua_touserdata(L, 1);
-	if (s == NULL) {
-		return luaL_error(L, "Need a sprite");
-	}
+	struct sprite *s = self(L);
 	struct srt srt;
-	fill_srt(L,&srt,2);
-	float x = luaL_checknumber(L, 3);
-	float y = luaL_checknumber(L, 4);
+	fill_srt(L,&srt,4);
+	float x = luaL_checknumber(L, 2);
+	float y = luaL_checknumber(L, 3);
 	struct sprite * m = sprite_test(s, &srt, x*SCREEN_SCALE, y*SCREEN_SCALE);
 	if (m == NULL)
 		return 0;
@@ -536,7 +553,7 @@ ltest(lua_State *L) {
 	int i;
 	lua_pushvalue(L,1);
 	for (i=depth+1;i>1;i--) {
-		struct sprite * tmp = lua_touserdata(L, i);
+		struct sprite * tmp = (struct sprite *)lua_touserdata(L, i);
 		tmp = lookup(L, tmp);
 		if (tmp == NULL) {
 			return luaL_error(L, "find an invalid sprite");
@@ -545,6 +562,81 @@ ltest(lua_State *L) {
 	}
 
 	return 1;
+}
+
+static int
+lps(lua_State *L) {
+	struct sprite *s = self(L);
+	struct matrix *m = &s->mat;
+	if (s->t.mat == NULL) {
+		matrix_identity(m);
+		s->t.mat = m;
+	}
+	int *mat = m->m;
+	int n = lua_gettop(L);
+	int x,y,scale;
+	switch (n) {
+	case 4:
+		// x,y,scale
+		x = luaL_checknumber(L,2) * SCREEN_SCALE;
+		y = luaL_checknumber(L,3) * SCREEN_SCALE;
+		scale = luaL_checknumber(L,4) * 1024;
+		mat[0] = scale;
+		mat[1] = 0;
+		mat[2] = 0;
+		mat[3] = scale;
+		mat[4] = x;
+		mat[5] = y;
+		break;
+	case 3:
+		// x,y
+		x = luaL_checknumber(L,2) * SCREEN_SCALE;
+		y = luaL_checknumber(L,3) * SCREEN_SCALE;
+		mat[4] = x;
+		mat[5] = y;
+		break;
+	case 2:
+		// scale
+		scale = luaL_checknumber(L,2) * 1024;
+		mat[0] = scale;
+		mat[1] = 0;
+		mat[2] = 0;
+		mat[3] = scale;
+		break;
+	default:
+		return luaL_error(L, "Invalid parm");
+	}
+	return 0;
+}
+
+static int
+lsr(lua_State *L) {
+	struct sprite *s = self(L);
+	struct matrix *m = &s->mat;
+	if (s->t.mat == NULL) {
+		matrix_identity(m);
+		s->t.mat = m;
+	}
+	int sx=1024,sy=1024,r=0;
+	int n = lua_gettop(L);
+	switch (n) {
+	case 4:
+		// sx,sy,rot
+		r = luaL_checknumber(L,4) * (1024.0 / 360.0);
+		// go through
+	case 3:
+		// sx, sy
+		sx = luaL_checknumber(L,2) * 1024;
+		sy = luaL_checknumber(L,3) * 1024;
+		break;
+	case 2:
+		// rot
+		r = luaL_checknumber(L,2) * (1024.0 / 360.0);
+		break;
+	}
+	matrix_sr(m, sx, sy, r);
+
+	return 0;
 }
 
 static void
@@ -562,6 +654,8 @@ lmethod(lua_State *L) {
 		lua_pushstring(L, srt_key[i]);
 	}
 	luaL_Reg l2[] = {
+		{ "ps", lps },
+		{ "sr", lsr },
 		{ "draw", ldraw },
 		{ "multi_draw", lmulti_draw },
 		{ "test", ltest },
