@@ -11,6 +11,14 @@ local touch = {
 	"BEGIN",
 	"END",
 	"MOVE",
+	"CANCEL"
+}
+
+local gesture = {
+	"PAN",
+	"TAP",
+	"PINCH",
+    "PRESS",
 }
 
 function ejoy2d.start(callback)
@@ -18,6 +26,9 @@ function ejoy2d.start(callback)
 	fw.EJOY2D_DRAWFRAME = assert(callback.drawframe)
 	fw.EJOY2D_TOUCH = function(x,y,what,id)
 		return callback.touch(touch[what],x,y,id)
+	end
+    fw.EJOY2D_GESTURE = function(what, x1, y1, x2, y2, state)
+		return callback.gesture(gesture[what], x1, y1, x2, y2, state)
 	end
 	fw.inject()
 end
