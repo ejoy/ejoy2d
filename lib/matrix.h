@@ -29,7 +29,7 @@ matrix_identity(struct matrix *mm) {
 	mat[5] = 0;
 }
 
-void matrix_inverse(const struct matrix *mm, struct matrix *mo);
+int matrix_inverse(const struct matrix *mm, struct matrix *mo);
 
 struct srt {
 	int offx;

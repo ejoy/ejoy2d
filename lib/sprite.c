@@ -583,7 +583,11 @@ test_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, int x, i
 	}
 	matrix_srt(&mat, srt);
 	struct matrix imat;
-	matrix_inverse(&mat, &imat);
+	if (matrix_inverse(&mat, &imat)) {
+		// invalid matrix
+		*touch = NULL;
+		return 0;
+	}
 	int *m = imat.m;
 
 	int xx = (x * m[0] + y * m[2]) / 1024 + m[4];

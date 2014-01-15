@@ -41,7 +41,9 @@ static int
 linverse(lua_State *L) {
 	struct matrix *m = (struct matrix *)lua_touserdata(L, 1);
 	struct matrix source = *m;
-	matrix_inverse(&source, m);
+	if (matrix_inverse(&source, m)) {
+		return luaL_error(L, "Invalid matrix");
+	}
 	lua_settop(L,1);
 	return 1;
 }
