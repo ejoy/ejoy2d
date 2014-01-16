@@ -48,7 +48,7 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 	}
 }
 
-void 
+void
 sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg) {
 	struct matrix tmp;
 	int i,j;
@@ -86,7 +86,7 @@ sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struc
 	}
 }
 
-int 
+int
 sprite_size(struct sprite_pack *pack, int id) {
 	if (id < 0 || id >=	pack->n)
 		return 0;
@@ -100,7 +100,7 @@ sprite_size(struct sprite_pack *pack, int id) {
 	return 0;
 }
 
-int 
+int
 sprite_action(struct sprite *s, const char * action) {
 	if (s->type != TYPE_ANIMATION) {
 		return -1;
@@ -128,7 +128,7 @@ sprite_action(struct sprite *s, const char * action) {
 	}
 }
 
-void 
+void
 sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	if (id < 0 || id >=	pack->n)
 		return;
@@ -167,7 +167,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	}
 }
 
-void 
+void
 sprite_mount(struct sprite *parent, int index, struct sprite *child) {
 	assert(parent->type == TYPE_ANIMATION);
 	struct pack_animation *ani = parent->s.ani;
@@ -196,7 +196,7 @@ real_frame(struct sprite *s) {
 	return f;
 }
 
-int 
+int
 sprite_child(struct sprite *s, const char * childname) {
 	assert(childname);
 	if (s->type != TYPE_ANIMATION)
@@ -214,7 +214,7 @@ sprite_child(struct sprite *s, const char * childname) {
 	return -1;
 }
 
-int 
+int
 sprite_component(struct sprite *s, int index) {
 	if (s->type != TYPE_ANIMATION)
 		return -1;
@@ -224,7 +224,7 @@ sprite_component(struct sprite *s, int index) {
 	return ani->component[index].id;
 }
 
-const char * 
+const char *
 sprite_childname(struct sprite *s, int index) {
 	if (s->type != TYPE_ANIMATION)
 		return NULL;
@@ -247,9 +247,9 @@ color_mul(uint32_t c1, uint32_t c2) {
 	int b2 = (c2 >> 24) & 0xff;
 	int a2 = c2 & 0xff;
 
-	return (r1 * r2 /255) << 24 | 
-		(g1 * g2 /255) << 16 | 
-		(b1 * b2 /255) << 8 | 
+	return (r1 * r2 /255) << 24 |
+		(g1 * g2 /255) << 16 |
+		(b1 * b2 /255) << 8 |
 		(a1 * a2 /255) ;
 }
 
@@ -346,7 +346,7 @@ set_scissor(const struct pack_pannel *p, const struct srt *srt, const struct spr
 	scissor_push(minx,miny,maxx-minx,maxy-miny);
 }
 
-static int 
+static int
 draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 	struct sprite_trans temp;
 	struct matrix temp_matrix;
@@ -516,7 +516,7 @@ test_animation(struct sprite *s, struct srt *srt, struct sprite_trans * t, int x
 	struct pack_animation *ani = s->s.ani;
 	int frame = real_frame(s) + s->start_frame;
 	struct pack_frame * pf = &ani->frame[frame];
-	int start = pf->n-1; 
+	int start = pf->n-1;
 	do {
 		int scissor = -1;
 		int i;
@@ -623,7 +623,7 @@ test_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, int x, i
 	}
 }
 
-struct sprite * 
+struct sprite *
 sprite_test(struct sprite *s, struct srt *srt, int x, int y) {
 	struct sprite *tmp = NULL;
 	int testin = test_child(s, srt, NULL, x, y, &tmp);
@@ -637,15 +637,15 @@ sprite_test(struct sprite *s, struct srt *srt, int x, int y) {
 }
 
 void
-sprite_setframe(struct sprite *s, int frame) {
+sprite_setframe(struct sprite *s, int frame, bool force_child) {
 	if (s == NULL || s->type != TYPE_ANIMATION)
 		return;
 	s->frame = frame;
 	int i;
 	struct pack_animation * ani = s->s.ani;
 	for (i=0;i<ani->component_number;i++) {
-		if (ani->component[i].name == NULL) {
-			sprite_setframe(s->data.children[i],frame);
+		if (force_child || ani->component[i].name == NULL) {
+			sprite_setframe(s->data.children[i],frame, force_child);
 		}
 	}
 }

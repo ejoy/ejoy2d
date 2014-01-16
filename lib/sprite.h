@@ -22,7 +22,7 @@ struct sprite {
 	} s;
 	struct matrix mat;
 	int start_frame;
-	int total_frame; 
+	int total_frame;
 	int frame;
 	bool visible;
 	bool message;
@@ -52,7 +52,7 @@ int sprite_child(struct sprite *, const char * childname);
 // return sprite id in pack, -1 for end
 int sprite_component(struct sprite *, int index);
 const char * sprite_childname(struct sprite *, int index);
-void sprite_setframe(struct sprite *, int frame);
+void sprite_setframe(struct sprite *, int frame, bool force_child);
 void sprite_mount(struct sprite *, int index, struct sprite *);
 
 int ejoy2d_sprite(lua_State *L);
