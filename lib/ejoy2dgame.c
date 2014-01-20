@@ -15,7 +15,7 @@
 #include "label.h"
 #include "particle.h"
 
-#define LOGIC_FRAME 30
+//#define LOGIC_FRAME 30
 
 #define EJOY_INIT "EJOY2D_INIT"
 #define EJOY_UPDATE "EJOY2D_UPDATE"
@@ -27,6 +27,8 @@
 #define UPDATE_FUNCTION 2
 #define DRAWFRAME_FUNCTION 3
 #define TOP_FUNCTION 3
+
+static int LOGIC_FRAME = 30;
 
 struct game {
 	lua_State *L;
@@ -141,6 +143,12 @@ traceback (lua_State *L) {
 		lua_pushliteral(L, "(no error message)");
 	}
 	return 1;
+}
+
+void
+ejoy2d_game_logicframe(int frame)
+{
+	LOGIC_FRAME = frame;
 }
 
 void
