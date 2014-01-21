@@ -145,7 +145,7 @@ find_space(struct dfont *df, struct font_line *line, int width) {
 	int start_pos = 0;
 	struct hash_rect * hr;
 	int max_space = 0;
-	list_for_each_entry(hr, &line->head, next_char) {
+	list_for_each_entry(hr, struct hash_rect, &line->head, next_char) {
 		int space = hr->rect.x - start_pos;
 		if (space >= width) {
 			struct hash_rect *n = new_node(df);
@@ -241,7 +241,7 @@ release_char(struct dfont *df, int c,int font) {
 static struct hash_rect *
 release_space(struct dfont *df, int width, int height) {
 	struct hash_rect *hr, *tmp;
-	list_for_each_entry_safe(hr, tmp, &df->time, time) {
+	list_for_each_entry_safe(hr, struct hash_rect, tmp, &df->time, time) {
 		if (hr->version == df->version)
 			return NULL;
 		if (hr->rect.h != height) {
@@ -305,7 +305,7 @@ dfont_dump(struct dfont * df) {
 	printf("By version : ");
 	struct hash_rect *hr;
 	int version = -1;
-	list_for_each_entry(hr, &df->time, time) {
+	list_for_each_entry(hr, struct hash_rect, &df->time, time) {
 		if (hr->version != version) {
 			version = hr->version;
 			printf("\nversion %d : ", version);
@@ -318,7 +318,7 @@ dfont_dump(struct dfont * df) {
 	for (i=0;i<df->max_line;i++) {
 		struct font_line *line = &df->line[i];
 		printf("line (y=%d h=%d space=%d) :",line->start_line, line->height,line->space);
-		list_for_each_entry(hr, &line->head, next_char) {
+		list_for_each_entry(hr, struct hash_rect, &line->head, next_char) {
 			printf("%d(%d-%d) ",hr->c,hr->rect.x,hr->rect.x+hr->rect.w-1);
 		}
 		printf("\n");

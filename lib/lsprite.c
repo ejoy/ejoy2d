@@ -189,7 +189,7 @@ static int
 lsetframe(lua_State *L) {
 	struct sprite * s = self(L);
 	int frame = (int)luaL_checkinteger(L,2);
-	sprite_setframe(s, frame);
+	sprite_setframe(s, frame, false);
 	return 0;
 }
 
@@ -639,6 +639,14 @@ lsr(lua_State *L) {
 	return 0;
 }
 
+static int
+lrecursion_frame(lua_State *L) {
+	struct sprite * s = self(L);
+	int frame = (int)luaL_checkinteger(L,2);
+	sprite_setframe(s, frame, true);
+	return 0;
+}
+
 static void
 lmethod(lua_State *L) {
 	luaL_Reg l[] = {
@@ -657,6 +665,7 @@ lmethod(lua_State *L) {
 		{ "ps", lps },
 		{ "sr", lsr },
 		{ "draw", ldraw },
+		{ "recursion_frame", lrecursion_frame },
 		{ "multi_draw", lmulti_draw },
 		{ "test", ltest },
 		{ NULL, NULL, },
