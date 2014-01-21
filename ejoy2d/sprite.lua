@@ -33,10 +33,12 @@ function sprite_meta.__index(spr, key)
 		return getter(spr)
 	end
 	local child = fetch(spr, key)
+
 	if child then
 		return child
 	else
-		error("Unsupport get " ..  key)
+		print("Unsupport get " ..  key)
+		return nil
 	end
 end
 
