@@ -37,7 +37,7 @@ void main() {
 }
 ]]
 
-local text_fs = [[
+local text_fs_gray = [[
 varying vec2 v_texcoord;
 varying vec4 v_color;
 
@@ -47,6 +47,20 @@ void main() {
 	float c = texture2D(texture0, v_texcoord).w;
 	gl_FragColor.xyz = v_color.xyz * c;
 	gl_FragColor.w = c;
+	gl_FragColor *= v_color.w;
+}
+]]
+
+local text_fs = [[
+varying vec2 v_texcoord;
+varying vec4 v_color;
+
+uniform sampler2D texture0;
+
+void main() {
+	vec4 tmp = texture2D(texture0, v_texcoord);	
+	gl_FragColor.xyz = tmp.xyz * v_color.xyz;
+	gl_FragColor.w = tmp.w;
 	gl_FragColor *= v_color.w;
 }
 ]]

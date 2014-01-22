@@ -27,6 +27,8 @@ struct pack_label {
 	int height;
 	int align;
 	int size;
+    int edge;
+    int max_width;
 };
 
 struct pack_quad {

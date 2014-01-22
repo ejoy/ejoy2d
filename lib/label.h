@@ -20,6 +20,7 @@ struct font_context {
 	int ascent;
 	void * font;
 	void * dc;
+    int edge;
 };
 
 void font_size(const char *str, int unicode, struct font_context * ctx);
