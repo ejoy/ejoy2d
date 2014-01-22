@@ -138,6 +138,18 @@ draw_size(int unicode, const char *utf8, int size, int edge) {
 	return 0;
 }
 
+static int
+draw_height(int unicode, const char *utf8, int size, int edge) {
+	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,size,edge);
+	if (rect == NULL) {
+		rect = gen_char(unicode,utf8,size,edge);
+	}
+	if (rect) {
+		return rect->h + 1;
+	}
+	return 0;
+}
+
 // also defined in sprite.c
 static inline uint32_t
 color_mul(uint32_t c1, uint32_t c2) {
@@ -179,6 +191,51 @@ draw_utf8(int unicode, int cx, int cy, int size, int edge, const struct srt *srt
 	return rect->w - 1;
 }
 
+static void
+draw_line(const char *str, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg,
+          uint32_t color, int cy, int w, int start, int end) {
+    int cx, j;
+
+    switch (l->align) {
+        case LABEL_ALIGN_LEFT:
+            cx = 0;
+            break;
+        case LABEL_ALIGN_RIGHT:
+            cx = l->width - w;
+            break;
+        case LABEL_ALIGN_CENTER:
+            cx = (l->width - w)/2;
+            break;
+    }
+    
+    for (j=start; j<end;) {
+        int unicode;
+        uint8_t c = (uint8_t)str[j];
+        if ((c&0x80) == 0) {
+            unicode = get_unicode(str+j,1);
+            j+=1;
+        } else if ((c&0xe0) == 0xc0) {
+            unicode = get_unicode(str+j,2);
+            j+=2;
+        } else if ((c&0xf0) == 0xe0) {
+            unicode = get_unicode(str+j,3);
+            j+=3;
+        } else if ((c&0xf8) == 0xf0) {
+            unicode = get_unicode(str+j,4);
+            j+=4;
+        } else if ((c&0xfc) == 0xf8) {
+            unicode = get_unicode(str+j,5);
+            j+=5;
+        } else {
+            unicode = get_unicode(str+j,6);
+            j+=6;
+        }
+        
+        if(unicode != '\n')
+            cx+=draw_utf8(unicode, cx, cy, l->size, l->edge, srt, color, arg);
+    }
+}
+
 void
 label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg) {
 	shader_texture(Tex);
@@ -194,9 +251,8 @@ label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct
 
 	char utf8[7];
 	int i;
-	int w = 0;
-    
-	for (i=0;str[i];) {
+    int ch = 0, w = 0, cy = 0, pre = 0;
+	for (i=0; str[i];) {
 		int unicode;
 		uint8_t c = (uint8_t)str[i];
 		if ((c&0x80) == 0) {
@@ -218,45 +274,19 @@ label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct
 			unicode = copystr(utf8,str+i,6);
 			i+=6;
 		}
-		w+=draw_size(unicode, utf8, l->size, l->edge);
+		w += draw_size(unicode, utf8, l->size, l->edge);
+        if (ch == 0) {
+            ch = draw_height(unicode, utf8, l->size, l->edge);
+        }
+        
+        if(w > l->width || unicode == '\n') {
+            draw_line(str, l, srt, arg, color, cy, w, pre, i);
+            cy += ch;
+            pre = i;
+            w = 0; ch = 0;
+        }
 	}
-
-	int cx=0,cy=0;
-	switch (l->align) {
-	case LABEL_ALIGN_LEFT:
-		cx = 0;
-		break;
-	case LABEL_ALIGN_RIGHT:
-		cx = l->width - w;
-		break;
-	case LABEL_ALIGN_CENTER:
-		cx = (l->width - w)/2;
-		break;
-	}
-
-	for (i=0;str[i];) {
-		int unicode;
-		uint8_t c = (uint8_t)str[i];
-		if ((c&0x80) == 0) {
-			unicode = get_unicode(str+i,1);
-			i+=1;
-		} else if ((c&0xe0) == 0xc0) {
-			unicode = get_unicode(str+i,2);
-			i+=2;
-		} else if ((c&0xf0) == 0xe0) {
-			unicode = get_unicode(str+i,3);
-			i+=3;
-		} else if ((c&0xf8) == 0xf0) {
-			unicode = get_unicode(str+i,4);
-			i+=4;
-		} else if ((c&0xfc) == 0xf8) {
-			unicode = get_unicode(str+i,5);
-			i+=5;
-		} else {
-			unicode = get_unicode(str+i,6);
-			i+=6;
-		}
-		// todo: multiline
-		cx+=draw_utf8(unicode, cx, cy, l->size, l->edge, srt, color, arg);
-	}
+    
+    draw_line(str, l, srt, arg, color, cy, w, pre, i);
 }
+
