@@ -291,6 +291,7 @@ void
 shader_defaultblend() {
 	if (RS->blendchange) {
 		rs_commit();
+		RS->blendchange = 0;
 		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 	}
 }
