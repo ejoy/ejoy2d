@@ -57,6 +57,8 @@ function spack.load(tbl)
 	spack.path(assert(tbl.pattern))
 	for _,v in ipairs(tbl) do
 		spack.preload(v)
+		-- collect immediately , because preload text description may use large temp memory
+		collectgarbage "collect"
 	end
 end
 

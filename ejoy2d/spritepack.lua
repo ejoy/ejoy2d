@@ -252,6 +252,7 @@ function spritepack.init( name, texture, meta )
 		cobj = pack.import(texture,meta.maxid,meta.size,meta.data),
 		export = meta.export,
 	}
+	meta.data = nil
 
 	return pack_pool[name]
 end
