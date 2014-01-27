@@ -78,13 +78,28 @@ _font_glyph_gray(NSString* str, void* buffer, struct font_context* ctx){
 //    [str writeToFile:file atomically:YES encoding:NSUTF8StringEncoding error:NULL];
 //}
 
+static void
+convert_rgba_to_alpha(int sz, uint32_t * src, uint8_t *dest) {
+	int i;
+	for (i=0;i<sz;i++) {
+		uint8_t alpha = src[i] & 0xff;
+		uint8_t color = (src[i] >> 8) & 0xff;
+		if (alpha == 0xff) {
+			dest[i] = color / 2 + 128;
+		} else {
+			dest[i] = alpha / 2;
+		}
+	}
+}
+
 static inline void
 _font_glyph_rgba(NSString* str, void* buffer, struct font_context* ctx){
     float w = (float)ctx->w;
     float h = (float)ctx->h;
+    uint32_t tmp[w*h];
     UIFont* font = (__bridge id)(ctx->font);
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGContextRef context = CGBitmapContextCreate(buffer, w, h, 8, w*4,
+    CGContextRef context = CGBitmapContextCreate((void *)tmp, w, h, 8, w*4,
                                                  colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrderDefault);
     if(context == NULL){
         NSLog(@"the context is NULL! @ _font_glyph_rgba function ");
@@ -138,6 +153,8 @@ _font_glyph_rgba(NSString* str, void* buffer, struct font_context* ctx){
     
     UIGraphicsPopContext();
     CGContextRelease(context);
+
+	convert_rgba_to_alpha(w*h, tmp, buffer);
     
 //    _test_write_ppm3(buffer, ctx->w, ctx->h);
 }

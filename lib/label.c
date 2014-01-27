@@ -12,7 +12,7 @@
 
 #define TEX_HEIGHT 1024
 #define TEX_WIDTH 1024
-#define TEX_FMT GL_RGBA
+#define TEX_FMT GL_ALPHA
 
 static GLuint Tex;
 static struct dfont * Dfont = NULL;
@@ -73,23 +73,20 @@ get_unicode(const char *str, int n) {
 }
 
 static const struct dfont_rect *
-gen_char(int unicode, const char * utf8, int size, int edge) {
+gen_char(int unicode, const char * utf8, int size) {
 	struct font_context ctx;
 	font_create(size, &ctx);
-    ctx.edge = edge;
-    if (ctx.font == NULL) {
-        return NULL;
-    }
-    
+	if (ctx.font == NULL) {
+		return NULL;
+	}
+
 	font_size(utf8, unicode, &ctx);
-	const struct dfont_rect * rect = dfont_insert(Dfont, unicode, size, ctx.edge, ctx.w, ctx.h);
+	const struct dfont_rect * rect = dfont_insert(Dfont, unicode, size, ctx.w, ctx.h);
 	if (rect == NULL) {
 		font_release(&ctx);
 		return NULL;
 	}
 	int buffer_sz = rect->w * rect->h;
-    if (TEX_FMT == GL_RGBA)
-        buffer_sz = buffer_sz * 4;
 	uint8_t buffer[buffer_sz];
 	memset(buffer,0,buffer_sz);
 	font_glyph(utf8, unicode, buffer, &ctx);
@@ -127,10 +124,10 @@ draw_rect(const struct dfont_rect *rect, struct matrix *mat, uint32_t color) {
 }
 
 static int
-draw_size(int unicode, const char *utf8, int size, int edge) {
-	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,size,edge);
+draw_size(int unicode, const char *utf8, int size) {
+	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,size);
 	if (rect == NULL) {
-		rect = gen_char(unicode,utf8,size,edge);
+		rect = gen_char(unicode,utf8,size);
 	}
 	if (rect) {
 		return rect->w - 1;
@@ -139,10 +136,10 @@ draw_size(int unicode, const char *utf8, int size, int edge) {
 }
 
 static int
-draw_height(int unicode, const char *utf8, int size, int edge) {
-	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,size,edge);
+draw_height(int unicode, const char *utf8, int size) {
+	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,size);
 	if (rect == NULL) {
-		rect = gen_char(unicode,utf8,size,edge);
+		rect = gen_char(unicode,utf8,size);
 	}
 	if (rect) {
 		return rect->h + 1;
@@ -169,9 +166,9 @@ color_mul(uint32_t c1, uint32_t c2) {
 }
 
 static int
-draw_utf8(int unicode, int cx, int cy, int size, int edge, const struct srt *srt,
-            uint32_t color, const struct sprite_trans *arg) {
-	const struct dfont_rect * rect = dfont_lookup(Dfont, unicode, size, edge);
+draw_utf8(int unicode, int cx, int cy, int size, const struct srt *srt,
+		uint32_t color, const struct sprite_trans *arg) {
+	const struct dfont_rect * rect = dfont_lookup(Dfont, unicode, size);
 	if (rect == NULL) {
 		return 0;
 	}
@@ -232,7 +229,7 @@ draw_line(const char *str, struct pack_label * l, struct srt *srt, const struct 
         }
         
         if(unicode != '\n')
-            cx+=draw_utf8(unicode, cx, cy, l->size, l->edge, srt, color, arg);
+            cx+=draw_utf8(unicode, cx, cy, l->size, srt, color, arg);
     }
 }
 
@@ -274,9 +271,9 @@ label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct
 			unicode = copystr(utf8,str+i,6);
 			i+=6;
 		}
-		w += draw_size(unicode, utf8, l->size, l->edge);
+		w += draw_size(unicode, utf8, l->size);
         if (ch == 0) {
-            ch = draw_height(unicode, utf8, l->size, l->edge);
+            ch = draw_height(unicode, utf8, l->size);
         }
         
         if(w > l->width || unicode == '\n') {

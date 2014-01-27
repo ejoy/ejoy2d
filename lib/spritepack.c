@@ -242,8 +242,8 @@ import_label(struct import_stream *is) {
 	pl->size = import_word(is);
 	pl->width = import_word(is);
 	pl->height = import_word(is);
-    pl->edge = import_byte(is);
-    pl->max_width = import_word(is);
+	pl->edge = import_byte(is);
+	pl->max_width = import_word(is);
 }
 
 static void
@@ -294,6 +294,8 @@ import_sprite(struct import_stream *is) {
 	integer maxid
 	integer size
 	string data
+		lightuserdata data
+		integer data_sz
 
 	ret: userdata sprite_pack
  */
@@ -339,9 +341,17 @@ limport(lua_State *L) {
 
 	struct import_stream is;
 	is.alloc = &alloc;
-	is.stream =luaL_checklstring(L, 4, &is.size);
 	is.pack = pack;
 	is.current_id = -1;
+	if (lua_isstring(L,4)) {
+		is.stream = lua_tolstring(L, 4, &is.size);
+	} else {
+		is.stream = lua_touserdata(L, 4);
+		if (is.stream == NULL) {
+			return luaL_error(L, "Need const char *");
+		}
+		is.size = luaL_checkinteger(L, 5);
+	}
 
 	while (is.size != 0) {
 		import_sprite(&is);
@@ -575,6 +585,64 @@ ldumppack(lua_State *L) {
 	return 0;
 }
 
+static int
+limport_value(lua_State *L) {
+	size_t sz = 0;
+	const uint8_t * data = (const uint8_t *)luaL_checklstring(L, 1, &sz);
+	int off = luaL_checkinteger(L, 2) - 1;
+	int len = 0;
+	const char * type = luaL_checkstring(L,3);
+	switch(type[0]) {
+	case 'w': {
+		len = 2;
+		if (off+len > sz) {
+			return luaL_error(L, "Invalid data stream");
+		}
+		int v = data[off] | data[off+1] << 8;
+		lua_pushinteger(L, v);
+		break;
+	}
+	case 'i': {
+		len = 4;
+		if (off+len > sz) {
+			return luaL_error(L, "Invalid data stream");
+		}
+		uint32_t v = data[off] 
+			| data[off+1] << 8
+			| data[off+2] << 16
+			| data[off+3] << 24;
+		lua_pushunsigned(L, v);
+		break;
+	}
+	case 's': {
+		len = 1;
+		if (off+len > sz) {
+			return luaL_error(L, "Invalid data stream");
+		}
+		int slen = data[off];
+		if (slen == 0xff) {
+			lua_pushlstring(L, "", 0);
+			break;
+		}
+		if (off+len+slen > sz) {
+			return luaL_error(L, "Invalid data stream");
+		}
+		lua_pushlstring(L, (const char *)(data+off+1), slen);
+		len += slen;
+		break;
+	}
+	case 'p' : {
+		len = 0;
+		lua_pushlightuserdata(L, (void *)(data+off));
+		break;
+	}
+	default:
+		return luaL_error(L, "Invalid type %s", type);
+	}
+	lua_pushinteger(L, off + len + 1);
+	return 2;
+}
+
 int
 ejoy2d_spritepack(lua_State *L) {
 	luaL_Reg l[] = {
@@ -593,6 +661,7 @@ ejoy2d_spritepack(lua_State *L) {
 		{ "label_size", llabel_size },
 		{ "pannel_size", lpannel_size },
 		{ "import", limport },
+		{ "import_value", limport_value },
 		{ "dump", ldumppack },
 		{ NULL, NULL },
 	};

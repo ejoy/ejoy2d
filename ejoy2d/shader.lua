@@ -37,20 +37,6 @@ void main() {
 }
 ]]
 
-local text_fs_gray = [[
-varying vec2 v_texcoord;
-varying vec4 v_color;
-
-uniform sampler2D texture0;
-
-void main() {
-	float c = texture2D(texture0, v_texcoord).w;
-	gl_FragColor.xyz = v_color.xyz * c;
-	gl_FragColor.w = c;
-	gl_FragColor *= v_color.w;
-}
-]]
-
 local text_fs = [[
 varying vec2 v_texcoord;
 varying vec4 v_color;
@@ -58,9 +44,28 @@ varying vec4 v_color;
 uniform sampler2D texture0;
 
 void main() {
-	vec4 tmp = texture2D(texture0, v_texcoord);	
-	gl_FragColor.xyz = tmp.xyz * v_color.xyz;
-	gl_FragColor.w = tmp.w;
+	float c = texture2D(texture0, v_texcoord).w;
+	float alpha = clamp(c * 2.0 , 0, 1.0);
+
+	gl_FragColor.xyz = v_color.xyz * alpha;
+	gl_FragColor.w = alpha;
+	gl_FragColor *= v_color.w;
+}
+]]
+
+local text_edge_fs = [[
+varying vec2 v_texcoord;
+varying vec4 v_color;
+
+uniform sampler2D texture0;
+
+void main() {
+	float c = texture2D(texture0, v_texcoord).w;
+	float alpha = clamp(c * 2.0 , 0, 1.0);
+	float color = clamp((c-0.5) * 2.0, 0, 1.0);
+
+	gl_FragColor.xyz = v_color.xyz * color;
+	gl_FragColor.w = alpha;
 	gl_FragColor *= v_color.w;
 }
 ]]
@@ -103,13 +108,15 @@ local shader = {}
 local shader_name = {
 	NORMAL = 0,
 	TEXT = 1,
-	GRAY = 2,
-	COLOR = 3,
+	EDGE = 2,
+	GRAY = 3,
+	COLOR = 4,
 }
 
 function shader.init()
 	s.load(shader_name.NORMAL, PRECISION .. sprite_fs, PRECISION .. sprite_vs)
 	s.load(shader_name.TEXT, PRECISION .. text_fs, PRECISION .. sprite_vs)
+	s.load(shader_name.EDGE, PRECISION .. text_edge_fs, PRECISION .. sprite_vs)
 	s.load(shader_name.GRAY, PRECISION .. gray_fs, PRECISION .. sprite_vs)
 	s.load(shader_name.COLOR, PRECISION .. color_fs, PRECISION .. sprite_vs)
 end

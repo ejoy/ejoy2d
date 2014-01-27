@@ -38,6 +38,7 @@ function spack.preload(packname)
 	local p = {}
 	local filename = realname(packname)
 	p.meta = assert(pack.pack(dofile(filename .. ".lua")))
+
 	p.tex = {}
 	for i=1,p.meta.texture do
 		p.tex[i] = require_tex(filename .. "." .. i)

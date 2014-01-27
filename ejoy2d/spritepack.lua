@@ -241,6 +241,41 @@ function spritepack.pack( data )
 	return ret
 end
 
+function spritepack.export(meta)
+	local result = { true }
+	table.insert(result, pack.word(meta.maxid))
+	table.insert(result, pack.word(meta.texture))
+	table.insert(result, pack.int32(meta.size))
+	table.insert(result, pack.int32(#meta.data))
+	local s = 0
+	for k,v in pairs(meta.export) do
+		table.insert(result, pack.word(v))
+		table.insert(result, pack.string(k))
+		s = s + 1
+	end
+	result[1] = pack.word(s)
+	table.insert(result, meta.data)
+	return table.concat(result)
+end
+
+function spritepack.import(data)
+	local meta = { export = {} }
+	local export_n, off = pack.import_value(data, 1, 'w')
+	meta.maxid , off = pack.import_value(data, off, 'w')
+	meta.texture , off = pack.import_value(data, off, 'w')
+	meta.size , off = pack.import_value(data, off, 'i')
+	meta.data_sz , off = pack.import_value(data, off, 'i')
+	for i=1, export_n do
+		local id, name
+		id, off = pack.import_value(data, off, 'w')
+		name, off = pack.import_value(data, off, 's')
+		meta.export[name] = id
+	end
+	meta.data = pack.import_value(data, off, 'p')
+
+	return meta
+end
+
 function spritepack.init( name, texture, meta )
 	assert(pack_pool[name] == nil , string.format("sprite package [%s] is exist", name))
 	if type(texture) == "number" then
@@ -249,7 +284,7 @@ function spritepack.init( name, texture, meta )
 		assert(meta.texture == #texture)
 	end
 	pack_pool[name] = {
-		cobj = pack.import(texture,meta.maxid,meta.size,meta.data),
+		cobj = pack.import(texture,meta.maxid,meta.size,meta.data, meta.data_sz),
 		export = meta.export,
 	}
 	meta.data = nil
