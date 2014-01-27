@@ -22,13 +22,10 @@ font_size(const char *str, int unicode, struct font_context *ctx) {
     NSString * tmp = [NSString stringWithUTF8String: str];
     //TODO handle ios 7 for deprecated method
     CGSize sz = [tmp sizeWithFont:(__bridge UIFont *)(ctx->font)];
-    if(ctx->edge == 1) {
-        ctx->w = (int)sz.width+4;
-        ctx->h = (int)sz.height+4;
-    } else {
-        ctx->w = (int)sz.width;
-        ctx->h = (int)sz.height;
-    }
+  
+    ctx->w = (int)sz.width+3;
+    ctx->h = (int)sz.height+3;
+  
 }
 
 static inline void
@@ -82,25 +79,42 @@ static void
 convert_rgba_to_alpha(int sz, uint32_t * src, uint8_t *dest) {
 	int i;
 	for (i=0;i<sz;i++) {
-		uint8_t alpha = src[i] & 0xff;
+		uint8_t alpha = (src[i]>>24) & 0xff;
 		uint8_t color = (src[i] >> 8) & 0xff;
 		if (alpha == 0xff) {
-			dest[i] = color / 2 + 128;
+//			dest[i] = color / 2 + 128;
+      dest[i]=255;
 		} else {
 			dest[i] = alpha / 2;
 		}
+    //dest[i] = alpha;
 	}
+}
+
+static void
+dump(int w, int h, uint32_t *src) {
+  static char map[] = "_123456789abcdef";
+  int i,j;
+  for (i=0;i<h;i++) {
+    for (j=0;j<w;j++) {
+      printf("%c",map[((src[w*i+j]>>24)&0xff)/16]);
+    }
+    printf("\n");
+  }
 }
 
 static inline void
 _font_glyph_rgba(NSString* str, void* buffer, struct font_context* ctx){
     float w = (float)ctx->w;
     float h = (float)ctx->h;
-    uint32_t tmp[w*h];
+    printf("%f, %f\n", w, h);
+    uint32_t tmp[ctx->w*ctx->h];
+  memset(tmp,0,sizeof(tmp));
     UIFont* font = (__bridge id)(ctx->font);
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     CGContextRef context = CGBitmapContextCreate((void *)tmp, w, h, 8, w*4,
                                                  colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrderDefault);
+  
     if(context == NULL){
         NSLog(@"the context is NULL! @ _font_glyph_rgba function ");
         CGColorSpaceRelease(colorSpace);
@@ -113,29 +127,23 @@ _font_glyph_rgba(NSString* str, void* buffer, struct font_context* ctx){
     UIGraphicsPushContext(context);
 
     if([[[UIDevice currentDevice] systemVersion] floatValue] >= 7.0){
-        if (ctx->edge) {
-            CGContextSetLineWidth(context, 4);
-            CGContextSetTextDrawingMode(context, kCGTextStroke);
+      
+            CGContextSetLineWidth(context, 2);
+            CGContextSetTextDrawingMode(context, kCGTextFillStroke);
             NSDictionary* _attr =[NSDictionary dictionaryWithObjectsAndKeys:
                               font, NSFontAttributeName,
+ //                             [NSNumber numberWithFloat: -2.0], NSStrokeWidthAttributeName,
                               [UIColor whiteColor], NSForegroundColorAttributeName,
                               [UIColor blackColor], NSStrokeColorAttributeName,
                               nil];
-            [str drawAtPoint:CGPointMake(2, 2) withAttributes:_attr];
-        
-            CGContextSetTextDrawingMode(context, kCGTextFill);
-            [str drawAtPoint:CGPointMake(2, 2) withAttributes:_attr];
-        } else {
-            NSDictionary* _attr =[NSDictionary dictionaryWithObjectsAndKeys:
-                                  font, NSFontAttributeName,
-                                  [UIColor whiteColor], NSForegroundColorAttributeName,
-                                  nil];
-            [str drawAtPoint:CGPointMake(0, 0) withAttributes:_attr];
-        }
+            [str drawAtPoint:CGPointMake(1, 1) withAttributes:_attr];
+//        
+//            CGContextSetTextDrawingMode(context, kCGTextFill);
+//            [str drawAtPoint:CGPointMake(2, 2) withAttributes:_attr];
+      
     }
     else {
-        
-        if (ctx->edge) {
+      
             CGContextSetRGBFillColor(context, 1, 1, 1, 1);
         
             CGContextSetLineWidth(context, 4);
@@ -146,15 +154,12 @@ _font_glyph_rgba(NSString* str, void* buffer, struct font_context* ctx){
         
             CGContextSetTextDrawingMode(context, kCGTextFill);
             [str drawAtPoint:CGPointMake(2,2) withFont:font];
-        } else {
-            [str drawAtPoint:CGPointMake(0,0) withFont:font];
-        }
     }
     
     UIGraphicsPopContext();
     CGContextRelease(context);
 
-	convert_rgba_to_alpha(w*h, tmp, buffer);
+	convert_rgba_to_alpha(ctx->w*ctx->h, tmp, buffer);
     
 //    _test_write_ppm3(buffer, ctx->w, ctx->h);
 }
