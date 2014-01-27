@@ -12,6 +12,7 @@
 
 #define TEX_HEIGHT 1024
 #define TEX_WIDTH 1024
+#define FONT_SIZE 31
 #define TEX_FMT GL_ALPHA
 
 static GLuint Tex;
@@ -72,24 +73,88 @@ get_unicode(const char *str, int n) {
 	return unicode;
 }
 
+static void
+gen_outline(int w, int h, uint8_t *buffer, uint8_t *dest) {
+	int i,j;
+	for (i=0;i<h;i++) {
+		uint8_t * output = dest + i*w;
+		uint8_t * line = buffer + i*w;
+		uint8_t * prev;
+		uint8_t * next;
+		if (i==0) {
+			prev = line;
+		} else {
+			prev = line-w;
+		}
+		if (i==h-1) {
+			next = line;
+		} else {
+			next = line+w;
+		}
+		for (j=0;j<w;j++) {
+			int left, right;
+			if (j==0) {
+				left = 0;
+			} else {
+				left = 1;
+			}
+			if (j==w-1) {
+				right = 0;
+			} else {
+				right = 1;
+			}
+			int c = line[j] * 4 
+				+ line[j-left] * 2
+				+ line[j+right] * 2
+				+ prev[j] * 2
+				+ next[j] * 2
+				+ prev[j-left]
+				+ prev[j+right]
+				+ next[j-left]
+				+ next[j+right]
+				;
+			output[j] = c / 16;
+		}
+	}
+}
+
+static void
+halfsize(uint8_t *src, uint8_t *dest, int w, int h) {
+	int i,j;
+	for (i=0;i<h;i++) {
+		uint8_t * line_s = src+i*2*w*2;
+		uint8_t * line_d = dest+i*w;
+		for (j=0;j<w;j++) {
+			line_d[j] = (line_s[j*2] + line_s[j*2+1] +
+				line_s[j*2+w*2] + line_s[j*2+w*2+1]) / 4;
+		}
+	}
+}
+
 static const struct dfont_rect *
 gen_char(int unicode, const char * utf8, int size) {
+	// todo : use large size when size is large
 	struct font_context ctx;
-	font_create(size, &ctx);
+	font_create(FONT_SIZE*2, &ctx);
 	if (ctx.font == NULL) {
 		return NULL;
 	}
 
 	font_size(utf8, unicode, &ctx);
-	const struct dfont_rect * rect = dfont_insert(Dfont, unicode, size, ctx.w, ctx.h);
+	const struct dfont_rect * rect = dfont_insert(Dfont, unicode, FONT_SIZE, ctx.w/2+1, ctx.h/2+1);
 	if (rect == NULL) {
 		font_release(&ctx);
 		return NULL;
 	}
-	int buffer_sz = rect->w * rect->h;
+	ctx.w = rect->w * 2;
+	ctx.h = rect->h * 2;
+	int buffer_sz = ctx.w * ctx.h;
 	uint8_t buffer[buffer_sz];
+	uint8_t tmp[buffer_sz];
 	memset(buffer,0,buffer_sz);
 	font_glyph(utf8, unicode, buffer, &ctx);
+	gen_outline(ctx.w, ctx.h, buffer, tmp);
+	halfsize(tmp, buffer, rect->w,rect->h);
 	font_release(&ctx);
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -110,39 +175,39 @@ set_point(float *v, int *m, int xx, int yy,int tx, int ty) {
 }
 
 static void
-draw_rect(const struct dfont_rect *rect, struct matrix *mat, uint32_t color) {
+draw_rect(const struct dfont_rect *rect, int size, struct matrix *mat, uint32_t color) {
 	float vb[16];
 
-	int w = rect->w-1;
-	int h = rect->h-1;
+	int w = (rect->w -1) * size / FONT_SIZE ;
+	int h = (rect->h -1) * size / FONT_SIZE ;
 
 	set_point(vb+0, mat->m, 0,0, rect->x, rect->y);
-	set_point(vb+4, mat->m, w*SCREEN_SCALE,0, rect->x+w, rect->y);
-	set_point(vb+8, mat->m, w*SCREEN_SCALE,h*SCREEN_SCALE, rect->x+w, rect->y+h);
-	set_point(vb+12, mat->m, 0,h*SCREEN_SCALE, rect->x, rect->y+h);
+	set_point(vb+4, mat->m, w*SCREEN_SCALE,0, rect->x+rect->w-1, rect->y);
+	set_point(vb+8, mat->m, w*SCREEN_SCALE,h*SCREEN_SCALE, rect->x+rect->w-1, rect->y+rect->h-1);
+	set_point(vb+12, mat->m, 0,h*SCREEN_SCALE, rect->x, rect->y+rect->h-1);
 	shader_draw(vb, color);
 }
 
 static int
 draw_size(int unicode, const char *utf8, int size) {
-	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,size);
+	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE);
 	if (rect == NULL) {
 		rect = gen_char(unicode,utf8,size);
 	}
 	if (rect) {
-		return rect->w - 1;
+		return (rect->w -1) * size / FONT_SIZE;
 	}
 	return 0;
 }
 
 static int
 draw_height(int unicode, const char *utf8, int size) {
-	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,size);
+	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE);
 	if (rect == NULL) {
 		rect = gen_char(unicode,utf8,size);
 	}
 	if (rect) {
-		return rect->h + 1;
+		return rect->h * size / FONT_SIZE;
 	}
 	return 0;
 }
@@ -167,8 +232,8 @@ color_mul(uint32_t c1, uint32_t c2) {
 
 static int
 draw_utf8(int unicode, int cx, int cy, int size, const struct srt *srt,
-		uint32_t color, const struct sprite_trans *arg) {
-	const struct dfont_rect * rect = dfont_lookup(Dfont, unicode, size);
+	uint32_t color, const struct sprite_trans *arg) {
+	const struct dfont_rect * rect = dfont_lookup(Dfont, unicode, FONT_SIZE);
 	if (rect == NULL) {
 		return 0;
 	}
@@ -183,9 +248,9 @@ draw_utf8(int unicode, int cx, int cy, int size, const struct srt *srt,
 		m=&mat1;
 	}
 	matrix_srt(m, srt);
-	draw_rect(rect,m,color);
+	draw_rect(rect,size,m,color);
 
-	return rect->w - 1;
+	return (rect->w-1) * size / FONT_SIZE ;
 }
 
 static void

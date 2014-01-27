@@ -743,7 +743,7 @@ return {
 {
 	type = "label",
 	id = 39,
-	font = "", color = 0xffffffff, align = 2, size = 16, width = 100, height = 20, noedge = true
+	font = "", color = 0xffffffff, align = 2, size = 20, width = 100, height = 40, noedge = true
 },
 {
 	type = "pannel",

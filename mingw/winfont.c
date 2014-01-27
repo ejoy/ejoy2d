@@ -11,7 +11,7 @@ font_create(int font_size, struct font_context *ctx) {
 	HFONT f = CreateFontW(
 		font_size,0,
 		0, 0, 
-		0,
+		FW_SEMIBOLD,
 		FALSE, FALSE, FALSE, 
 		DEFAULT_CHARSET, 
 		OUT_DEFAULT_PRECIS, 
@@ -89,7 +89,7 @@ font_glyph(const char * str, int unicode, void * buffer, struct font_context *ct
 	for (i=0;i<h;i++) {
 		for (j=0;j<gm.gmBlackBoxX;j++) {
 			int src = tmp[i*w+j];
-			buf[(i + offy)*ctx->w + j + offx] = src * 255 / 65;
+			buf[(i + offy)*ctx->w + j + offx] = src * 255 / 64;
 		}
 	}
 }

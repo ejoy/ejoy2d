@@ -51,7 +51,7 @@ init_window(HWND hWnd) {
 	}
 
 	glViewport(0, 0, WIDTH, HEIGHT);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
 	ReleaseDC(hWnd, hDC);
 }
