@@ -169,8 +169,8 @@ void
 font_glyph(const char * str, int unicode, void * buffer, struct font_context *ctx){
  
     NSString * tmp = [NSString stringWithUTF8String: str];
-    _font_glyph_rgba(tmp, buffer, ctx);
-//    _font_glyph_gray(tmp, buffer, ctx);
+//    _font_glyph_rgba(tmp, buffer, ctx);
+    _font_glyph_gray(tmp, buffer, ctx);
 }
 
 
