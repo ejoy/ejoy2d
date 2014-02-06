@@ -47,6 +47,23 @@ function spack.preload(packname)
 	packages[packname] = p
 end
 
+function spack.preload_raw(packname)
+	if packages[packname] then
+		return packages[packname]
+	end
+	local p = {}
+	local filename = realname(packname)
+	local data = io.open(filename..".raw", "rb"):read("*a")
+	p.meta = assert(pack.import(data))
+
+	p.tex = {}
+	for i=1,p.meta.texture do
+		p.tex[i] = require_tex(filename .. "." .. i)
+	end
+	pack.init(packname, p.tex, p.meta)
+	packages[packname] = p
+end
+
 function ejoy2d.sprite(packname, name)
 	if packages[packname] == nil then
 		spack.preload(packname)
@@ -58,9 +75,16 @@ function spack.load(tbl)
 	spack.path(assert(tbl.pattern))
 	for _,v in ipairs(tbl) do
 		spack.preload(v)
-		-- collect immediately , because preload text description may use large temp memory
 		collectgarbage "collect"
 	end
+end
+
+function spack.load_raw(tbl)
+	spack.path(assert(tbl.pattern))
+	for _,v in ipairs(tbl) do
+		spack.preload_raw(v)
+	end
+	collectgarbage "collect"
 end
 
 function spack.texture(packname, index)
@@ -68,6 +92,23 @@ function spack.texture(packname, index)
 		spack.preload(packname)
 	end
 	return packages[packname].tex[index or 1]
+end
+
+function spack.export(outdir, tbl)
+	spack.path(assert(tbl.pattern))
+	for _, packname in ipairs(tbl) do
+		print("packname    ", packname, outdir, tbl.pattern)
+		local filename = string.gsub(outdir..tbl.pattern, 
+				"([^?]*)?([^?]*)", "%1"..packname.."%2")
+		print("spack.export     ",  filename.. ".raw")
+
+		local meta = assert(pack.pack(dofile(filename .. ".lua")))
+		local output = pack.export(meta)
+
+		local file = io.open(filename .. ".raw", "w+")
+		file:write(output)
+		file:close()
+	end
 end
 
 return spack
