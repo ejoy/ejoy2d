@@ -114,64 +114,70 @@ gen_outline(int w, int h, uint8_t *buffer, uint8_t *dest) {
 			}
 			int n1 = max(line[j-left],line[j+right],prev[j],next[j]);
 			int n2 = max(prev[j-left],prev[j+right],next[j-left],next[j+right]);
-			if (line[j] < n1) {
-				output[j] = (line[j] + n1)/2;
-			} else if (line[j] < n2) {
-				output[j] = (line[j] * 3 + n2)/4;
+			int edge = (n1*3 + n2) / 4;
+			if (line[j] == 0) {
+				output[j] = edge / 2;
 			} else {
-				output[j] = line[j];
+				output[j] = line[j]/2 + 128;
 			}
+		}
+		if (output[0] > 128) {
+			output[0]/=2;
+		}
+		if (output[w-1] > 128) {
+			output[w-1]/=2;
 		}
 	}
 }
 
+/*
 static void
-halfsize(uint8_t *src, uint8_t *dest, int w, int h) {
+write_pgm(int unicode, int w, int h, const uint8_t * buffer) {
+	char tmp[128];
+	sprintf(tmp,"%d.pgm",unicode);
+	FILE *f = fopen(tmp, "wb");
+	fprintf(f, "P2\n%d %d\n255\n",w,h);
 	int i,j;
 	for (i=0;i<h;i++) {
-		uint8_t * line_s = src+i*2*w*2;
-		uint8_t * line_d = dest+i*w;
 		for (j=0;j<w;j++) {
-			line_d[j] = (line_s[j*2] + line_s[j*2+1] +
-				line_s[j*2+w*2] + line_s[j*2+w*2+1]) / 4;
+			fprintf(f,"%3d,",buffer[0]);
+			++buffer;
 		}
-		if (line_d[0] == 255)
-			line_d[0] = 128;
-		if (line_d[w-1] == 255)
-			line_d[w-1] = 128;
+		fprintf(f,"\n");
 	}
+	fclose(f);
 }
+*/
 
 static const struct dfont_rect *
 gen_char(int unicode, const char * utf8, int size) {
 	// todo : use large size when size is large
 	struct font_context ctx;
-	font_create(FONT_SIZE*2, &ctx);
+	font_create(FONT_SIZE, &ctx);
 	if (ctx.font == NULL) {
 		return NULL;
 	}
 
 	font_size(utf8, unicode, &ctx);
-	const struct dfont_rect * rect = dfont_insert(Dfont, unicode, FONT_SIZE, ctx.w/2+1, ctx.h/2+1);
+	const struct dfont_rect * rect = dfont_insert(Dfont, unicode, FONT_SIZE, ctx.w+1, ctx.h+1);
 	if (rect == NULL) {
 		font_release(&ctx);
 		return NULL;
 	}
-	ctx.w = rect->w * 2;
-	ctx.h = rect->h * 2;
+	ctx.w = rect->w ;
+	ctx.h = rect->h ;
 	int buffer_sz = ctx.w * ctx.h;
 	uint8_t buffer[buffer_sz];
 	uint8_t tmp[buffer_sz];
 
-	memset(buffer,0,buffer_sz);
-	font_glyph(utf8, unicode, buffer, &ctx);
-	gen_outline(ctx.w, ctx.h, buffer, tmp);
+	memset(tmp,0,buffer_sz);
+	font_glyph(utf8, unicode, tmp, &ctx);
 	gen_outline(ctx.w, ctx.h, tmp, buffer);
-	halfsize(buffer, tmp, rect->w,rect->h);
+//	write_pgm(unicode, ctx.w, ctx.h, buffer);
 	font_release(&ctx);
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, rect->x, rect->y, rect->w, rect->h, TEX_FMT, GL_UNSIGNED_BYTE, tmp);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, rect->x, rect->y, rect->w, rect->h, TEX_FMT, GL_UNSIGNED_BYTE, buffer);
 
 	return rect;
 }
