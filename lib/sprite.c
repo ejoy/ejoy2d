@@ -176,6 +176,7 @@ sprite_mount(struct sprite *parent, int index, struct sprite *child) {
 	struct sprite * oldc = parent->data.children[index];
 	if (oldc) {
 		oldc->parent = NULL;
+    oldc->name = NULL;
 	}
 	parent->data.children[index] = child;
 	if (child) {
