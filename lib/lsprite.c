@@ -464,6 +464,21 @@ ldraw(lua_State *L) {
 }
 
 static int
+laabb(lua_State *L) {
+	struct sprite *s = self(L);
+	struct srt srt;
+	fill_srt(L,&srt,2);
+	int aabb[4];
+	sprite_aabb(s, &srt, aabb);
+	int i;
+	for (i=0;i<4;i++) {
+		lua_pushinteger(L, aabb[i]);
+	}
+	return 4;
+}
+
+
+static int
 lmulti_draw(lua_State *L) {
 	struct sprite *s = self(L);
 	int cnt = (int)luaL_checkinteger(L,3);
@@ -668,6 +683,7 @@ lmethod(lua_State *L) {
 		{ "recursion_frame", lrecursion_frame },
 		{ "multi_draw", lmulti_draw },
 		{ "test", ltest },
+		{ "aabb", laabb },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);

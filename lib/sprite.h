@@ -55,6 +55,8 @@ const char * sprite_childname(struct sprite *, int index);
 void sprite_setframe(struct sprite *, int frame, bool force_child);
 void sprite_mount(struct sprite *, int index, struct sprite *);
 
+void sprite_aabb(struct sprite *s, struct srt *srt, int aabb[4]);
+
 int ejoy2d_sprite(lua_State *L);
 
 #endif

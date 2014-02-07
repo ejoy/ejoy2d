@@ -10,6 +10,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
+#include <limits.h>
 
 void
 sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const struct sprite_trans *arg) {
@@ -299,6 +300,16 @@ trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_trans *t
 	return t;
 }
 
+static struct matrix *
+mat_mul(struct matrix *a, struct matrix *b, struct matrix *tmp) {
+	if (b == NULL)
+		return a;
+	if (a == NULL)
+		return b;
+	matrix_mul(tmp, a , b);
+	return tmp;
+}
+
 static void
 switch_program(struct sprite_trans *t, int def) {
 	int prog = t->program;
@@ -411,6 +422,139 @@ sprite_draw(struct sprite *s, struct srt *srt) {
 	}
 }
 
+// aabb
+
+static void
+poly_aabb(int n, const int32_t * point, struct srt *srt, struct matrix *ts, int aabb[4]) {
+	struct matrix mat;
+	if (ts == NULL) {
+		matrix_identity(&mat);
+	} else {
+		mat = *ts;
+	}
+	matrix_srt(&mat, srt);
+	int *m = mat.m;
+
+	int i;
+	for (i=0;i<n;i++) {
+		int x = point[i*2];
+		int y = point[i*2+1];
+
+		int xx = (x * m[0] + y * m[2]) / 1024 + m[4];
+		int yy = (x * m[1] + y * m[3]) / 1024 + m[5];
+
+		if (xx < aabb[0])
+			aabb[0] = xx;
+		if (xx > aabb[2])
+			aabb[2] = xx;
+		if (yy < aabb[1])
+			aabb[1] = yy;
+		if (yy > aabb[3])
+			aabb[3] = yy;
+	}
+}
+
+static inline void
+quad_aabb(struct pack_picture * pic, struct srt *srt, struct matrix *ts, int aabb[4]) {
+	int i;
+	for (i=0;i<pic->n;i++) {
+		poly_aabb(4, pic->rect[i].screen_coord, srt, ts, aabb);
+	}
+}
+
+static inline void
+polygon_aabb(struct pack_polygon * polygon, struct srt *srt, struct matrix *ts, int aabb[4]) {
+	int i;
+	for (i=0;i<polygon->n;i++) {
+		struct pack_poly * poly = &polygon->poly[i];
+		poly_aabb(poly->n, poly->screen_coord, srt, ts, aabb);
+	}
+}
+
+static inline void
+label_aabb(struct pack_label *label, struct srt *srt, struct matrix *ts, int aabb[4]) {
+	int32_t point[] = {
+		0,0,
+		label->width * SCREEN_SCALE, 0,
+		0, label->height * SCREEN_SCALE,
+		label->width * SCREEN_SCALE, label->height * SCREEN_SCALE,
+	};
+	poly_aabb(4, point, srt, ts, aabb);
+}
+
+static inline void
+panel_aabb(struct pack_pannel *panel, struct srt *srt, struct matrix *ts, int aabb[4]) {
+	int32_t point[] = {
+		0,0,
+		panel->width * SCREEN_SCALE, 0,
+		0, panel->height * SCREEN_SCALE,
+		panel->width * SCREEN_SCALE, panel->height * SCREEN_SCALE,
+	};
+	poly_aabb(4, point, srt, ts, aabb);
+}
+
+static int
+child_aabb(struct sprite *s, struct srt *srt, struct matrix * mat, int aabb[4]) {
+	struct matrix temp;
+	struct matrix *t = mat_mul(s->t.mat, mat, &temp);
+	switch (s->type) {
+	case TYPE_PICTURE:
+		quad_aabb(s->s.pic, srt, t, aabb);
+		return 0;
+	case TYPE_POLYGON:
+		polygon_aabb(s->s.poly, srt, t, aabb);
+		return 0;
+	case TYPE_LABEL:
+		label_aabb(s->s.label, srt, t, aabb);
+		return 0;
+	case TYPE_ANIMATION:
+		break;
+	case TYPE_PANNEL:
+		panel_aabb(s->s.pannel, srt, t, aabb);
+		return s->data.scissor;
+	default:
+		// todo : invalid type
+		return 0;
+	}
+	// draw animation
+	struct pack_animation *ani = s->s.ani;
+	int frame = real_frame(s) + s->start_frame;
+	struct pack_frame * pf = &ani->frame[frame];
+	int i;
+	for (i=0;i<pf->n;i++) {
+		struct pack_part *pp = &pf->part[i];
+		int index = pp->component_id;
+		struct sprite * child = s->data.children[index];
+		if (child == NULL || child->visible == false) {
+			continue;
+		}
+		struct matrix temp2;
+		struct matrix *ct = mat_mul(pp->t.mat, t, &temp2);
+		if (child_aabb(child, srt, ct, aabb))
+			break;
+	}
+	return 0;
+}
+
+void
+sprite_aabb(struct sprite *s, struct srt *srt, int aabb[4]) {
+	int i;
+	if (s->visible) {
+		aabb[0] = INT_MAX;
+		aabb[1] = INT_MAX;
+		aabb[2] = INT_MIN;
+		aabb[3] = INT_MIN;
+		child_aabb(s,srt,NULL,aabb);
+		for (i=0;i<4;i++)
+			aabb[i] /= SCREEN_SCALE;
+	} else {
+		for (i=0;i<4;i++)
+			aabb[i] = 0;
+	}
+}
+
+// test
+
 static int
 test_quad(struct pack_picture * pic, int x, int y) {
 	int p;
@@ -480,19 +624,18 @@ test_pannel(struct pack_pannel *pannel, int x, int y) {
 	return x>=0 && x<pannel->width && y>=0 && y<pannel->height;
 }
 
-static int test_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, int x, int y, struct sprite ** touch);
+static int test_child(struct sprite *s, struct srt *srt, struct matrix * ts, int x, int y, struct sprite ** touch);
 
 static int
-check_child(struct sprite *s, struct srt *srt, struct sprite_trans * t, struct pack_frame * pf, int i, int x, int y, struct sprite ** touch) {
+check_child(struct sprite *s, struct srt *srt, struct matrix * t, struct pack_frame * pf, int i, int x, int y, struct sprite ** touch) {
 	struct pack_part *pp = &pf->part[i];
 	int index = pp->component_id;
 	struct sprite * child = s->data.children[index];
 	if (child == NULL || !child->visible) {
 		return 0;
 	}
-	struct sprite_trans temp2;
-	struct matrix temp_matrix2;
-	struct sprite_trans *ct = trans_mul(&pp->t, t, &temp2, &temp_matrix2);
+	struct matrix temp2;
+	struct matrix *ct = mat_mul(pp->t.mat, t, &temp2);
 	struct sprite *tmp = NULL;
 	int testin = test_child(child, srt, ct, x, y, &tmp);
 	if (testin) {
@@ -512,7 +655,7 @@ check_child(struct sprite *s, struct srt *srt, struct sprite_trans * t, struct p
 		0 : test failed, but *touch capture the message
  */
 static int
-test_animation(struct sprite *s, struct srt *srt, struct sprite_trans * t, int x, int y, struct sprite ** touch) {
+test_animation(struct sprite *s, struct srt *srt, struct matrix * t, int x, int y, struct sprite ** touch) {
 	struct pack_animation *ani = s->s.ani;
 	int frame = real_frame(s) + s->start_frame;
 	struct pack_frame * pf = &ani->frame[frame];
@@ -555,10 +698,9 @@ test_animation(struct sprite *s, struct srt *srt, struct sprite_trans * t, int x
 }
 
 static int
-test_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, int x, int y, struct sprite ** touch) {
-	struct sprite_trans temp;
-	struct matrix temp_matrix;
-	struct sprite_trans *t = trans_mul(&s->t, ts, &temp, &temp_matrix);
+test_child(struct sprite *s, struct srt *srt, struct matrix * ts, int x, int y, struct sprite ** touch) {
+	struct matrix temp;
+	struct matrix *t = mat_mul(s->t.mat, ts, &temp);
 	if (s->type == TYPE_ANIMATION) {
 		struct sprite *tmp = NULL;
 		int testin = test_animation(s , srt, t, x,y, &tmp);
@@ -576,10 +718,10 @@ test_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, int x, i
 		}
 	}
 	struct matrix mat;
-	if (t->mat == NULL) {
+	if (t == NULL) {
 		matrix_identity(&mat);
 	} else {
-		mat = *t->mat;
+		mat = *t;
 	}
 	matrix_srt(&mat, srt);
 	struct matrix imat;
