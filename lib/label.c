@@ -30,6 +30,7 @@ label_load() {
 
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
@@ -73,6 +74,14 @@ get_unicode(const char *str, int n) {
 	return unicode;
 }
 
+static inline int
+max(int a, int b, int c, int d) {
+	a = a>b ? a : b;
+	a = a>c ? a : c;
+	a = a>d ? a : d;
+	return a;
+}
+
 static void
 gen_outline(int w, int h, uint8_t *buffer, uint8_t *dest) {
 	int i,j;
@@ -103,17 +112,15 @@ gen_outline(int w, int h, uint8_t *buffer, uint8_t *dest) {
 			} else {
 				right = 1;
 			}
-			int c = line[j] * 4 
-				+ line[j-left] * 2
-				+ line[j+right] * 2
-				+ prev[j] * 2
-				+ next[j] * 2
-				+ prev[j-left]
-				+ prev[j+right]
-				+ next[j-left]
-				+ next[j+right]
-				;
-			output[j] = c / 16;
+			int n1 = max(line[j-left],line[j+right],prev[j],next[j]);
+			int n2 = max(prev[j-left],prev[j+right],next[j-left],next[j+right]);
+			if (line[j] < n1) {
+				output[j] = (line[j] + n1)/2;
+			} else if (line[j] < n2) {
+				output[j] = (line[j] * 3 + n2)/4;
+			} else {
+				output[j] = line[j];
+			}
 		}
 	}
 }
@@ -128,6 +135,10 @@ halfsize(uint8_t *src, uint8_t *dest, int w, int h) {
 			line_d[j] = (line_s[j*2] + line_s[j*2+1] +
 				line_s[j*2+w*2] + line_s[j*2+w*2+1]) / 4;
 		}
+		if (line_d[0] == 255)
+			line_d[0] = 128;
+		if (line_d[w-1] == 255)
+			line_d[w-1] = 128;
 	}
 }
 
@@ -151,14 +162,16 @@ gen_char(int unicode, const char * utf8, int size) {
 	int buffer_sz = ctx.w * ctx.h;
 	uint8_t buffer[buffer_sz];
 	uint8_t tmp[buffer_sz];
+
 	memset(buffer,0,buffer_sz);
 	font_glyph(utf8, unicode, buffer, &ctx);
 	gen_outline(ctx.w, ctx.h, buffer, tmp);
-	halfsize(tmp, buffer, rect->w,rect->h);
+	gen_outline(ctx.w, ctx.h, tmp, buffer);
+	halfsize(buffer, tmp, rect->w,rect->h);
 	font_release(&ctx);
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, rect->x, rect->y, rect->w, rect->h, TEX_FMT, GL_UNSIGNED_BYTE, buffer);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, rect->x, rect->y, rect->w, rect->h, TEX_FMT, GL_UNSIGNED_BYTE, tmp);
 
 	return rect;
 }
