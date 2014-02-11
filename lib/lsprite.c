@@ -294,6 +294,15 @@ lgetname(lua_State *L) {
 }
 
 static int
+lgetparentname(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->parent == NULL)
+		return 0;
+	lua_pushstring(L, s->parent->name);
+	return 1;
+}
+
+static int
 lsettext(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->type != TYPE_LABEL) {
@@ -358,6 +367,7 @@ lgetter(lua_State *L) {
 		{"additive", lgetadditive },
 		{"message", lgetmessage },
 		{"matrix", lgetmat },
+		{"parent_name", lgetparentname },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
