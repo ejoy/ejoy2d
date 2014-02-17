@@ -423,6 +423,18 @@ sprite_draw(struct sprite *s, struct srt *srt) {
 	}
 }
 
+void
+sprite_draw_as_child(struct sprite *s, struct srt *srt, struct matrix *mat, uint32_t color) {
+	if (s->visible) {
+		struct sprite_trans st;
+		st.mat = mat;
+		st.color = color;
+		st.additive = 0;
+		st.program = PROGRAM_DEFAULT;
+		draw_child(s, srt, &st);
+	}
+}
+
 // aabb
 
 static void
