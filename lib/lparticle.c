@@ -114,7 +114,7 @@ _init_from_table(struct particle_config *ps, struct lua_State *L) {
 static struct particle_system *
 _new(struct lua_State *L) {
 	int maxParticles = dict_int(L,"maxParticles");
-	int totalsize = maxParticles * (sizeof(struct particle) + sizeof(struct matrix) + sizeof(struct particle_config));
+	int totalsize = sizeof(struct particle_system) + maxParticles * (sizeof(struct particle) + sizeof(struct matrix)) + sizeof(struct particle_config);
 	struct particle_system * ps = (struct particle_system *)lua_newuserdata(L, totalsize);
 	lua_insert(L, -2);
 	memset(ps, 0, totalsize);

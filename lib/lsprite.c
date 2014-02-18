@@ -294,6 +294,15 @@ lgetname(lua_State *L) {
 }
 
 static int
+lgetparentname(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->parent == NULL)
+		return 0;
+	lua_pushstring(L, s->parent->name);
+	return 1;
+}
+
+static int
 lsettext(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->type != TYPE_LABEL) {
@@ -358,6 +367,7 @@ lgetter(lua_State *L) {
 		{"additive", lgetadditive },
 		{"message", lgetmessage },
 		{"matrix", lgetmat },
+		{"parent_name", lgetparentname },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -493,19 +503,26 @@ lmulti_draw(lua_State *L) {
 	struct srt srt;
 	fill_srt(L, &srt, 2);
 
+	if (s->t.mat == NULL) {
+		s->t.mat = &s->mat;
+		matrix_identity(&s->mat);
+	}
+	struct matrix *parent_mat = s->t.mat;
+	uint32_t parent_color = s->t.color;
+
 	int i;
 	for (i = 0; i < cnt; i++) {
 		lua_rawgeti(L, 4, i+1);
 		lua_rawgeti(L, 5, i+1);
-		struct matrix * mat = (struct matrix *)lua_touserdata(L, -2);
-		s->t.mat = mat;
+		s->t.mat = (struct matrix *)lua_touserdata(L, -2);
 		s->t.color = (uint32_t)lua_tounsigned(L, -1);
 		lua_pop(L, 2);
 
-		sprite_draw(s, &srt);
+		sprite_draw_as_child(s, &srt, parent_mat, parent_color);
 	}
 
-	s->t.mat = NULL;
+	s->t.mat = parent_mat;
+	s->t.color = parent_color;
 
 	return 0;
 }

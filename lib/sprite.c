@@ -176,6 +176,7 @@ sprite_mount(struct sprite *parent, int index, struct sprite *child) {
 	struct sprite * oldc = parent->data.children[index];
 	if (oldc) {
 		oldc->parent = NULL;
+    oldc->name = NULL;
 	}
 	parent->data.children[index] = child;
 	if (child) {
@@ -419,6 +420,18 @@ void
 sprite_draw(struct sprite *s, struct srt *srt) {
 	if (s->visible) {
 		draw_child(s, srt, NULL);
+	}
+}
+
+void
+sprite_draw_as_child(struct sprite *s, struct srt *srt, struct matrix *mat, uint32_t color) {
+	if (s->visible) {
+		struct sprite_trans st;
+		st.mat = mat;
+		st.color = color;
+		st.additive = 0;
+		st.program = PROGRAM_DEFAULT;
+		draw_child(s, srt, &st);
 	}
 }
 
