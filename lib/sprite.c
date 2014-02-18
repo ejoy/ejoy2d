@@ -358,6 +358,17 @@ set_scissor(const struct pack_pannel *p, const struct srt *srt, const struct spr
 	scissor_push(minx,miny,maxx-minx,maxy-miny);
 }
 
+static void
+anchor_update(struct sprite *s, struct srt *srt, struct sprite_trans *arg) {
+	struct matrix *r = s->s.mat;
+	if (arg->mat == NULL) {
+		matrix_identity(r);
+	} else {
+		*r = *arg->mat;
+	}
+	matrix_srt(r, srt);
+}
+
 static int
 draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 	struct sprite_trans temp;
@@ -377,6 +388,9 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 			switch_program(t, s->s.label->edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT);
 			label_draw(s->data.text, s->s.label,srt,t);
 		}
+		return 0;
+	case TYPE_ANCHOR:
+		anchor_update(s, srt, t);
 		return 0;
 	case TYPE_ANIMATION:
 		break;
@@ -763,6 +777,9 @@ test_child(struct sprite *s, struct srt *srt, struct matrix * ts, int x, int y, 
 	case TYPE_PANNEL:
 		testin = test_pannel(s->s.pannel, xx, yy);
 		break;
+	case TYPE_ANCHOR:
+		*touch = NULL;
+		return 0;
 	default:
 		// todo : invalid type
 		*touch = NULL;

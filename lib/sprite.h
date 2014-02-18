@@ -19,6 +19,7 @@ struct sprite {
 		struct pack_polygon *poly;
 		struct pack_label *label;
 		struct pack_pannel *pannel;
+		struct matrix *mat;
 	} s;
 	struct matrix mat;
 	int start_frame;

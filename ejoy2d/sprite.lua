@@ -87,7 +87,7 @@ function sprite.label(tbl)
 	if l then
 		l = debug.setmetatable(l, sprite_meta)
 		if tbl.text then
-			l.name = tbl.text
+			l.text = tbl.text
 		end
 		return l
 	end

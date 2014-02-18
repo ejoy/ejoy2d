@@ -7,7 +7,7 @@ local matrix_meta = {
 
 function matrix(srt)
 	local mat = c.new(srt)
-	if srt then
+	if type(srt) == "table" then
 		if srt.scale then
 			c.scale(mat, srt.scale)
 		elseif srt.sx and srt.sy then

@@ -91,23 +91,45 @@ static const char * srt_key[] = {
 
 static void
 update_message(struct sprite * s, struct sprite_pack * pack, int parentid, int componentid, int frame) {
-  struct pack_animation * ani = (struct pack_animation *)pack->data[parentid];
-  if (frame < 0 || frame >= ani->frame_number) {
-    return;
-  }
-  struct pack_frame pframe = ani->frame[frame];
-  int i = 0;
-  for (; i < pframe.n; i++) {
-    if (pframe.part[i].component_id == componentid && pframe.part[i].touchable) {
-    	s->message = true;
-    	return;
-    }
-  }
+	struct pack_animation * ani = (struct pack_animation *)pack->data[parentid];
+	if (frame < 0 || frame >= ani->frame_number) {
+		return;
+	}
+	struct pack_frame pframe = ani->frame[frame];
+	int i = 0;
+	for (; i < pframe.n; i++) {
+		if (pframe.part[i].component_id == componentid && pframe.part[i].touchable) {
+			s->message = true;
+			return;
+		}
+	}
 }
 
+static struct sprite *
+newanchor(lua_State *L) {
+	int sz = sizeof(struct sprite) + sizeof(struct matrix);
+	struct sprite * s = (struct sprite *)lua_newuserdata(L, sz);
+	s->parent = NULL;
+	s->t.mat = NULL;
+	s->t.color = 0xffffffff;
+	s->t.additive = 0;
+	s->t.program = PROGRAM_DEFAULT;
+	s->message = false;
+	s->visible = false;	// anchor is invisible by default
+	s->name = NULL;
+	s->id = ANCHOR_ID;
+	s->type = TYPE_ANCHOR;
+	s->s.mat = (struct matrix *)(s+1);
+	matrix_identity(s->s.mat);
+
+	return s;
+}
 
 static struct sprite *
 newsprite(lua_State *L, struct sprite_pack *pack, int id) {
+	if (id == ANCHOR_ID) {
+		return newanchor(L);
+	}
 	int sz = sprite_size(pack, id);
 	if (sz == 0) {
 		return NULL;
@@ -255,6 +277,10 @@ lsetmat(lua_State *L) {
 static int
 lgetmat(lua_State *L) {
 	struct sprite *s = self(L);
+	if (s->type == TYPE_ANCHOR) {
+		lua_pushlightuserdata(L, s->s.mat);
+		return 1;
+	}
 	if (s->t.mat == NULL) {
 		s->t.mat = &s->mat;
 		matrix_identity(&s->mat);

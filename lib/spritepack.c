@@ -212,7 +212,7 @@ import_animation(struct import_stream *is) {
 	int i;
 	for (i=0;i<component;i++) {
 		int id = import_word(is);
-		if (id < 0 || id >= is->pack->n) {
+		if (id != ANCHOR_ID && id >= is->pack->n) {
 			luaL_error(is->alloc->L, "Invalid stream (%d): wrong id %d", is->current_id, id);
 		}
 		pa->component[i].id = id;

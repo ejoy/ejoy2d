@@ -10,7 +10,9 @@
 #define TYPE_POLYGON 3
 #define TYPE_LABEL 4
 #define TYPE_PANNEL 5
+#define TYPE_ANCHOR 6
 
+#define ANCHOR_ID 0xffff
 #define SCREEN_SCALE 16
 
 struct matrix;

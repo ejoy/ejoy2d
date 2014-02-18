@@ -158,8 +158,12 @@ local function pack_animation(data, ret)
 	local component = assert(data.component)
 	table.insert(ret , pack.word(#component))
 	for _, v in ipairs(component) do
-		if v.id > max_id then
+		if v.id and v.id > max_id then
 			max_id = v.id
+		end
+		if v.id == nil then
+			assert(v.name, "Anchor need a name")
+			v.id = 0xffff	-- Anchor use id 0xffff
 		end
 		table.insert(ret, pack.word(v.id))
 		table.insert(ret, pack.string(v.name))
