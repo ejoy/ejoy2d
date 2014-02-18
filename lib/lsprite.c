@@ -277,16 +277,22 @@ lsetmat(lua_State *L) {
 static int
 lgetmat(lua_State *L) {
 	struct sprite *s = self(L);
-	if (s->type == TYPE_ANCHOR) {
-		lua_pushlightuserdata(L, s->s.mat);
-		return 1;
-	}
 	if (s->t.mat == NULL) {
 		s->t.mat = &s->mat;
 		matrix_identity(&s->mat);
 	}
 	lua_pushlightuserdata(L, s->t.mat);
 	return 1;
+}
+
+static int
+lgetwmat(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type == TYPE_ANCHOR) {
+		lua_pushlightuserdata(L, s->s.mat);
+		return 1;
+	}
+	return luaL_error(L, "Only anchor can get world matrix");
 }
 
 static int
@@ -393,6 +399,7 @@ lgetter(lua_State *L) {
 		{"additive", lgetadditive },
 		{"message", lgetmessage },
 		{"matrix", lgetmat },
+		{"world_matrix", lgetwmat },
 		{"parent_name", lgetparentname },
 		{NULL, NULL},
 	};

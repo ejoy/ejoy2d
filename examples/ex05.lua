@@ -29,8 +29,8 @@ end
 
 function game.drawframe()
 	obj:draw(screencoord)
-	-- If anchor is visible, obj:draw will update anchor's matrix
-	label.matrix = anchor.matrix
+	-- If anchor is visible, obj:draw will update anchor's world_matrix
+	label.matrix = anchor.world_matrix
 	label:draw()
 end
 
