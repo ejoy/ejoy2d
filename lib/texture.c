@@ -21,24 +21,31 @@ static struct texture_pool POOL;
 
 const char * 
 texture_load(int id, int pixel_format, int pixel_width, int pixel_height, void *data) {
-	if (POOL.count >= MAX_TEXTURE) {
+	if (id >= MAX_TEXTURE) {
 		return "Too many texture";
 	}
-	int idx = POOL.count ++;
-	struct texture * tex = &POOL.tex[idx];
+	struct texture * tex = &POOL.tex[id];
+	if (id >= POOL.count) {
+		POOL.count = id + 1;
+	} 
 
+	tex->width = pixel_width;
+	tex->height = pixel_height;
+	tex->invw = 1.0f / (float)pixel_width;
+	tex->invh = 1.0f / (float)pixel_height;
+	if (tex->id == 0) {
+		glGenTextures(1, &tex->id);
+	}
+	if (data == NULL) {
+		// empty texture
+		return NULL;
+	}
 	if ((pixel_format == Texture2DPixelFormat_RGBA8888) || 
 		( IS_POT(pixel_width) && IS_POT(pixel_height))) {
 		glPixelStorei(GL_UNPACK_ALIGNMENT,4);
 	} else {
 		glPixelStorei(GL_UNPACK_ALIGNMENT,1);
 	}
-	tex->id = 0;
-	tex->width = pixel_width;
-	tex->height = pixel_height;
-	tex->invw = 1.0f / (float)pixel_width;
-	tex->invh = 1.0f / (float)pixel_height;
-	glGenTextures(1, &tex->id);
 	glActiveTexture(GL_TEXTURE0);
 	shader_texture(tex->id);
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -63,6 +70,8 @@ texture_load(int id, int pixel_format, int pixel_width, int pixel_height, void *
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, (GLsizei)pixel_width, (GLsizei)pixel_height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, data);
 			break;
 		default:
+			glDeleteTextures(1,&tex->id);
+			tex->id = 0;
 			return "Invalid pixel format";
 	}
 
