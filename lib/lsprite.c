@@ -201,8 +201,6 @@ self(lua_State *L) {
 static int
 lgetframe(lua_State *L) {
 	struct sprite * s = self(L);
-	if (s->frame == -1)
-		return 0;
 	lua_pushinteger(L, s->frame);
 	return 1;
 }
