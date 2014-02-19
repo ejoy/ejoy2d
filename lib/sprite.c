@@ -430,6 +430,23 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 	return 0;
 }
 
+bool
+sprite_child_visible(struct sprite *s, const char * childname) {
+	struct pack_animation *ani = s->s.ani;
+	int frame = real_frame(s) + s->start_frame;
+	struct pack_frame * pf = &ani->frame[frame];
+	int i;
+	for (i=0;i<pf->n;i++) {
+		struct pack_part *pp = &pf->part[i];
+		int index = pp->component_id;
+		struct sprite * child = s->data.children[index];
+		if (child->name && strcmp(childname, child->name) == 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void
 sprite_draw(struct sprite *s, struct srt *srt) {
 	if (s->visible) {

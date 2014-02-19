@@ -33,8 +33,8 @@ color4f(struct color4f *c4f) {
 
 static int
 _init_from_table(struct particle_config *ps, struct lua_State *L) {
-	ps->angle = dict_float(L, "angle");
-	ps->angleVar = dict_float(L, "angleVariance");
+	ps->angle = -dict_float(L, "angle");
+	ps->angleVar = -dict_float(L, "angleVariance");
 	ps->duration = dict_float(L, "duration");
 
 	// avoid defined blend func
