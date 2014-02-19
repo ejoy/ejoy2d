@@ -41,7 +41,7 @@ function particle_meta.__index:data(ptc)
 	return c.data(ptc.particle, self.mat, self.col)
 end
 
-function particle_meta.__index:draw(pos)
+function particle_meta.__index:draw()
 	local cnt = 0
 	for _, v in ipairs(self.particles) do
 		if self.group:child_visible(v.anchor.name) then
