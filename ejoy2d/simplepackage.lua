@@ -71,6 +71,10 @@ function ejoy2d.sprite(packname, name)
 	return sprite.new(packname, name)
 end
 
+function ejoy2d.load_texture(filename)
+	return require_tex(filename)
+end
+
 function spack.load(tbl)
 	spack.path(assert(tbl.pattern))
 	for _,v in ipairs(tbl) do
@@ -98,7 +102,7 @@ function spack.export(outdir, tbl)
 	spack.path(assert(tbl.pattern))
 	for _, packname in ipairs(tbl) do
 		print("packname    ", packname, outdir, tbl.pattern)
-		local filename = string.gsub(outdir..tbl.pattern, 
+		local filename = string.gsub(outdir..tbl.pattern,
 				"([^?]*)?([^?]*)", "%1"..packname.."%2")
 		print("spack.export     ",  filename.. ".raw")
 

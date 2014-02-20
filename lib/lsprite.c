@@ -518,6 +518,60 @@ laabb(lua_State *L) {
 	return 4;
 }
 
+static int
+lchild_visible(lua_State *L) {
+	struct sprite *s = self(L);
+	const char * name = luaL_checkstring(L,2);
+	lua_pushboolean(L, sprite_child_visible(s, name));
+	return 1;
+}
+
+static int
+lmatrix_multi_draw(lua_State *L) {
+	struct sprite *s = self(L);
+	int cnt = (int)luaL_checkinteger(L,3);
+	if (cnt == 0)
+		return 0;
+	luaL_checktype(L,4,LUA_TTABLE);
+	luaL_checktype(L,5,LUA_TTABLE);
+	if (lua_rawlen(L, 4) < cnt) {
+		return luaL_error(L, "matrix length less then particle count");
+	}
+
+	struct matrix *mat = (struct matrix *)lua_touserdata(L, 2);
+	
+	if (s->t.mat == NULL) {
+		s->t.mat = &s->mat;
+		matrix_identity(&s->mat);
+	}
+	struct matrix *parent_mat = s->t.mat;
+	uint32_t parent_color = s->t.color;
+	struct matrix tmp;
+	struct srt srt;
+	srt.offx = 0;
+	srt.offy = 0;
+	srt.rot = 0;
+	srt.scalex = 1024;
+	srt.scaley = 1024;
+
+	int i;
+	for (i = 0; i < cnt; i++) {
+		lua_rawgeti(L, 4, i+1);
+		lua_rawgeti(L, 5, i+1);
+		struct matrix *m = (struct matrix *)lua_touserdata(L, -2);
+		matrix_mul(&tmp, m, mat);
+		s->t.mat = &tmp;
+		s->t.color = (uint32_t)lua_tounsigned(L, -1);
+		lua_pop(L, 2);
+
+		sprite_draw(s, &srt);
+	}
+	
+	s->t.mat = parent_mat;
+	s->t.color = parent_color;
+
+	return 0;
+}
 
 static int
 lmulti_draw(lua_State *L) {
@@ -730,8 +784,10 @@ lmethod(lua_State *L) {
 		{ "draw", ldraw },
 		{ "recursion_frame", lrecursion_frame },
 		{ "multi_draw", lmulti_draw },
+		{ "matrix_multi_draw", lmatrix_multi_draw },
 		{ "test", ltest },
 		{ "aabb", laabb },
+		{ "child_visible", lchild_visible },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);
