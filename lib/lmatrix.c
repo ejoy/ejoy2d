@@ -8,6 +8,7 @@
 
 static int
 lnew(lua_State *L) {
+	lua_settop(L,1);
 	struct matrix *m = (struct matrix *)lua_newuserdata(L, sizeof(*m));
 	int *mat = m->m;
 	if (lua_istable(L,1) && lua_rawlen(L,1)==6) {
@@ -18,6 +19,7 @@ lnew(lua_State *L) {
 			lua_pop(L,1);
 		}
 	} else if (lua_isuserdata(L,1)) {
+		// It's a matrix
 		memcpy(mat, lua_touserdata(L,1), 6 * sizeof(int));
 	} else {
 		mat[0] = 1024;
