@@ -134,6 +134,17 @@ ltostring(lua_State *L) {
 	return 1;
 }
 
+static int
+lexport(lua_State *L) {
+	int i;
+	struct matrix *mat = (struct matrix *)lua_touserdata(L, 1);
+	int *m = mat->m;
+	for (i=0;i<6;i++) {
+		lua_pushinteger(L, m[i]);
+	}
+	return 6;
+}
+
 int 
 ejoy2d_matrix(lua_State *L) {
 	luaL_Reg l[] = {
@@ -145,6 +156,7 @@ ejoy2d_matrix(lua_State *L) {
 		{ "mul", lmul },
 		{ "tostring", ltostring },
 		{ "identity", lidentity},
+		{ "export", lexport },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
