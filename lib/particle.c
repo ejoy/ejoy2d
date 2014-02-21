@@ -236,7 +236,7 @@ init_with_particles(struct particle_system *ps, int numberOfParticles) {
 	ps->matrix = (struct matrix *)(ps->particles + numberOfParticles);
 	ps->config = (struct particle_config*)(ps->matrix + numberOfParticles);
 	ps->allocatedParticles = numberOfParticles;
-	ps->isActive = true;
+	ps->isActive = false;
 	ps->config->totalParticles = numberOfParticles;
 	ps->config->positionType = POSITION_TYPE_FREE;
 	ps->config->emitterMode = PARTICLE_MODE_GRAVITY;
