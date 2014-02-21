@@ -8,6 +8,7 @@
 
 static int
 lnew(lua_State *L) {
+	lua_settop(L,1);
 	struct matrix *m = (struct matrix *)lua_newuserdata(L, sizeof(*m));
 	int *mat = m->m;
 	if (lua_istable(L,1) && lua_rawlen(L,1)==6) {
@@ -18,6 +19,7 @@ lnew(lua_State *L) {
 			lua_pop(L,1);
 		}
 	} else if (lua_isuserdata(L,1)) {
+		// It's a matrix
 		memcpy(mat, lua_touserdata(L,1), 6 * sizeof(int));
 	} else {
 		mat[0] = 1024;
@@ -132,6 +134,17 @@ ltostring(lua_State *L) {
 	return 1;
 }
 
+static int
+lexport(lua_State *L) {
+	int i;
+	struct matrix *mat = (struct matrix *)lua_touserdata(L, 1);
+	int *m = mat->m;
+	for (i=0;i<6;i++) {
+		lua_pushinteger(L, m[i]);
+	}
+	return 6;
+}
+
 int 
 ejoy2d_matrix(lua_State *L) {
 	luaL_Reg l[] = {
@@ -143,6 +156,7 @@ ejoy2d_matrix(lua_State *L) {
 		{ "mul", lmul },
 		{ "tostring", ltostring },
 		{ "identity", lidentity},
+		{ "export", lexport },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
