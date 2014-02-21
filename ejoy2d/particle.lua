@@ -32,8 +32,19 @@ end
 function particle_meta.__index:do_update(dt)
 	self.is_active = false
 	for _, v in ipairs(self.particles) do
-		local active = c.update(v.particle, dt)
-		self.is_active = active or self.is_active
+		local visible = self:is_particle_visible(v)
+		if visible then
+			if not v.is_visible then
+				v.is_visible = true
+				c.reset(v.particle)
+			end
+			local active = c.update(v.particle, dt)
+			self.is_active = active or self.is_active
+		else
+			if v.is_visible then
+				v.is_visible = false
+			end
+		end
 	end
 end
 
@@ -44,7 +55,7 @@ end
 function particle_meta.__index:draw()
 	local cnt = 0
 	for _, v in ipairs(self.particles) do
-		if self.group:child_visible(v.anchor.name) then
+		if v.is_visible then
 			cnt = self:data(v)
 			if cnt > 0 then
 				shader.blend(v.src_blend,v.dst_blend)
@@ -58,8 +69,12 @@ end
 function particle_meta.__index:reset()
 	self.is_active = true
 	for _, v in ipairs(self.particles) do
-		c.reset(v.particle)
+		v.is_visible = false
 	end
+end
+
+function particle_meta.__index:is_particle_visible(particle)
+	return self.group:child_visible(particle.anchor.name)
 end
 
 function particle.preload(config_path)
@@ -112,6 +127,7 @@ function particle.new(name, callback)
 	end
 	return debug.setmetatable({group=group,
 		is_active = true,
+		is_visible = false,
 		particles = particles,
 		end_callback = callback,
 		is_loop = loop,
