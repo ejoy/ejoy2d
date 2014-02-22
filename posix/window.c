@@ -165,6 +165,7 @@ main(int argc, char *argv[]) {
                 if (keychar[0] == 'q' || keychar[0] == 'Q') {
                     close_x();
                 }
+                break;
             case ButtonPress: 
                 ejoy2d_win_touch(event.xbutton.x, event.xbutton.y, TOUCH_BEGIN); 
                 break;
