@@ -124,10 +124,21 @@ init_x() {
 	}
 };
 
+static void
+close_x() {
+    Display *dis = g_X.display;
+    XFreeGC(dis, gc);
+    XDestroyWindow(dis, g_X.wnd);
+    XCloseDisplay(dis);
+    exit(1);
+}
+
 int
 main(int argc, char *argv[]) {
     XEvent event;
     uint32_t timestamp = 0;
+    KeySym keysym;
+    char keychar[255];
     init_x();
     font_init();
 
@@ -143,8 +154,13 @@ main(int argc, char *argv[]) {
                 if (event.xexpose.count==0)
                     update_frame();
                 break;
-            case ButtonPress:
-                ejoy2d_win_touch(event.xbutton.x, event.xbutton.y, TOUCH_BEGIN);
+            case KeyPress:
+                XLookupString(&event.xkey, keychar, 255, &keysym, 0);
+                if (keychar[0] == 'q') {
+                    close_x();
+                }
+            case ButtonPress: 
+                ejoy2d_win_touch(event.xbutton.x, event.xbutton.y, TOUCH_BEGIN); 
                 break;
             case ButtonRelease:
                 ejoy2d_win_touch(event.xbutton.x,event.xbutton.y,TOUCH_END);
