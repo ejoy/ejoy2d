@@ -178,6 +178,7 @@ main(int argc, char *argv[]) {
                 if ((Atom)event.xclient.data.l[0] == wm_delete_window) {
                     close_x();
                 }
+                break;
             }
         }
 
