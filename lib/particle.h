@@ -17,7 +17,7 @@
 
 #define POSITION_TYPE_FREE 0
 #define POSITION_TYPE_RELATIVE 1
-#define POSTTION_TYPE_GROUPED 2
+#define POSITION_TYPE_GROUPED 2
 
 /** The Particle emitter lives forever */
 #define DURATION_INFINITY (-1)

@@ -546,25 +546,32 @@ lmatrix_multi_draw(lua_State *L) {
 	}
 	struct matrix *parent_mat = s->t.mat;
 	uint32_t parent_color = s->t.color;
-	struct matrix tmp;
-	struct srt srt;
-	srt.offx = 0;
-	srt.offy = 0;
-	srt.rot = 0;
-	srt.scalex = 1024;
-	srt.scaley = 1024;
 
 	int i;
-	for (i = 0; i < cnt; i++) {
-		lua_rawgeti(L, 4, i+1);
-		lua_rawgeti(L, 5, i+1);
-		struct matrix *m = (struct matrix *)lua_touserdata(L, -2);
-		matrix_mul(&tmp, m, mat);
-		s->t.mat = &tmp;
-		s->t.color = (uint32_t)lua_tounsigned(L, -1);
-		lua_pop(L, 2);
+	if (mat) {
+		struct matrix tmp;
+		for (i = 0; i < cnt; i++) {
+			lua_rawgeti(L, 4, i+1);
+			lua_rawgeti(L, 5, i+1);
+			struct matrix *m = (struct matrix *)lua_touserdata(L, -2);
+			matrix_mul(&tmp, m, mat);
+			s->t.mat = &tmp;
+			s->t.color = (uint32_t)lua_tounsigned(L, -1);
+			lua_pop(L, 2);
 
-		sprite_draw(s, &srt);
+			sprite_draw(s, NULL);
+		}
+	} else {
+		for (i = 0; i < cnt; i++) {
+			lua_rawgeti(L, 4, i+1);
+			lua_rawgeti(L, 5, i+1);
+			struct matrix *m = (struct matrix *)lua_touserdata(L, -2);
+			s->t.mat = m;
+			s->t.color = (uint32_t)lua_tounsigned(L, -1);
+			lua_pop(L, 2);
+
+			sprite_draw(s, NULL);
+		}
 	}
 	
 	s->t.mat = parent_mat;

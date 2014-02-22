@@ -136,6 +136,9 @@ scale_mat(int *m, int sx, int sy) {
 
 void
 matrix_srt(struct matrix *mm, const struct srt *srt) {
+	if (!srt) {
+		return;
+	}
 	scale_mat(mm->m, srt->scalex, srt->scaley);
 	rot_mat(mm->m, srt->rot);
 	mm->m[4] += srt->offx;

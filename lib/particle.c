@@ -166,7 +166,7 @@ _normalize_point(struct point *p, struct point *out) {
 
 static void
 _update_particle(struct particle_system *ps, struct particle *p, float dt) {
-	if (ps->config->positionType == POSITION_TYPE_RELATIVE) {
+	if (ps->config->positionType != POSITION_TYPE_GROUPED) {
 		p->startPos = ps->config->sourcePosition;
 	}
 	// Mode A: gravity, direction, tangential accel & radial accel
@@ -238,7 +238,7 @@ init_with_particles(struct particle_system *ps, int numberOfParticles) {
 	ps->allocatedParticles = numberOfParticles;
 	ps->isActive = false;
 	ps->config->totalParticles = numberOfParticles;
-	ps->config->positionType = POSITION_TYPE_FREE;
+	ps->config->positionType = POSITION_TYPE_RELATIVE;
 	ps->config->emitterMode = PARTICLE_MODE_GRAVITY;
 }
 

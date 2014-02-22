@@ -3,6 +3,9 @@ local ej = require "ejoy2d"
 local c = require "ejoy2d.particle.c"
 local shader = require "ejoy2d.shader"
 local pack = require "ejoy2d.simplepackage"
+local fw = require "ejoy2d.framework"
+
+local matrix = require "ejoy2d.matrix.c"
 
 local particle_configs = {}
 local particle_group_configs = {}
@@ -12,25 +15,10 @@ local particle = {}
 local particle_meta = {__index = {mat = {}, col = {}}}
 
 function particle_meta.__index:update(dt)
-	if not self.is_active then
-		if self.end_callback ~= nil then
-			self.end_callback()
-			self.end_callback = nil
-		end
-		return false
-	end
+	if not self.is_active then return end
 
-	self:do_update(dt)
-
-	if not self.is_active and self.end_callback ~= nil then
-		self.end_callback()
-		self.end_callback = nil
-	end
-	return self.is_active
-end
-
-function particle_meta.__index:do_update(dt)
 	self.is_active = false
+	loop_active = false
 	for _, v in ipairs(self.particles) do
 		local visible = self:is_particle_visible(v)
 		if visible then
@@ -38,12 +26,39 @@ function particle_meta.__index:do_update(dt)
 				v.is_visible = true
 				c.reset(v.particle)
 			end
-			local active = c.update(v.particle, dt)
+			local active = c.update(v.particle, dt, v.anchor.world_matrix)
+
 			self.is_active = active or self.is_active
+			loop_active = loop_active or (self.is_active and v.is_loop or false)
 		else
 			if v.is_visible then
 				v.is_visible = false
 			end
+		end
+	end
+
+	if self.group.frame_count > 1 then
+		local stay_last = false
+		local last_frame = self.group.frame >= self.group.frame_count - 1
+		if self.is_active then
+			if last_frame then
+				if loop_active then
+					stay_last = true
+					self.group.frame = self.group.frame_count - 1
+				else
+					self.is_active = false
+				end
+			end
+		else
+			if not last_frame then
+				self.is_active = true
+			end
+		end
+
+		-- print(self.group.frame, self.group.frame_count, stay_last, last_frame, loop_active)
+		if not stay_last then
+			self.float_frame = self.float_frame + fw.AnimationFramePerFrame
+			self.group.frame = self.float_frame
 		end
 	end
 end
@@ -59,7 +74,8 @@ function particle_meta.__index:draw()
 			cnt = self:data(v)
 			if cnt > 0 then
 				shader.blend(v.src_blend,v.dst_blend)
-				v.sprite:matrix_multi_draw(v.anchor.world_matrix, cnt, self.mat, self.col)
+				local mat = not v.emit_in_world and v.anchor.world_matrix
+				v.sprite:matrix_multi_draw(mat, cnt, self.mat, self.col)
 				shader.blend()
 			end
 		end
@@ -68,6 +84,8 @@ end
 
 function particle_meta.__index:reset()
 	self.is_active = true
+	self.group.frame = 0
+	self.float_frame = 0
 	for _, v in ipairs(self.particles) do
 		v.is_visible = false
 	end
@@ -106,6 +124,7 @@ local function new_single(name, anchor)
 			dst_blend = config.blendFuncDestination,
 			anchor = anchor,
 			is_loop = config.duration < 0,
+			emit_in_world = config.positionType == 2,
 			name = name
 		}
 	end
@@ -131,6 +150,7 @@ function particle.new(name, callback)
 		particles = particles,
 		end_callback = callback,
 		is_loop = loop,
+		float_frame = 0,
 		}, particle_meta)
 end
 
