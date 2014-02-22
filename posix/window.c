@@ -156,7 +156,7 @@ main(int argc, char *argv[]) {
                 break;
             case KeyPress:
                 XLookupString(&event.xkey, keychar, 255, &keysym, 0);
-                if (keychar[0] == 'q') {
+                if (keychar[0] == 'q' || keychar[0] == 'Q') {
                     close_x();
                 }
             case ButtonPress: 
