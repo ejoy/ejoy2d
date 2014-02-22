@@ -23,6 +23,8 @@ struct X_context {
 static GC gc;
 static GLXContext g_context = 0;
 struct X_context g_X;
+/* Used to intercept window closing requests. */
+static Atom wm_delete_window;
 
 static uint32_t
 _gettime(void) {
@@ -100,6 +102,10 @@ init_x() {
     win=XCreateSimpleWindow(dis,DefaultRootWindow(dis),0,0,
                             WIDTH, HEIGHT, 5,white, black);
 
+    XMapWindow(dis, win);
+    wm_delete_window = XInternAtom(dis, "WM_DELETE_WINDOW", False);
+    XSetWMProtocols(dis, win, &wm_delete_window, 1);
+
     XSetStandardProperties(dis,win,"ejoy2d",NULL,None,NULL,0,NULL);
     XSelectInput(dis, win,
                  ExposureMask|KeyPressMask|KeyReleaseMask
@@ -167,7 +173,11 @@ main(int argc, char *argv[]) {
                 break;
             case MotionNotify:
                 ejoy2d_win_touch(event.xbutton.x,event.xbutton.y,TOUCH_MOVE);
-                break;
+                break; 
+            case ClientMessage:
+                if ((Atom)event.xclient.data.l[0] == wm_delete_window) {
+                    close_x();
+                }
             }
         }
 
