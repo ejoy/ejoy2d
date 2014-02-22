@@ -87,11 +87,11 @@ filename 不能有后缀 ppm 或 pgm 。ppm.texture 会尝试打开 filename.ppm
 如果加载成功，会返回四个值：
 
  1. 图片类型，可能是下列类型中的一种：RGBA8 RGB8 ALPHA8 RGBA4 RGB4 ALPHA4
- 
+
  2. 图片宽度（像素单位）
- 
+
  3. 图片高度（像素单位）
- 
+
  4. 一个 table ，内含所有像素的整数值。
 
 > ppm.save(filename, type, width, height, data)
@@ -154,3 +154,45 @@ matrix { sx = -1, sy = 1 }
 
 做一个平移变换。
 
+##particle
+
+ejoy2d粒子发射器的描述文件见[examples/asset/particle_particle_config.lua](https://github.com/cloudwu/ejoy2d/blob/master/examples/asset/particle_particle_config.lua)。该文件基于[Particle Designer](http://particledesigner.71squared.com/)的输出而生成，即可以使用Particle Designer来编辑粒子系统。
+
+```Lua
+local c = require "ejoy2d.particle.c"
+local particle = c.new(config)
+```
+config对应描述文件中的一个table。ejoy2d只负责根据这个table发射粒子,并不负责具体的渲染，所以它是一个抽象的渲染无关的模块。除了new外，ejoy2d.particle.c还提供如下三个接口：
+
+1. 更新粒子系统，world_matrix为粒子系统的世界坐标矩阵，当希望粒子发射器在世界坐标系类发射粒子（对应于在粒子系统自身坐标系类发射粒子）时，每个粒子会根据这个矩阵记录下当它出生时的世界坐标。
+> c.update(particle, deltaTime, world_matrix)
+
+2. 获取粒子系统每个粒子的具体信息，包括矩阵和颜色信息
+> local mat = {}
+> local colors = {}
+> local cnt = c.data(particle, mat, colors)
+
+3. 重置粒子系统，用于重复使用之前生产的粒子系统
+> c.reset(particle)
+
+完整的特效系统通过[ejoy2d/particle.lua](https://github.com/cloudwu/ejoy2d/blob/master/ejoy2d/particle.lua)封装实现。除了完成粒子系统的渲染外，一个特效还支持多个粒子系统组成的组合，一个组合内的多个粒子系统可定义它们之间的层级关系，相对位置，甚至可以为单个粒子系统指定动画信息。这一切都是基于sprite来实现的，即我们先定义一个简单的sprite层级结构，每个子节点对应一个粒子系统。特效系统sprite层级结构的示例见[asset/particle.lua](https://github.com/cloudwu/ejoy2d/blob/master/examples/asset/particle.lua)
+
+一个更简单的示例如下：
+```lua
+{
+		component = 	{
+			{name = "fire"},
+			{name = "ice"}
+		},
+		export = "ice_fire",
+		type = "animation",
+		{
+		    {{index = 0},{index = 1}},
+		}
+}
+```
+如上所示：一个export为ice_fire的sprite包含两个anchor：fire和ice，这是一个典型的sprite定义。ejoy2d/particle.lua会首先创建出这个sprite，并遍历它的component，根据anchor的名字创建单个particle。可以在[examples/asset/particle_particle_config.lua](https://github.com/cloudwu/ejoy2d/blob/master/examples/asset/particle_particle_config.lua)中找到他们对应的粒子发射器配置文件。当anchor和particle绑定之后，如上particle.update所述，我们可以将anchor.world_matrix传入备用
+
+然后我们就可以做粒子系统的渲染。在update之后，通过data接口获取粒子的矩阵和颜色信息，通过sprite.matrix_multi_draw将所有粒子逐一渲染出来
+
+在脚本层可以将一个特效系统当作一个普通的sprite来使用。
