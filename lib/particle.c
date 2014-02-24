@@ -12,6 +12,7 @@
 #include "spritepack.h"
 
 #include <math.h>
+#include <stdio.h>
 
 static inline float
 clampf(float x) {
@@ -251,11 +252,11 @@ particle_system_reset(struct particle_system *ps) {
 }
 
 void
-calc_particle_system_mat(struct particle * p, struct matrix *m) {
+calc_particle_system_mat(struct particle * p, struct matrix *m, int edge) {
 	matrix_identity(m);
 	struct srt srt;
 	srt.rot = p->rotation * 1024 / 360;
-	srt.scalex = p->size * SCREEN_SCALE;
+	srt.scalex = p->size * 1024 / edge;
 	srt.scaley = srt.scalex;
 	srt.offx = (p->pos.x + p->startPos.x) * SCREEN_SCALE;
 	srt.offy = (p->pos.y + p->startPos.y) * SCREEN_SCALE;

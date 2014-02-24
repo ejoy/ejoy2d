@@ -173,11 +173,12 @@ ldata(lua_State *L) {
 	luaL_checktype(L,2,LUA_TTABLE);
 	luaL_checktype(L,3,LUA_TTABLE);
 	struct particle_system *ps = (struct particle_system *)lua_touserdata(L, 1);
+	int edge = (int)luaL_checkinteger(L,4);
 	int n = ps->particleCount;
 	int i;
 	for (i=0;i<n;i++) {
 		struct particle *p = &ps->particles[i];
-		calc_particle_system_mat(p,&ps->matrix[i]);
+		calc_particle_system_mat(p,&ps->matrix[i], edge);
 
 		lua_pushlightuserdata(L, &ps->matrix[i]);
 		lua_rawseti(L, 2, i+1);
