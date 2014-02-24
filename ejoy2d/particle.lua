@@ -4,8 +4,7 @@ local c = require "ejoy2d.particle.c"
 local shader = require "ejoy2d.shader"
 local pack = require "ejoy2d.simplepackage"
 local fw = require "ejoy2d.framework"
-
-local matrix = require "ejoy2d.matrix.c"
+local math = require "math"
 
 local particle_configs = {}
 local particle_group_configs = {}
@@ -64,7 +63,7 @@ function particle_meta.__index:update(dt)
 end
 
 function particle_meta.__index:data(ptc)
-	return c.data(ptc.particle, self.mat, self.col)
+	return c.data(ptc.particle, self.mat, self.col, ptc.edge)
 end
 
 function particle_meta.__index:draw()
@@ -118,8 +117,12 @@ local function new_single(name, anchor)
 	anchor.visible = true
 
 	if cobj then
+		local sprite = ej.sprite("particle", texid)
+		local x, y, w, h = sprite:aabb()
+		local edge = 2 * math.min(w, h)
 		return {particle = cobj,
-			sprite = ej.sprite("particle", texid),
+			sprite = sprite,
+			edge = edge,
 			src_blend = config.blendFuncSource,
 			dst_blend = config.blendFuncDestination,
 			anchor = anchor,
