@@ -158,7 +158,7 @@ import_string(struct import_stream *is) {
 
 static void
 import_frame(struct pack_frame * pf, struct import_stream *is, int maxc) {
-	int n = import_byte(is);
+	int n = import_word(is);
 	int i;
 	pf->part = (struct pack_part *)ialloc(is->alloc, n * sizeof(struct pack_part));
 	pf->n = n;
