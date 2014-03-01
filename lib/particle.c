@@ -30,7 +30,7 @@ RANDOM_M11(unsigned int *seed) {
 		uint32_t d;
 		float f;
 	} u;
-	u.d = (((uint32_t)rand() & 0x7fff) << 8) | 0x40000000;
+	u.d = (((uint32_t)(*seed) & 0x7fff) << 8) | 0x40000000;
 	return u.f - 3.0f;
 }
 
