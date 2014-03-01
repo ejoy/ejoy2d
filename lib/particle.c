@@ -25,7 +25,7 @@ clampf(float x) {
 
 inline static float
 RANDOM_M11(unsigned int *seed) {
-	*seed = (*seed * 134775813 + 1) % 0x7fff;
+	*seed = *seed * 134775813 + 1;
 	union {
 		uint32_t d;
 		float f;
