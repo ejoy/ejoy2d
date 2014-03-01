@@ -123,7 +123,7 @@ end
 
 local function pack_frame(data, ret)
 	local size = 0
-	table.insert(ret, pack.byte(#data))
+	table.insert(ret, pack.word(#data))
 	for _,v in ipairs(data) do
 		local psize = pack_part(v, ret)
 		size = size + psize
@@ -201,7 +201,7 @@ function spritepack.pack( data )
 			end
 			local exportname = v.export
 			if exportname then
-				assert(ret.export[exportname] == nil, "Duplicate export name")
+				assert(ret.export[exportname] == nil, "Duplicate export name"..exportname)
 				ret.export[exportname] = id
 			end
 			table.insert(ret.data, pack.word(id))
