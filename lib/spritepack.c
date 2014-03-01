@@ -8,6 +8,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#if defined(_MSC_VER)
+#include <dynarray.h>
+#endif
+
 #define TAG_ID 1
 #define TAG_COLOR 2
 #define TAG_ADDITIVE 4
@@ -346,7 +350,7 @@ limport(lua_State *L) {
 	if (lua_isstring(L,4)) {
 		is.stream = lua_tolstring(L, 4, &is.size);
 	} else {
-		is.stream = lua_touserdata(L, 4);
+		is.stream = (const char *)lua_touserdata(L, 4);
 		if (is.stream == NULL) {
 			return luaL_error(L, "Need const char *");
 		}
@@ -424,10 +428,14 @@ lpackstring(lua_State *L) {
 		uint8_t buf[1] = { 255 };
 		lua_pushlstring(L, (char *)buf, 1);
 	} else {
+#if !defined(_MSC_VER)
 		uint8_t buf[sz + 1];
+#else
+		msvc::dynarray<uint8_t> buf(sz + 1);
+#endif
 		buf[0] = sz;
 		memcpy(buf+1, str, sz);
-		lua_pushlstring(L, (char *)buf, sz+1);
+		lua_pushlstring(L, (char *)(uint8_t *)buf, sz + 1);
 	}
 	return 1;
 }

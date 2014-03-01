@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <EJOY2D>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), ejoy2d.root))</EJOY2D>
+    <EJOY2D_ROOT>$(EJOY2D)\..\</EJOY2D_ROOT>
+    <EJOY2D_OBJ>$(EJOY2D)\obj\$(Configuration)\$(ProjectName)\</EJOY2D_OBJ>
+    <EJOY2D_LIB>$(EJOY2D)\lib\$(Configuration)\</EJOY2D_LIB>
+    <EJOY2D_LUA>$(EJOY2D)\src\lua-5.2.3\src\</EJOY2D_LUA>
+    <EJOY2D_GLEW>$(EJOY2D)\src\glew\</EJOY2D_GLEW>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IntDir>$(EJOY2D_OBJ)</IntDir>
+    <OutDir>$(EJOY2D_LIB)</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link />
+    <ResourceCompile>
+      <IgnoreStandardIncludePath>
+      </IgnoreStandardIncludePath>
+    </ResourceCompile>
+    <ResourceCompile>
+      <ShowProgress>
+      </ShowProgress>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="EJOY2D">
+      <Value>$(EJOY2D)</Value>
+    </BuildMacro>
+    <BuildMacro Include="EJOY2D_ROOT">
+      <Value>$(EJOY2D_ROOT)</Value>
+    </BuildMacro>
+    <BuildMacro Include="EJOY2D_OBJ">
+      <Value>$(EJOY2D_OBJ)</Value>
+    </BuildMacro>
+    <BuildMacro Include="EJOY2D_LIB">
+      <Value>$(EJOY2D_LIB)</Value>
+    </BuildMacro>
+    <BuildMacro Include="EJOY2D_LUA">
+      <Value>$(EJOY2D_LUA)</Value>
+    </BuildMacro>
+    <BuildMacro Include="EJOY2D_GLEW">
+      <Value>$(EJOY2D_GLEW)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

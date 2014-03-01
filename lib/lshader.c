@@ -5,6 +5,10 @@
 #include "screen.h"
 #include "texture.h"
 
+#if defined(_MSC_VER)
+#include <dynarray.h>
+#endif
+
 static int
 lload(lua_State *L) {
 	int prog = (int)luaL_checkinteger(L,1);
@@ -48,7 +52,11 @@ ldraw(lua_State *L) {
 	if (point * 4 != n) {
 		return luaL_error(L, "Invalid polygon");
 	}
+#if !defined(_MSC_VER)
 	float vb[n];
+#else
+	msvc::dynarray<float> vb(n);
+#endif
 	int i;
 	for (i=0;i<point;i++) {
 		lua_rawgeti(L, 2, i*2+1);

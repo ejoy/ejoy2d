@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="port">
+      <UniqueIdentifier>{98700cef-bbd8-4a3b-9369-f92508213883}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mingw">
+      <UniqueIdentifier>{b8eca352-4f4d-4400-9653-39afc5c0c27a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{a9373cdd-21d2-4b1f-866e-2a9862e3848d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\inc">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="lib\src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\mingw\window.c">
+      <Filter>mingw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\mingw\winfont.c">
+      <Filter>mingw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\mingw\winfw.c">
+      <Filter>mingw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\dfont.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\ejoy2dgame.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\fault.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\label.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\lmatrix.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\lparticle.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\lshader.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\lsprite.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\matrix.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\particle.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\ppm.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\screen.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\shader.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\sprite.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\spritepack.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\texture.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\scissor.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ejoy2d\winmain.c">
+      <Filter>mingw</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\stdbool.h">
+      <Filter>port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\typeof.h">
+      <Filter>port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\mingw\winfw.h">
+      <Filter>mingw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\dfont.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\ejoy2dgame.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\fault.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\label.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\lmatrix.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\matrix.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\opengl.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\texture.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\spritepack.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\sprite.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\shader.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\screen.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\ppm.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\particle.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\list.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\scissor.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\lauxlib.h">
+      <Filter>port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\lua.h">
+      <Filter>port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\lua_path.h">
+      <Filter>port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\lualib.h">
+      <Filter>port</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\include\dynarray.h">
+      <Filter>port</Filter>
+    </None>
+  </ItemGroup>
+</Project>

@@ -4,7 +4,12 @@ EJOY 2D
 Make
 ====
 
-For Windows , you need mingw32 .
+For Windows and msvc
+
+* msvc\make.bat
+* ej2d examples/ex01.lua to test
+
+For Windows and mingw32
 
 * Install Lua 5.2.3
 * Copy lua52.dll to /usr/local/bin
