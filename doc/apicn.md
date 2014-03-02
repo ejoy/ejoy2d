@@ -107,9 +107,12 @@ ppm 的文件格式非常简单，可以很容易的用任何编程语言操作�
 你也可以使用 http://www.imagemagick.org/ 这个工具把带通道的 png 文件转换为一组 ppm/pgm 文件：
 
 > convert image.png image.ppm
+
+提取 Alpha 通道：
+
 > convert image.png -channel A -separate image.pgm
 
-把 ppm/pgm 合成一张带 Alpha 通道的 png 文件可以用：
+把 ppm/pgm 合成一张带 Alpha 通道的 png 文件可以：
 
 > convert image.ppm image.pgm -compose copy-opacity -composite image.png
 
