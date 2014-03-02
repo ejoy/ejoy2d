@@ -6,15 +6,12 @@
 #include "matrix.h"
 #include "label.h"
 #include "scissor.h"
+#include "array.h"
 
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
 #include <limits.h>
-
-#if defined(_MSC_VER)
-#include <dynarray.h>
-#endif
 
 void
 sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const struct sprite_trans *arg) {
@@ -71,11 +68,9 @@ sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struc
 			continue;
 		shader_texture(glid);
 		int pn = p->n;
-#if !defined(_MSC_VER)
-		float vb[4 * pn];
-#else
-		msvc::dynarray<float> vb(4 * pn);
-#endif
+
+		ARRAY(float, vb, 4 * pn);
+
 		for (j=0;j<pn;j++) {
 			int xx = p->screen_coord[j*2+0];
 			int yy = p->screen_coord[j*2+1];

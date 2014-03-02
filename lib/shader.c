@@ -1,15 +1,12 @@
 #include "shader.h"
 #include "opengl.h"
 #include "fault.h"
+#include "array.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-
-#if defined(_MSC_VER)
-#include <dynarray.h>
-#endif
 
 #define MAX_COMMBINE 64
 #define MAX_PROGRAM 6
@@ -261,11 +258,7 @@ shader_draw(const float vb[16], uint32_t color) {
 void
 shader_drawpolygon(int n, const float *vb, uint32_t color) {
 	rs_commit();
-#if !defined(_MSC_VER)
-	struct vertex p[n];
-#else
-	msvc::dynarray<struct vertex> p(n);
-#endif
+	ARRAY(struct vertex, p, n);
 	int i;
 	for (i=0;i<n;i++) {
 		p[i].vx = vb[i*4+0];

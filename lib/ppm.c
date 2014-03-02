@@ -1,5 +1,6 @@
 #include "ppm.h"
 #include "texture.h"
+#include "array.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -8,10 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#if defined(_MSC_VER)
-#include <dynarray.h>
-#endif
 
 #define PPM_RGBA8 0
 #define PPM_RGB8 1
@@ -169,11 +166,7 @@ static int
 loadppm(lua_State *L) {
 	size_t sz = 0;
 	const char * filename = luaL_checklstring(L, 1, &sz);
-#if !defined(_MSC_VER)
-	char tmp[sz + 5];
-#else
-	msvc::dynarray<char> tmp(sz + 5);
-#endif
+	ARRAY(char, tmp, sz+5);
 	sprintf(tmp, "%s.ppm", filename);
 	FILE *rgb = fopen(tmp, "rb");
 	sprintf(tmp, "%s.pgm", filename);
@@ -235,11 +228,7 @@ loadtexture(lua_State *L) {
 	int id = (int)luaL_checkinteger(L,1);
 	size_t sz = 0;
 	const char * filename = luaL_checklstring(L, 2, &sz);
-#if !defined(_MSC_VER)
-	char tmp[sz + 5];
-#else
-	msvc::dynarray<char> tmp(sz + 5);
-#endif
+	ARRAY(char, tmp, sz + 5);
 	sprintf(tmp, "%s.ppm", filename);
 	FILE *rgb = fopen(tmp, "rb");
 	sprintf(tmp, "%s.pgm", filename);
@@ -381,11 +370,8 @@ save_rgb(lua_State *L, int step, int depth) {
 	size_t sz = 0;
 	const char * filename = lua_tolstring(L, 1, &sz);
 
-#if !defined(_MSC_VER)
-	char tmp[sz + 5];
-#else
-	msvc::dynarray<char> tmp(sz + 5);
-#endif
+	ARRAY(char, tmp, sz + 5);
+
 	int width = (int)lua_tointeger(L, 3);
 	int height = (int)lua_tointeger(L, 4);
 	sprintf(tmp, "%s.ppm", filename);
@@ -422,11 +408,7 @@ save_alpha(lua_State *L, int step, int depth, int offset) {
 	size_t sz = 0;
 	const char * filename = lua_tolstring(L, 1, &sz);
 
-#if !defined(_MSC_VER)
-	char tmp[sz + 5];
-#else
-	msvc::dynarray<char> tmp(sz + 5);
-#endif
+	ARRAY(char, tmp, sz + 5);
 
 	int width = (int)lua_tointeger(L, 3);
 	int height = (int)lua_tointeger(L, 4);

@@ -5,14 +5,11 @@
 #include "matrix.h"
 #include "spritepack.h"
 #include "screen.h"
+#include "array.h"
 
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-
-#if defined(_MSC_VER)
-#include <dynarray.h>
-#endif
 
 #define TEX_HEIGHT 1024
 #define TEX_WIDTH 1024
@@ -171,13 +168,10 @@ gen_char(int unicode, const char * utf8, int size) {
 	ctx.w = rect->w ;
 	ctx.h = rect->h ;
 	int buffer_sz = ctx.w * ctx.h;
-#if !defined(_MSC_VER)
-	uint8_t buffer[buffer_sz];
-	uint8_t tmp[buffer_sz];
-#else
-	msvc::dynarray<uint8_t> buffer(buffer_sz);
-	msvc::dynarray<uint8_t> tmp(buffer_sz);
-#endif
+
+	ARRAY(uint8_t, buffer, buffer_sz);
+	ARRAY(uint8_t, tmp, buffer_sz);
+
 	memset(tmp,0,buffer_sz);
 	font_glyph(utf8, unicode, tmp, &ctx);
 	gen_outline(ctx.w, ctx.h, tmp, buffer);
