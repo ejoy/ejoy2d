@@ -98,6 +98,21 @@ filename 不能有后缀 ppm 或 pgm 。ppm.texture 会尝试打开 filename.ppm
 
 和 ppm.load 对应，可生成一个 ppm/pgm 文件。
 
+### 生成 ppm/pgm 文件
+
+如果你知道如何通过 lua 把常见格式如 png 加载到内存，那么你就可以用 ejoy2d 自带的 ppm.save 来生成 ppm/pgm 文件。
+
+ppm 的文件格式非常简单，可以很容易的用任何编程语言操作。参见：http://en.wikipedia.org/wiki/Netpbm_format 
+
+你也可以使用 http://www.imagemagick.org/ 这个工具把带通道的 png 文件转换为一组 ppm/pgm 文件：
+
+> convert image.png image.ppm
+> convert image.png -channel A -separate image.pgm
+
+把 ppm/pgm 合成一张带 Alpha 通道的 png 文件可以用：
+
+> convert image.ppm image.pgm -compose copy-opacity -composite image.png
+
 ## matrix
 
 ejoy2d 使用一个 3*2 的 2D 变换矩阵，进行 2D 图像的各种变换操作。这个矩阵使用定点运算，所以矩阵即是一个 6 个整数构成的整数数组。ejoy2d.matrix 是一个方便开发者使用的针对矩阵数据类型处理的数学库。所有相关 API 在接受一个 matrix 参数时，可以是一个由 ejoy2d.matrix 构造程序来 lua userdata ，也可以是其它 C 模块传递过来的 lightuserdata （C 指针）。如果它是一个 lightuserdata ，需要调用者保证它指向的的确是一个长度为 6 的整数数组。
