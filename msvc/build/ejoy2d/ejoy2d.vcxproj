@@ -34,6 +34,7 @@
     <ClCompile Include="..\..\src\ejoy2d\winmain.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\lib\array.h" />
     <ClInclude Include="..\..\..\lib\dfont.h" />
     <ClInclude Include="..\..\..\lib\ejoy2dgame.h" />
     <ClInclude Include="..\..\..\lib\fault.h" />
@@ -56,10 +57,6 @@
     <ClInclude Include="..\..\include\lualib.h" />
     <ClInclude Include="..\..\include\lua_path.h" />
     <ClInclude Include="..\..\include\stdbool.h" />
-    <ClInclude Include="..\..\include\typeof.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\include\dynarray.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\glew\glew.vcxproj">

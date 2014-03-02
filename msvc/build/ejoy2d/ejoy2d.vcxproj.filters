@@ -88,9 +88,6 @@
     <ClInclude Include="..\..\include\stdbool.h">
       <Filter>port</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\typeof.h">
-      <Filter>port</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\mingw\winfw.h">
       <Filter>mingw</Filter>
     </ClInclude>
@@ -154,10 +151,8 @@
     <ClInclude Include="..\..\include\lualib.h">
       <Filter>port</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\include\dynarray.h">
-      <Filter>port</Filter>
-    </None>
+    <ClInclude Include="..\..\..\lib\array.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
