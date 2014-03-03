@@ -30,6 +30,7 @@ function ejoy2d.start(callback)
     fw.EJOY2D_GESTURE = function(what, x1, y1, x2, y2, state)
 		return callback.gesture(gesture[what], x1, y1, x2, y2, state)
 	end
+  fw.EJOY2D_HANDLE_ERROR = assert(callback.handle_error)
 	fw.inject()
 end
 

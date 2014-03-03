@@ -43,6 +43,9 @@ function game.touch(what, x, y)
 	end
 end
 
+function game.handle_error(...)
+end
+
 ej.start(game)
 
 

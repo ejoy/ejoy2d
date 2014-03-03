@@ -1,6 +1,7 @@
 return {
 	fire ={
 	texId= 4,
+  positionType= 2,
         angle= 90.0, 
         angleVariance= 10.0, 
         blendFuncDestination= 771.0, 
