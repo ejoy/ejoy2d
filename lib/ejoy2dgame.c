@@ -22,6 +22,7 @@
 #define EJOY_DRAWFRAME "EJOY2D_DRAWFRAME"
 #define EJOY_TOUCH "EJOY2D_TOUCH"
 #define EJOY_GESTURE "EJOY2D_GESTURE"
+#define EJOY_HANDLE_ERROR "EJOY2D_HANDLE_ERROR"
 
 #define TRACEBACK_FUNCTION 1
 #define UPDATE_FUNCTION 2
@@ -51,6 +52,7 @@ linject(lua_State *L) {
 		EJOY_DRAWFRAME,
 		EJOY_TOUCH,
         EJOY_GESTURE,
+		EJOY_HANDLE_ERROR,
 	};
 	int i;
 	for (i=0;i<sizeof(ejoy_callback)/sizeof(ejoy_callback[0]);i++) {
@@ -162,6 +164,34 @@ ejoy2d_game_start(struct game *G) {
 	lua_getfield(L,LUA_REGISTRYINDEX, EJOY_DRAWFRAME);
 }
 
+void 
+ejoy2d_handle_error(lua_State *L, const char *err_type, const char *msg) {
+	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_HANDLE_ERROR);
+	lua_pushstring(L, err_type);
+	lua_pushstring(L, msg);
+	int err = lua_pcall(L, 2, 0, 0);
+	switch(err) {
+	case LUA_OK:
+		printf("LUA_OK\n");
+		break;
+	case LUA_ERRRUN:
+		printf("LUA_ERRRUN : %s\n", lua_tostring(L,-1));
+		break;
+	case LUA_ERRMEM:
+		printf("LUA_ERRMEM : %s\n", lua_tostring(L,-1));
+		break;
+	case LUA_ERRERR:
+		printf("LUA_ERRERR : %s\n", lua_tostring(L,-1));
+		break;
+	case LUA_ERRGCMM:
+		printf("LUA_ERRGCMM : %s\n", lua_tostring(L,-1));
+		break;
+	default:
+		printf("Unknown Lua error: %d\n", err);
+		break;
+	}
+}
+
 static int
 call(lua_State *L, int n, int r) {
 	int err = lua_pcall(L, n, r, TRACEBACK_FUNCTION);
@@ -169,18 +199,23 @@ call(lua_State *L, int n, int r) {
 	case LUA_OK:
 		break;
 	case LUA_ERRRUN:
+		ejoy2d_handle_error(L, "LUA_ERRRUN", lua_tostring(L,-1));
 		fault("LUA_ERRRUN : %s\n", lua_tostring(L,-1));
 		break;
 	case LUA_ERRMEM:
+		ejoy2d_handle_error(L, "LUA_ERRMEM", lua_tostring(L,-1));
 		fault("LUA_ERRMEM : %s\n", lua_tostring(L,-1));
 		break;
 	case LUA_ERRERR:
+		ejoy2d_handle_error(L, "LUA_ERRERR", lua_tostring(L,-1));
 		fault("LUA_ERRERR : %s\n", lua_tostring(L,-1));
 		break;
 	case LUA_ERRGCMM:
+		ejoy2d_handle_error(L, "LUA_ERRGCMM", lua_tostring(L,-1));
 		fault("LUA_ERRGCMM : %s\n", lua_tostring(L,-1));
 		break;
 	default:
+		ejoy2d_handle_error(L, "UnknownError", "Unknown");
 		fault("Unknown Lua error: %d\n", err);
 		break;
 	}
