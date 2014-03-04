@@ -97,7 +97,7 @@ local function pack_part(data, ret)
 		if data.add and data.add ~= 0 then
 			tag = tag .. "a"
 		end
-		if data.touch and data.touch == 1 then
+		if data.touch then
 			tag = tag .. "t"
 		end
 		table.insert(ret, pack.frametag(tag))
