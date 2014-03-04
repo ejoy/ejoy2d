@@ -22,7 +22,7 @@ static struct dfont * Dfont = NULL;
 void
 label_load() {
 	assert(Dfont == NULL);
-	Dfont = dfont_create(TEX_HEIGHT, TEX_WIDTH);
+	Dfont = dfont_create(TEX_WIDTH, TEX_HEIGHT);
 	glPixelStorei(GL_UNPACK_ALIGNMENT,1);
 
 	glGenTextures(1, &(Tex));
