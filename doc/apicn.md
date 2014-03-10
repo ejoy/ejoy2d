@@ -275,6 +275,8 @@ sprite 用 lua 表的形式描述在资源文件中。资源文件通常于开�
 
 也可以参考 [examples/asset/sample.lua](https://github.com/cloudwu/ejoy2d/blob/master/examples/asset/sample.lua)
 
+我的同事制作了一个脚本可以将 flash 动画导出成 ejoy2d 的资源文件： https://github.com/robinxb/flash-parser
+
 详细文档待补充。
 
 ##particle
