@@ -346,7 +346,15 @@ lsettext(lua_State *L) {
 		return luaL_error(L, "Only label can set text");
 	}
 	lua_settop(L,2);
+	if (lua_isnil(L,2)) {
+		s->data.text = NULL;
+		lua_setuservalue(L,1);
+		return 0;
+	}
 	s->data.text = luaL_checkstring(L,2);
+	lua_createtable(L,1,0);
+	lua_pushvalue(L, -2);
+	lua_rawseti(L, -2, 1);
 	lua_setuservalue(L, 1);
 	return 0;
 }
@@ -357,8 +365,11 @@ lgettext(lua_State *L) {
 	if (s->type != TYPE_LABEL) {
 		return luaL_error(L, "Only label can get text");
 	}
-	lua_settop(L,2);
 	lua_getuservalue(L, 1);
+	if (!lua_istable(L,-1)) {
+		return 0;
+	}
+	lua_rawgeti(L, -1, 1);
 	return 1;
 }
 
