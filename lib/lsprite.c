@@ -333,6 +333,13 @@ lgetparentname(lua_State *L) {
 }
 
 static int
+lhasparent(lua_State *L) {
+	struct sprite *s = self(L);
+	lua_pushboolean(L, s->parent != NULL);
+	return 1;
+}
+
+static int
 lsettext(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->type != TYPE_LABEL) {
@@ -399,6 +406,7 @@ lgetter(lua_State *L) {
 		{"matrix", lgetmat },
 		{"world_matrix", lgetwmat },
 		{"parent_name", lgetparentname },
+		{"has_parent", lhasparent },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
