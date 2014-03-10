@@ -22,6 +22,7 @@
 #define EJOY_DRAWFRAME "EJOY2D_DRAWFRAME"
 #define EJOY_TOUCH "EJOY2D_TOUCH"
 #define EJOY_GESTURE "EJOY2D_GESTURE"
+#define EJOY_MESSAGE "EJOY2D_MESSAGE"
 #define EJOY_HANDLE_ERROR "EJOY2D_HANDLE_ERROR"
 
 #define TRACEBACK_FUNCTION 1
@@ -51,7 +52,8 @@ linject(lua_State *L) {
 		EJOY_UPDATE,
 		EJOY_DRAWFRAME,
 		EJOY_TOUCH,
-        EJOY_GESTURE,
+		EJOY_GESTURE,
+		EJOY_MESSAGE,
 		EJOY_HANDLE_ERROR,
 	};
 	int i;
@@ -162,7 +164,9 @@ ejoy2d_game_start(struct game *G) {
 	lua_pushcfunction(L, traceback);
 	lua_getfield(L,LUA_REGISTRYINDEX, EJOY_UPDATE);
 	lua_getfield(L,LUA_REGISTRYINDEX, EJOY_DRAWFRAME);
+	lua_getfield(L,LUA_REGISTRYINDEX, EJOY_MESSAGE);
 }
+
 
 void 
 ejoy2d_handle_error(lua_State *L, const char *err_type, const char *msg) {
@@ -277,4 +281,15 @@ ejoy2d_game_gesture(struct game *G, int type,
     lua_pushnumber(G->L, y2);
     lua_pushinteger(G->L, s);
     call(G->L, 6, 0);
+}
+
+void
+ejoy2d_game_message(struct game* G,int id_, const char* state, const char* data) {
+  lua_State *L = G->L;
+  lua_getfield(L, LUA_REGISTRYINDEX, EJOY_MESSAGE);
+  lua_pushnumber(L, id_);
+  lua_pushstring(L, state);
+  lua_pushstring(L, data);
+  call(L, 3, 0);
+  lua_settop(L, TOP_FUNCTION);
 }

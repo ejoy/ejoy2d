@@ -16,5 +16,7 @@ void ejoy2d_game_drawframe(struct game *);
 int ejoy2d_game_touch(struct game *, int id, float x, float y, int status);
 void ejoy2d_game_gesture(struct game *, int type,
                          double x1, double y1, double x2, double y2, int s);
+void
+ejoy2d_game_message(struct game* G,int id_, const char* state, const char* data);
 
 #endif
