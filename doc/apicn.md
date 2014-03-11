@@ -187,6 +187,8 @@ local obj = sprite.new("packname", "objectname")
 
 构造出来的 sprite 对象都可以对其调用一系列方法，而下列方法仅仅是被记入文档的一部分。未被文档化的方法可以在源代码中找到，但它们更可能在未来有变动，需要酌情使用。
 
+###sprite 方法
+
 ```Lua
 sprite:draw(srt)
 ```
@@ -227,6 +229,55 @@ test 方法和 draw 有点类似，但是它不会绘制这个对象，而只会
 sprite:aabb(srt)
 ```
 aabb 和 draw 类似，但它不绘制对象，仅仅返回四个整数表示这个对象的轴对齐包围盒。这四个整数分别是左上角和右下角的屏幕像素坐标。
+
+```Lua
+sprite:fetch(name)
+```
+一个 sprite 对象以树结构组织，若它的子节点在资源文件中标明了名字，那么可以用 fetch 方法获得这个子节点对象。同时，sprite.name 是 `sprite:fetch("name")` 的语法糖，两种写法是等价的。
+
+```Lua
+sprite:mount(name, child)
+```
+在运行时，可以动态换掉一个 sprite 对象的具名子节点。这里 name 是一个字符串，child 是另一个 sprite 对象。sprite.name = child 是 `sprite:mount("name", child)` 的语法糖，两种写法是等价的。
+
+注：不能将同一个 sprite 对象 mount 到两个不同的 sprite 对象上。如果你需要这样做，请用同一份资源构造两个 sprite 对象。
+
+###sprite 属性
+* `sprite.frame` 可读写
+对象当前帧号
+* `sprite.matrix` 可读写
+对象的变换矩阵。注：不同于 sprite 在资源文件里标注的变换矩阵，这个矩阵是运行期的。在渲染时，运行期的变换矩阵和资源文件中描述的变换矩阵都会影响对象最终的显示效果（运行期矩阵最后起效果）。默认的运行期变换矩阵为单位矩阵。
+* `sprite.visible` 可读写
+对象是否显示。这个标记如果被设置为 false，整个子树都不会显示。
+* `sprite.text` 可读写
+只有 label 类型的对象才有这个属性。它是 label 的文字。
+* `sprite.color` 可读写
+对象的混合颜色，为一个 32bit ARGB 整数。这个对象及子树在渲染时都会乘上这个颜色，默认值为 0xffffffff 。最常用的做法是用于半透明效果，当 color 为 0x80ffffff 时，就是 50% 的半透明混合。
+* `sprite.additive` 可读写
+给对象叠加一个颜色，为一个 24bit RGB 整数，默认值为 0 。在渲染这个对象及子树时会叠加这个颜色。
+* `sprite.message` 可读写
+对象是否截获 test 调用。多用于 UI 控制。
+* `sprite.frame_count` 只读
+对象的动画帧数。
+* `sprite.action` 只写
+设置一组动作动画。在资源文件中，一个对象对象可以有多组动画，被称为不同的 action 。每组 action 有一个字符串名字，通过设置 action 可以切换到不同的动画序列。默认的动画序列为资源文件中描述的第一个 action 。
+* `sprite.program` 只写
+给对象设置一个专有的渲染程序。program 是一个数字 id 。这是一个高级特性，使用它需要对 opengl shader program 有一定了解。ejoy2d 目前在 shader.lua 中预设了几段 program 。比如 `sprite.program = shader.id "GRAY"` 可以让一个对象以灰色图形式渲染。
+* `sprite.scissor` 只写
+让一个 panel 类型的对象具有剪切器的能力。这可以让一个 panel 节点以一个矩形（指定宽和高）为范围裁减它的子节点。一般用来实现滚动框。
+* `sprite.world_matrix` 只读
+anchor 类型的对象的特有只读属性。它会返回上一次这个 anchor 对象最终渲染的世界矩阵。注：anchor 类型的对象默认 visible 为 false ，当不可显时，引擎不计算 world matrix 。
+
+###sprite 资源结构
+sprite 用 lua 表的形式描述在资源文件中。资源文件通常于开发期构建。不同于运行期 API ，资源的数据定义灵活度要更为灵活。开发者可以按格式手写资源文件，更可以用额外的工具生成它们。对于特殊的需求，还可以用另一段 lua 脚本生成需要的数据（比如用工具生成动画的关键帧，再用程序插值补上中间的运动帧）。
+
+资源的数据结构说明见：http://blog.codingnow.com/2013/12/ejoy2d.html
+
+也可以参考 [examples/asset/sample.lua](https://github.com/cloudwu/ejoy2d/blob/master/examples/asset/sample.lua)
+
+我的同事制作了一个脚本可以将 flash 动画导出成 ejoy2d 的资源文件： https://github.com/robinxb/flash-parser
+
+详细文档待补充。
 
 ##particle
 
