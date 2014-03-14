@@ -372,7 +372,7 @@
 		F44EF70C18CF2805005EFAC1 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0510;
 			};
 			buildConfigurationList = F44EF70F18CF2805005EFAC1 /* Build configuration list for PBXProject "example" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -466,7 +466,8 @@
 					/usr/local/include,
 					/usr/X11R6/include/freetype2,
 				);
-				SDKROOT = macosx10.9;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -481,7 +482,7 @@
 					/usr/local/include,
 					/usr/X11R6/include/freetype2,
 				);
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
@@ -529,7 +530,7 @@
 					"-ldl",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -575,7 +576,7 @@
 					"-ldl",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
