@@ -1,6 +1,6 @@
 .PHONY : mingw ej2d linux undefined
 
-CFLAGS = -g -Wall -Ilib -D EJOY2D_OS=$(OS)
+CFLAGS = -g -Wall -Ilib -Ilua -D EJOY2D_OS=$(OS)
 LDFLAGS :=
 
 SRC := \
@@ -22,6 +22,40 @@ lib/particle.c \
 lib/lparticle.c \
 lib/scissor.c
 
+LUASRC := \
+lua/lapi.c \
+lua/lauxlib.c \
+lua/lbaselib.c \
+lua/lbitlib.c \
+lua/lcode.c \
+lua/lcorolib.c \
+lua/lctype.c \
+lua/ldblib.c \
+lua/ldebug.c \
+lua/ldo.c \
+lua/ldump.c \
+lua/lfunc.c \
+lua/lgc.c \
+lua/linit.c \
+lua/liolib.c \
+lua/llex.c \
+lua/lmathlib.c \
+lua/lmem.c \
+lua/loadlib.c \
+lua/lobject.c \
+lua/lopcodes.c \
+lua/loslib.c \
+lua/lparser.c \
+lua/lstate.c \
+lua/lstring.c \
+lua/lstrlib.c \
+lua/ltable.c \
+lua/ltablib.c \
+lua/ltm.c \
+lua/lundump.c \
+lua/lvm.c \
+lua/lzio.c
+
 UNAME=$(shell uname)
 SYS=$(if $(filter Linux%,$(UNAME)),linux,\
 	    $(if $(filter MINGW%,$(UNAME)),mingw,\
@@ -38,30 +72,30 @@ undefined:
 
 mingw : OS := WINDOWS
 mingw : TARGET := ej2d.exe
-mingw : CFLAGS += -I/usr/include -I/usr/local/include
-mingw : LDFLAGS += -L/usr/bin -lgdi32 -lglew32 -lopengl32 -L/usr/local/bin -llua52
+mingw : CFLAGS += -I/usr/include
+mingw : LDFLAGS += -L/usr/bin -lgdi32 -lglew32 -lopengl32
 mingw : SRC += mingw/window.c mingw/winfw.c mingw/winfont.c
 
 mingw : $(SRC) ej2d
 
 linux : OS := LINUX
 linux : TARGET := ej2d
-linux : CFLAGS += -I/usr/include -I/usr/local/include $(shell freetype-config --cflags)
-linux : LDFLAGS +=  -lGLEW -lGL -lX11 -lfreetype -llua -lm -Wl,-E
+linux : CFLAGS += -I/usr/include $(shell freetype-config --cflags)
+linux : LDFLAGS +=  -lGLEW -lGL -lX11 -lfreetype -lm
 linux : SRC += posix/window.c posix/winfw.c posix/winfont.c
 
 linux : $(SRC) ej2d
 
 macosx : OS := MACOSX
 macosx : TARGET := ej2d
-macosx : CFLAGS += -I/usr/X11R6/include -I/usr/include -I/usr/local/include $(shell freetype-config --cflags) -D __MACOSX
-macosx : LDFLAGS += -L/usr/X11R6/lib  -lGLEW -lGL -lX11 -lfreetype -llua -lm -Wl,-E -ldl
+macosx : CFLAGS += -I/usr/X11R6/include -I/usr/include $(shell freetype-config --cflags) -D __MACOSX
+macosx : LDFLAGS += -L/usr/X11R6/lib  -lGLEW -lGL -lX11 -lfreetype -lm -ldl
 macosx : SRC += posix/window.c posix/winfw.c posix/winfont.c
 
 macosx : $(SRC) ej2d
 
 ej2d :
-	gcc $(CFLAGS) -o $(TARGET) $(SRC) $(LDFLAGS)
+	gcc $(CFLAGS) -o $(TARGET) $(SRC) $(LUASRC) $(LDFLAGS)
 
 clean :
 	-rm -f ej2d.exe

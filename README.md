@@ -11,7 +11,6 @@ For Windows and msvc
 
 For Windows and mingw32
 
-* Install Lua 5.2.3
 * Copy lua52.dll to /usr/local/bin
 * Install glew 1.9
 * make or make mingw
@@ -19,7 +18,6 @@ For Windows and mingw32
 
 For Linux ,
 
-* Install Lua 5.2.3
 * Install glew 1.9
 * Install freetype 2
 * make or make linux
@@ -27,7 +25,6 @@ For Linux ,
 
 For Mac OS ,
 
-* Install Lua 5.2.3
 * Install glew 1.9
 * Install freetype 2
 * Install XQuartz
@@ -47,5 +44,3 @@ Please read http://blog.codingnow.com/2013/12/ejoy2d.html first (In Chinese)
 Chinese API document 
 
 Put your questions in [Issues](https://github.com/cloudwu/ejoy2d/issues) .
-
-
