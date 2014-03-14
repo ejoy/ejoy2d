@@ -11,7 +11,6 @@ For Windows and msvc
 
 For Windows and mingw32
 
-* Copy lua52.dll to /usr/local/bin
 * Install glew 1.9
 * make or make mingw
 * ej2d examples/ex01.lua to test
