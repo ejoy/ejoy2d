@@ -6,7 +6,7 @@
     <EJOY2D_ROOT>$(EJOY2D)\..\</EJOY2D_ROOT>
     <EJOY2D_OBJ>$(EJOY2D)\obj\$(Configuration)\$(ProjectName)\</EJOY2D_OBJ>
     <EJOY2D_LIB>$(EJOY2D)\lib\$(Configuration)\</EJOY2D_LIB>
-    <EJOY2D_LUA>$(EJOY2D)\src\lua-5.2.3\src\</EJOY2D_LUA>
+    <EJOY2D_LUA>$(EJOY2D)\..\lua\</EJOY2D_LUA>
     <EJOY2D_GLEW>$(EJOY2D)\src\glew\</EJOY2D_GLEW>
   </PropertyGroup>
   <PropertyGroup>
