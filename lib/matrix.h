@@ -43,5 +43,6 @@ void matrix_srt(struct matrix *mm, const struct srt *srt);
 void matrix_rot(struct matrix *m, int rot);
 void matrix_scale(struct matrix *m, int sx, int sy);
 void matrix_sr(struct matrix *mat, int sx, int sy, int d);
+void matrix_rs(struct matrix *mat, int sx, int sy, int d);
 
 #endif

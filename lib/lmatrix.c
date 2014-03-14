@@ -152,6 +152,32 @@ lsr(lua_State *L) {
 }
 
 static int
+lrs(lua_State *L) {
+	struct matrix *m = (struct matrix *)lua_touserdata(L, 1);
+
+	int sx=1024,sy=1024,r=0;
+	int n = lua_gettop(L);
+	switch (n) {
+	case 4:
+		// sx,sy,rot
+		r = luaL_checknumber(L,4) * (1024.0 / 360.0);
+		// go through
+	case 3:
+		// sx, sy
+		sx = luaL_checknumber(L,2) * 1024;
+		sy = luaL_checknumber(L,3) * 1024;
+		break;
+	case 2:
+		// rot
+		r = luaL_checknumber(L,2) * (1024.0 / 360.0);
+		break;
+	}
+	matrix_rs(m, sx, sy, r);
+
+	return 0;
+}
+
+static int
 ltostring(lua_State *L) {
 	struct matrix *mat = (struct matrix *)lua_touserdata(L, 1);
 	int *m = mat->m;
@@ -171,6 +197,17 @@ lexport(lua_State *L) {
 	return 6;
 }
 
+static int
+limport(lua_State *L) {
+	int i;
+	struct matrix *mat = (struct matrix *)lua_touserdata(L, 1);
+	int *m = mat->m;
+	for (i=0;i<6;i++) {
+		m[i] = (int)luaL_checkinteger(L,i+2);
+	}
+	return 0;
+}
+
 int 
 ejoy2d_matrix(lua_State *L) {
 	luaL_Reg l[] = {
@@ -179,11 +216,13 @@ ejoy2d_matrix(lua_State *L) {
 		{ "trans", ltrans },
 		{ "rot", lrot },
 		{ "sr", lsr },
+		{ "rs", lrs },
 		{ "inverse", linverse },
 		{ "mul", lmul },
 		{ "tostring", ltostring },
 		{ "identity", lidentity},
 		{ "export", lexport },
+		{ "import", limport },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);

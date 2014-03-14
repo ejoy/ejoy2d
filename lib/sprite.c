@@ -828,16 +828,21 @@ sprite_test(struct sprite *s, struct srt *srt, int x, int y) {
 	return NULL;
 }
 
-void
+int
 sprite_setframe(struct sprite *s, int frame, bool force_child) {
 	if (s == NULL || s->type != TYPE_ANIMATION)
-		return;
+		return 0;
 	s->frame = frame;
+	int total_frame = s->total_frame;
 	int i;
 	struct pack_animation * ani = s->s.ani;
 	for (i=0;i<ani->component_number;i++) {
 		if (force_child || ani->component[i].name == NULL) {
-			sprite_setframe(s->data.children[i],frame, force_child);
+			int t = sprite_setframe(s->data.children[i],frame, force_child);
+			if (t > total_frame) {
+				total_frame = t;
+			}
 		}
 	}
+	return total_frame;
 }
