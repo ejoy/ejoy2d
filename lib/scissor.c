@@ -45,6 +45,6 @@ scissor_pop() {
 		glDisable(GL_SCISSOR_TEST);
 		return;
 	}
-	struct box * s = &S.s[S.depth];
+	struct box * s = &S.s[S.depth-1];
 	screen_scissor(s->x,s->y,s->width,s->height);
 }
