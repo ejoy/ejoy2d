@@ -58,8 +58,8 @@ ltrans(lua_State *L) {
 	struct matrix *m = (struct matrix *)lua_touserdata(L, 1);
 	double x = luaL_checknumber(L,2);
 	double y = luaL_checknumber(L,3);
-	m->m[4] += x * 8;
-	m->m[5] += y * 8;
+	m->m[4] += x * SCREEN_SCALE;
+	m->m[5] += y * SCREEN_SCALE;
 
 	lua_settop(L,1);
 	return 1;
