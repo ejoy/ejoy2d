@@ -101,7 +101,7 @@ import_color(struct import_stream *is) {
 static void
 import_picture(struct import_stream *is) {
 	int n = import_byte(is);
-	struct pack_picture * pp = (struct pack_picture *)ialloc(is->alloc, sizeof(*pp) + (n - 1) * sizeof(struct pack_quad));
+	struct pack_picture * pp = (struct pack_picture *)ialloc(is->alloc, SIZEOF_PICTURE + n * SIZEOF_QUAD);
 	pp->n = n;
 	int i,j;
 	for (i=0;i<n;i++) {
@@ -120,7 +120,7 @@ import_picture(struct import_stream *is) {
 static void
 import_polygon(struct import_stream *is) {
 	int n = import_byte(is);
-	struct pack_polygon * pp = (struct pack_polygon *)ialloc(is->alloc, sizeof(*pp) + (n - 1) * sizeof(struct pack_poly));
+	struct pack_polygon * pp = (struct pack_polygon *)ialloc(is->alloc, SIZEOF_POLYGON + n * SIZEOF_POLY);
 	pp->n = n;
 	int i,j;
 	for (i=0;i<n;i++) {
@@ -161,7 +161,7 @@ static void
 import_frame(struct pack_frame * pf, struct import_stream *is, int maxc) {
 	int n = import_word(is);
 	int i;
-	pf->part = (struct pack_part *)ialloc(is->alloc, n * sizeof(struct pack_part));
+	pf->part = (struct pack_part *)ialloc(is->alloc, n * SIZEOF_PART);
 	pf->n = n;
 	for (i=0;i<n;i++) {
 		struct pack_part *pp = &pf->part[i];
@@ -175,7 +175,7 @@ import_frame(struct pack_frame * pf, struct import_stream *is, int maxc) {
 			luaL_error(is->alloc->L, "Invalid stream (%d): frame part need an id", is->current_id);
 		}
 		if (tag & TAG_MATRIX) {
-			pp->t.mat = (struct matrix *)ialloc(is->alloc, sizeof(struct matrix));
+			pp->t.mat = (struct matrix *)ialloc(is->alloc, SIZEOF_MATRIX);
 			int32_t *m = pp->t.mat->m;
 			int j;
 			for (j=0;j<6;j++) {
@@ -208,7 +208,7 @@ import_frame(struct pack_frame * pf, struct import_stream *is, int maxc) {
 static void
 import_animation(struct import_stream *is) {
 	int component = import_word(is);
-	struct pack_animation * pa = (struct pack_animation *)ialloc(is->alloc, sizeof(*pa) + (component - 1) * sizeof(struct pack_component));
+	struct pack_animation * pa = (struct pack_animation *)ialloc(is->alloc, SIZEOF_ANIMATION + component * SIZEOF_COMPONENT);
 	pa->component_number = component;
 	int i;
 	for (i=0;i<component;i++) {
@@ -220,7 +220,7 @@ import_animation(struct import_stream *is) {
 		pa->component[i].name = import_string(is);
 	}
 	pa->action_number = import_word(is);
-	pa->action = (struct pack_action *)ialloc(is->alloc, sizeof(struct pack_action) * pa->action_number);
+	pa->action = (struct pack_action *)ialloc(is->alloc, SIZEOF_ACTION * pa->action_number);
 	int frame = 0;
 	for (i=0;i<pa->action_number;i++) {
 		pa->action[i].name = import_string(is);
@@ -229,7 +229,7 @@ import_animation(struct import_stream *is) {
 		frame += pa->action[i].number;
 	}
 	pa->frame_number = import_word(is);
-	pa->frame = (struct pack_frame *)ialloc(is->alloc, sizeof(struct pack_frame) * pa->frame_number);
+	pa->frame = (struct pack_frame *)ialloc(is->alloc, SIZEOF_FRAME * pa->frame_number);
 	for (i=0;i<pa->frame_number;i++) {
 		import_frame(&pa->frame[i], is, component);
 	}
@@ -237,7 +237,7 @@ import_animation(struct import_stream *is) {
 
 static void
 import_label(struct import_stream *is) {
-	struct pack_label * pl = (struct pack_label *)ialloc(is->alloc, sizeof(struct pack_label));
+	struct pack_label * pl = (struct pack_label *)ialloc(is->alloc, SIZEOF_LABEL);
 	pl->align = import_byte(is);
 	pl->color = import_color(is);
 	pl->size = import_word(is);
@@ -249,7 +249,7 @@ import_label(struct import_stream *is) {
 
 static void
 import_pannel(struct import_stream *is) {
-	struct pack_pannel *pp = (struct pack_pannel *)ialloc(is->alloc, sizeof(struct pack_pannel));
+	struct pack_pannel *pp = (struct pack_pannel *)ialloc(is->alloc, SIZEOF_PANNEL);
 	pp->width = import_int32(is);
 	pp->height = import_int32(is);
 	pp->scissor = import_byte(is);
@@ -321,13 +321,13 @@ limport(lua_State *L) {
 	alloc.buffer = (char *)lua_newuserdata(L, size);
 	alloc.cap = size;
 
-	struct sprite_pack *pack = (struct sprite_pack *)ialloc(&alloc, sizeof(*pack) + (tex - 1) * sizeof(int));
+	struct sprite_pack *pack = (struct sprite_pack *)ialloc(&alloc, SIZEOF_PACK + tex * sizeof(int));
 	pack->n = max_id + 1;
 	int align_n = (pack->n + 3) & ~3;
 	pack->type = (uint8_t *)ialloc(&alloc, align_n * sizeof(uint8_t));
 	memset(pack->type, 0, align_n * sizeof(uint8_t));
-	pack->data = (void **)ialloc(&alloc, pack->n * sizeof(void*));
-	memset(pack->data, 0, pack->n * sizeof(void*));
+	pack->data = (void **)ialloc(&alloc, pack->n * SIZEOF_POINTER);
+	memset(pack->data, 0, pack->n * SIZEOF_POINTER);
 
 	if (lua_istable(L,1)) {
 		int i;
@@ -469,7 +469,7 @@ lpackframetag(lua_State *L) {
 static int
 lpicture_size(lua_State *L) {
 	int n = (int)luaL_checkinteger(L,1);
-	int sz = sizeof(struct pack_picture) + (n - 1) * sizeof(struct pack_quad);
+	int sz = SIZEOF_PICTURE + n * SIZEOF_QUAD;
 	lua_pushinteger(L, sz);
 	return 1;
 }
@@ -478,8 +478,8 @@ static int
 lpolygon_size(lua_State *L) {
 	int n = (int)luaL_checkinteger(L,1);
 	int pn = (int)luaL_checkinteger(L,2);
-	int sz = sizeof(struct pack_polygon)
-		+ (n-1) * sizeof(struct pack_poly)
+	int sz = SIZEOF_POLYGON
+		+ n * SIZEOF_POLY
 		+ 12 * pn;
 	lua_pushinteger(L, sz);
 	return 1;
@@ -490,10 +490,10 @@ lpack_size(lua_State *L) {
 	int max_id = (int)luaL_checkinteger(L,1);
 	int tex = (int)luaL_checkinteger(L,2);
 	int align_n = (max_id + 1 + 3) & ~3;
-	int size = sizeof(struct sprite_pack)
+	int size = SIZEOF_PACK
 		+ align_n * sizeof(uint8_t)
-		+ (max_id+1) * sizeof(void *)
-		+ (tex-1) * sizeof(int);
+		+ (max_id+1) * SIZEOF_POINTER
+		+ tex * sizeof(int);
 
 	lua_pushinteger(L, size);
 
@@ -513,10 +513,10 @@ lanimation_size(lua_State *L) {
 	int component = (int)luaL_checkinteger(L,2);
 	int action = (int)luaL_checkinteger(L,3);
 
-	int size = sizeof(struct pack_animation)
-		+ frame * sizeof(struct pack_frame)
-		+ action * sizeof(struct pack_action)
-		+ (component-1) * sizeof(struct pack_component);
+	int size = SIZEOF_ANIMATION
+		+ frame * SIZEOF_FRAME
+		+ action * SIZEOF_ACTION
+		+ component * SIZEOF_COMPONENT;
 
 	lua_pushinteger(L, size);
 	return 1;
@@ -526,9 +526,9 @@ static int
 lpart_size(lua_State *L) {
 	int size;
 	if (lua_isnoneornil(L,1)) {
-		size = sizeof(struct pack_part);
+		size = SIZEOF_PART;
 	} else {
-		size = sizeof(struct pack_part) + sizeof(struct matrix);
+		size = SIZEOF_PART + SIZEOF_MATRIX;
 	}
 	lua_pushinteger(L, size);
 
@@ -551,13 +551,13 @@ lstring_size(lua_State *L) {
 
 static int
 llabel_size(lua_State *L) {
-	lua_pushinteger(L, sizeof(struct pack_label));
+	lua_pushinteger(L, SIZEOF_LABEL);
 	return 1;
 }
 
 static int
 lpannel_size(lua_State *L) {
-	lua_pushinteger(L, sizeof(struct pack_pannel));
+	lua_pushinteger(L, SIZEOF_PANNEL);
 	return 1;
 }
 
