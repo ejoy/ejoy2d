@@ -56,7 +56,7 @@ struct pack_picture {
 	struct pack_quad rect[1];
 };
 
-#define SIZEOF_PICTURE (sizeof(struct pack_picture) - SIZEOF_QUAD)
+#define SIZEOF_PICTURE (sizeof(struct pack_picture) - sizeof(struct pack_quad))
 
 struct pack_poly {
 	uint16_t *texture_coord;
@@ -73,7 +73,7 @@ struct pack_polygon {
 	struct pack_poly poly[1];
 };
 
-#define SIZEOF_POLYGON (sizeof(struct pack_polygon) - SIZEOF_POLY)
+#define SIZEOF_POLYGON (sizeof(struct pack_polygon) - sizeof(struct pack_poly))
 
 struct sprite_trans {
 	struct matrix * mat;
@@ -127,7 +127,7 @@ struct pack_animation {
 	struct pack_component component[1];
 };
 
-#define SIZEOF_ANIMATION (sizeof(struct pack_animation) + 2 * PTR_SIZE_DIFF - SIZEOF_COMPONENT)
+#define SIZEOF_ANIMATION (sizeof(struct pack_animation) + 2 * PTR_SIZE_DIFF - sizeof(struct pack_component))
 
 struct sprite_pack {
 	uint8_t * type;
