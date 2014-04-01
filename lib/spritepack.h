@@ -91,7 +91,7 @@ struct pack_part {
 	int touchable;
 };
 
-#define SIZEOF_PART (sizeof(struct pack_part))
+#define SIZEOF_PART (sizeof(struct pack_part) + SIZEOF_TRANS - sizeof(struct sprite_trans))
 
 struct pack_frame {
 	struct pack_part *part;
