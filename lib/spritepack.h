@@ -59,16 +59,17 @@ struct pack_picture {
 #define SIZEOF_PICTURE (sizeof(struct pack_picture) - SIZEOF_QUAD)
 
 struct pack_poly {
-	int texid;
-	int n;
 	uint16_t *texture_coord;
 	int32_t *screen_coord;
+	int texid;
+	int n;
 };
 
 #define SIZEOF_POLY (sizeof(struct pack_poly) + 2 * PTR_SIZE_DIFF)
 
 struct pack_polygon {
 	int n;
+	int _dummy;		// unused: dummy for align to 64bit
 	struct pack_poly poly[1];
 };
 
@@ -79,21 +80,23 @@ struct sprite_trans {
 	uint32_t color;
 	uint32_t additive;
 	int program;
+	int _dummy;		// unused: dummy for align to 64bit
 };
 
-#define SIZEOF_TRANS (sizeof(struct sprite_trans) * PTR_SIZE_DIFF)
+#define SIZEOF_TRANS (sizeof(struct sprite_trans) + PTR_SIZE_DIFF)
 
 struct pack_part {
-	int component_id;
 	struct sprite_trans t;
+	int component_id;
 	int touchable;
 };
 
 #define SIZEOF_PART (sizeof(struct pack_part))
 
 struct pack_frame {
-	int n;
 	struct pack_part *part;
+	int n;
+	int _dummy;		// unused: dummy for align to 64bit
 };
 
 #define SIZEOF_FRAME (sizeof(struct pack_frame) + PTR_SIZE_DIFF)
@@ -107,31 +110,34 @@ struct pack_action {
 #define SIZEOF_ACTION (sizeof(struct pack_action) + PTR_SIZE_DIFF)
 
 struct pack_component {
-	int id;
 	const char *name;
+	int id;
+	int _dummy;		// unused: dummy for align to 64bit
 };
 
 #define SIZEOF_COMPONENT (sizeof(struct pack_component) + PTR_SIZE_DIFF)
 
 struct pack_animation {
+	struct pack_frame *frame;
+	struct pack_action *action;
 	int frame_number;
 	int action_number;
 	int component_number;
-	struct pack_frame *frame;
-	struct pack_action *action;
+	int _dummy;		// unused: dummy for align to 64bit
 	struct pack_component component[1];
 };
 
 #define SIZEOF_ANIMATION (sizeof(struct pack_animation) + 2 * PTR_SIZE_DIFF - SIZEOF_COMPONENT)
 
 struct sprite_pack {
-	int n;
 	uint8_t * type;
 	void ** data;
-	int tex[1];
+	int n;
+	int _dummy;		// unused: dummy for align to 64bit
+	int tex[2];
 };
 
-#define SIZEOF_PACK (sizeof(struct sprite_pack) + 2 * PTR_SIZE_DIFF - sizeof(int))
+#define SIZEOF_PACK (sizeof(struct sprite_pack) + 2 * PTR_SIZE_DIFF - 2 * sizeof(int))
 
 int ejoy2d_spritepack(lua_State *L);
 void dump_pack(struct sprite_pack *pack);
