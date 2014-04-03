@@ -94,6 +94,19 @@ lversion(lua_State *L) {
 	return 1;
 }
 
+static int
+lclear(lua_State *L) {
+	uint32_t c = luaL_optunsigned(L, 1, 0xff000000);
+	float a = ((c >> 24) & 0xff ) / 255.0;
+	float r = ((c >> 16) & 0xff ) / 255.0;
+	float g = ((c >> 8) & 0xff ) / 255.0;
+	float b = ((c >> 0) & 0xff ) / 255.0;
+	glClearColor(r,g,b,a);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	return 0;
+}
+
 int 
 ejoy2d_shader(lua_State *L) {
 	luaL_Reg l[] = {
@@ -101,6 +114,7 @@ ejoy2d_shader(lua_State *L) {
 		{"unload", lunload},
 		{"draw", ldraw},
 		{"blend", lblend},
+		{"clear", lclear},
 		{"version", lversion},
 		{NULL,NULL},
 	};

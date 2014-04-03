@@ -36,4 +36,8 @@ function ejoy2d.start(callback)
 	fw.inject()
 end
 
+function ejoy2d.clear(color)
+	return shader.clear(color)
+end
+
 return ejoy2d

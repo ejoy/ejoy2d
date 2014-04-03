@@ -27,6 +27,7 @@ local pos = {x=160, y= 300}
 local pos2 = {x=160, y = 240}
 
 function game.drawframe()
+  ej.clear()	-- default clear color is black (0,0,0,1)
   ps.group:draw()
 	ps:draw()
   obj:draw(pos)

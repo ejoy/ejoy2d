@@ -22,6 +22,7 @@ function game.update()
 end
 
 function game.drawframe()
+	ej.clear()
 	obj:draw(screencoord)
 end
 
