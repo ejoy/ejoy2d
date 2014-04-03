@@ -71,7 +71,7 @@ shader_init() {
 		idxs[i*6+5] = i*4+3;
 	}
 	
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6*MAX_COMMBINE*sizeof(*idxs), idxs, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idxs), idxs, GL_STATIC_DRAW);
 
 	glGenBuffers(1, &rs->vertex_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, rs->vertex_buffer);
