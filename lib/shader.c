@@ -8,7 +8,7 @@
 #include <string.h>
 #include <assert.h>
 
-#define MAX_COMMBINE 64
+#define MAX_COMMBINE 1024
 #define MAX_PROGRAM 6
 
 #define ATTRIB_VERTEX 0
@@ -60,7 +60,7 @@ shader_init() {
 	glGenBuffers(1, &rs->index_buffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rs->index_buffer);
 
-	GLubyte idxs[6 * MAX_COMMBINE];
+	GLushort idxs[6 * MAX_COMMBINE];
 	int i;
 	for (i=0;i<MAX_COMMBINE;i++) {
 		idxs[i*6] = i*4;
@@ -71,7 +71,7 @@ shader_init() {
 		idxs[i*6+5] = i*4+3;
 	}
 	
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6*MAX_COMMBINE, idxs, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6*MAX_COMMBINE*sizeof(*idxs), idxs, GL_STATIC_DRAW);
 
 	glGenBuffers(1, &rs->vertex_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, rs->vertex_buffer);
@@ -208,7 +208,7 @@ rs_commit() {
 	glVertexAttribPointer(ATTRIB_TEXTCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), BUFFER_OFFSET(8));
 	glEnableVertexAttribArray(ATTRIB_COLOR);
 	glVertexAttribPointer(ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(struct vertex), BUFFER_OFFSET(16));
-	glDrawElements(GL_TRIANGLES, 6 * RS->object, GL_UNSIGNED_BYTE, 0);
+	glDrawElements(GL_TRIANGLES, 6 * RS->object, GL_UNSIGNED_SHORT, 0);
 	RS->object = 0;
 }
 
