@@ -183,13 +183,13 @@ main(int argc, char *argv[]) {
             }
         }
 
-        uint32_t old = timestamp;
-        timestamp= _gettime();
-        if (timestamp - old >= UPDATE_INTERVAL) {
+        uint32_t current = _gettime();
+        if (current - timestamp >= UPDATE_INTERVAL) {
+            timestamp = current;
             ejoy2d_win_update();
             update_frame();
-        }
-        else
+        } else {
             usleep(1000);
+        }
     }
 }
