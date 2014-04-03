@@ -255,32 +255,27 @@ shader_draw(const float vb[16], uint32_t color) {
 	}
 }
 
+static void
+draw_quad(const float *vbp, uint32_t color, int max, int index) {
+	float vb[16];
+	int i;
+	memcpy(vb, vbp, 4 * sizeof(float));	// first point
+	for (i=1;i<4;i++) {
+		int j = i + index;
+		int n = (j <= max) ? j : max;
+		memcpy(vb + i * sizeof(float), vbp + n * sizeof(float), 4 * sizeof(float));
+	}
+	shader_draw(vb, color);
+}
+
 void
 shader_drawpolygon(int n, const float *vb, uint32_t color) {
-	rs_commit();
-	ARRAY(struct vertex, p, n);
-	int i;
-	for (i=0;i<n;i++) {
-		p[i].vx = vb[i*4+0];
-		p[i].vy = vb[i*4+1];
-		p[i].tx = vb[i*4+2];
-		p[i].ty = vb[i*4+3];
-		p[i].rgba[0] = (color >> 16) & 0xff;
-		p[i].rgba[1] = (color >> 8) & 0xff;
-		p[i].rgba[2] = (color) & 0xff;
-		p[i].rgba[3] = (color >> 24) & 0xff;
-	}
-	
-	glBindBuffer(GL_ARRAY_BUFFER, RS->vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(struct vertex) * n, (void*)p, GL_DYNAMIC_DRAW);
-
-	glEnableVertexAttribArray(ATTRIB_VERTEX);
-	glVertexAttribPointer(ATTRIB_VERTEX, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), BUFFER_OFFSET(0));
-	glEnableVertexAttribArray(ATTRIB_TEXTCOORD);
-	glVertexAttribPointer(ATTRIB_TEXTCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), BUFFER_OFFSET(8));
-	glEnableVertexAttribArray(ATTRIB_COLOR);
-	glVertexAttribPointer(ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(struct vertex), BUFFER_OFFSET(16));
-	glDrawArrays(GL_TRIANGLE_FAN, 0, n);
+	int i = 0;
+	--n;
+	do {
+		draw_quad(vb, color, n, i);
+		i+=2;
+	} while (i<n-1);
 }
 
 void 
