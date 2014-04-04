@@ -561,7 +561,7 @@ lmatrix_multi_draw(lua_State *L) {
 		return 0;
 	luaL_checktype(L,4,LUA_TTABLE);
 	luaL_checktype(L,5,LUA_TTABLE);
-    luaL_checktype(L,6,LUA_TTABLE);
+//    luaL_checktype(L,6,LUA_TTABLE);
 	if (lua_rawlen(L, 4) < cnt) {
 		return luaL_error(L, "matrix length less then particle count");
 	}
