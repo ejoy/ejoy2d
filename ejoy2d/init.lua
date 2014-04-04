@@ -19,6 +19,7 @@ local gesture = {
 	"TAP",
 	"PINCH",
     "PRESS",
+    "DOUBLE_TAP",
 }
 
 function ejoy2d.start(callback)
