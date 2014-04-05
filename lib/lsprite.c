@@ -554,6 +554,23 @@ lchild_visible(lua_State *L) {
 }
 
 static int
+lchildren_name(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_ANIMATION)
+		return 0;
+	int i;
+	int cnt=0;
+	struct pack_animation * ani = s->s.ani;
+	for (i=0;i<ani->component_number;i++) {
+		if (ani->component[i].name != NULL) {
+			lua_pushstring(L, ani->component[i].name);
+			cnt++;
+		}		
+	}
+	return cnt;
+}
+
+static int
 lmatrix_multi_draw(lua_State *L) {
 	struct sprite *s = self(L);
 	int cnt = (int)luaL_checkinteger(L,3);
@@ -844,6 +861,7 @@ lmethod(lua_State *L) {
 		{ "test", ltest },
 		{ "aabb", laabb },
 		{ "child_visible", lchild_visible },
+		{ "children_name", lchildren_name },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);
