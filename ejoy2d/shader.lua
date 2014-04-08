@@ -42,12 +42,13 @@ varying vec2 v_texcoord;
 varying vec4 v_color;
 
 uniform sampler2D texture0;
+uniform vec3 additive;
 
 void main() {
 	float c = texture2D(texture0, v_texcoord).w;
 	float alpha = clamp(c, 0.0, 0.5) * 2.0;
 
-	gl_FragColor.xyz = v_color.xyz * alpha;
+	gl_FragColor.xyz = (v_color.xyz + additive) * alpha;
 	gl_FragColor.w = alpha;
 	gl_FragColor *= v_color.w;
 }
@@ -58,13 +59,14 @@ varying vec2 v_texcoord;
 varying vec4 v_color;
 
 uniform sampler2D texture0;
+uniform vec3 additive;
 
 void main() {
 	float c = texture2D(texture0, v_texcoord).w;
 	float alpha = clamp(c, 0.0, 0.5) * 2.0;
 	float color = (clamp(c, 0.5, 1.0) - 0.5) * 2.0;
 
-	gl_FragColor.xyz = v_color.xyz * color;
+	gl_FragColor.xyz = (v_color.xyz + additive) * color;
 	gl_FragColor.w = alpha;
 	gl_FragColor *= v_color.w;
 }
