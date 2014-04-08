@@ -554,6 +554,23 @@ lchild_visible(lua_State *L) {
 }
 
 static int
+lchildren_name(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_ANIMATION)
+		return 0;
+	int i;
+	int cnt=0;
+	struct pack_animation * ani = s->s.ani;
+	for (i=0;i<ani->component_number;i++) {
+		if (ani->component[i].name != NULL) {
+			lua_pushstring(L, ani->component[i].name);
+			cnt++;
+		}		
+	}
+	return cnt;
+}
+
+static int
 lmatrix_multi_draw(lua_State *L) {
 	struct sprite *s = self(L);
 	int cnt = (int)luaL_checkinteger(L,3);
@@ -561,6 +578,7 @@ lmatrix_multi_draw(lua_State *L) {
 		return 0;
 	luaL_checktype(L,4,LUA_TTABLE);
 	luaL_checktype(L,5,LUA_TTABLE);
+//    luaL_checktype(L,6,LUA_TTABLE);
 	if (lua_rawlen(L, 4) < cnt) {
 		return luaL_error(L, "matrix length less then particle count");
 	}
@@ -613,12 +631,18 @@ lmulti_draw(lua_State *L) {
 	int cnt = (int)luaL_checkinteger(L,3);
 	if (cnt == 0)
 		return 0;
+    int n = lua_gettop(L);
 	luaL_checktype(L,4,LUA_TTABLE);
 	luaL_checktype(L,5,LUA_TTABLE);
 	if (lua_rawlen(L, 4) < cnt) {
 		return luaL_error(L, "matrix length less then particle count");
 	}
-
+    if (n == 6) {
+        luaL_checktype(L,6,LUA_TTABLE);
+        if (lua_rawlen(L, 6) < cnt) {
+            return luaL_error(L, "additive length less then particle count");
+        }
+    }
 	struct srt srt;
 	fill_srt(L, &srt, 2);
 
@@ -630,15 +654,29 @@ lmulti_draw(lua_State *L) {
 	uint32_t parent_color = s->t.color;
 
 	int i;
-	for (i = 0; i < cnt; i++) {
-		lua_rawgeti(L, 4, i+1);
-		lua_rawgeti(L, 5, i+1);
-		s->t.mat = (struct matrix *)lua_touserdata(L, -2);
-		s->t.color = (uint32_t)lua_tounsigned(L, -1);
-		lua_pop(L, 2);
-
-		sprite_draw_as_child(s, &srt, parent_mat, parent_color);
-	}
+    if (n == 5) {
+        for (i = 0; i < cnt; i++) {
+            lua_rawgeti(L, 4, i+1);
+            lua_rawgeti(L, 5, i+1);
+            s->t.mat = (struct matrix *)lua_touserdata(L, -2);
+            s->t.color = (uint32_t)lua_tounsigned(L, -1);
+            lua_pop(L, 2);
+            
+            sprite_draw_as_child(s, &srt, parent_mat, parent_color);
+        }
+    }else {
+        for (i = 0; i < cnt; i++) {
+            lua_rawgeti(L, 4, i+1);
+            lua_rawgeti(L, 5, i+1);
+            lua_rawgeti(L, 6, i+1);
+            s->t.mat = (struct matrix *)lua_touserdata(L, -3);
+            s->t.color = (uint32_t)lua_tounsigned(L, -2);
+            s->t.additive = (uint32_t)lua_tounsigned(L, -1);
+            lua_pop(L, 3);
+            
+            sprite_draw_as_child(s, &srt, parent_mat, parent_color);
+        }
+    }
 
 	s->t.mat = parent_mat;
 	s->t.color = parent_color;
@@ -823,6 +861,7 @@ lmethod(lua_State *L) {
 		{ "test", ltest },
 		{ "aabb", laabb },
 		{ "child_visible", lchild_visible },
+		{ "children_name", lchildren_name },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);
