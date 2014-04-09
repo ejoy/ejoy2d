@@ -124,12 +124,22 @@ ejoy2d_game() {
 }
 
 void
+ejoy2d_close_lua(struct game *G) {
+	if (G) {
+		if (G->L) {
+			lua_close(G->L);
+			G->L = NULL;
+		}
+		free(G);
+	}
+}
+
+void
 ejoy2d_game_exit(struct game *G) {
 	label_unload();
 	texture_exit();
 	shader_unload();
-	lua_close(G->L);
-	free(G);
+	ejoy2d_close_lua(G);
 }
 
 lua_State *
