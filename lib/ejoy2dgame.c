@@ -89,10 +89,14 @@ checkluaversion(lua_State *L) {
 			LUA_VERSION_NUM, *v);
 	}
 }
-
+#if __ANDROID__
+#define OS_STRING "ANDROID"
+#else
 #define STR_VALUE(arg)	#arg
 #define _OS_STRING(name) STR_VALUE(name)
 #define OS_STRING _OS_STRING(EJOY2D_OS)
+#endif
+
 
 struct game *
 ejoy2d_game() {
