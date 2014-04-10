@@ -21,7 +21,8 @@ static struct dfont * Dfont = NULL;
 
 void
 label_load() {
-	assert(Dfont == NULL);
+	if (Dfont) return;
+
 	Dfont = dfont_create(TEX_WIDTH, TEX_HEIGHT);
 	glPixelStorei(GL_UNPACK_ALIGNMENT,1);
 

@@ -50,7 +50,8 @@ static struct render_state *RS = NULL;
 
 void
 shader_init() {
-	assert(RS == NULL);
+	if (RS) return;
+
 	struct render_state * rs = (struct render_state *) malloc(sizeof(*rs));
 	memset(rs, 0 , sizeof(*rs));
 	rs->current_program = -1;

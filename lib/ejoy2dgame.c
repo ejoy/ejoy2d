@@ -89,10 +89,14 @@ checkluaversion(lua_State *L) {
 			LUA_VERSION_NUM, *v);
 	}
 }
-
+#if __ANDROID__
+#define OS_STRING "ANDROID"
+#else
 #define STR_VALUE(arg)	#arg
 #define _OS_STRING(name) STR_VALUE(name)
 #define OS_STRING _OS_STRING(EJOY2D_OS)
+#endif
+
 
 struct game *
 ejoy2d_game() {
@@ -124,12 +128,22 @@ ejoy2d_game() {
 }
 
 void
+ejoy2d_close_lua(struct game *G) {
+	if (G) {
+		if (G->L) {
+			lua_close(G->L);
+			G->L = NULL;
+		}
+		free(G);
+	}
+}
+
+void
 ejoy2d_game_exit(struct game *G) {
 	label_unload();
 	texture_exit();
 	shader_unload();
-	lua_close(G->L);
-	free(G);
+	ejoy2d_close_lua(G);
 }
 
 lua_State *
