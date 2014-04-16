@@ -79,6 +79,12 @@ lnewlabel(lua_State *L) {
 	return 1;
 }
 
+static int
+lgenoutline(lua_State *L) {
+  label_gen_outline(lua_toboolean(L, 1));
+  return 0;
+}
+
 static const char * srt_key[] = {
 	"x",
 	"y",
@@ -872,6 +878,7 @@ ejoy2d_sprite(lua_State *L) {
 	luaL_Reg l[] ={
 		{ "new", lnew },
 		{ "label", lnewlabel },
+		{ "label_gen_outline", lgenoutline },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
