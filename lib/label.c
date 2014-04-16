@@ -152,7 +152,7 @@ write_pgm(int unicode, int w, int h, const uint8_t * buffer) {
 */
 
 static const struct dfont_rect *
-gen_char(int unicode, const char * utf8, int size) {
+gen_char(int unicode, const char * utf8, int size, int edge) {
 	// todo : use large size when size is large
 	struct font_context ctx;
 	font_create(FONT_SIZE, &ctx);
@@ -171,11 +171,17 @@ gen_char(int unicode, const char * utf8, int size) {
 	int buffer_sz = ctx.w * ctx.h;
 
 	ARRAY(uint8_t, buffer, buffer_sz);
-	ARRAY(uint8_t, tmp, buffer_sz);
-
-	memset(tmp,0,buffer_sz);
-	font_glyph(utf8, unicode, tmp, &ctx);
-	gen_outline(ctx.w, ctx.h, tmp, buffer);
+  
+  if (edge) {
+    ARRAY(uint8_t, tmp, buffer_sz);
+    memset(tmp,0,buffer_sz);
+    font_glyph(utf8, unicode, tmp, &ctx);
+    gen_outline(ctx.w, ctx.h, tmp, buffer);
+  } else {
+    memset(buffer,0,buffer_sz);
+    font_glyph(utf8, unicode, buffer, &ctx);
+  }
+  
 //	write_pgm(unicode, ctx.w, ctx.h, buffer);
 	font_release(&ctx);
 
@@ -211,10 +217,10 @@ draw_rect(const struct dfont_rect *rect, int size, struct matrix *mat, uint32_t 
 }
 
 static int
-draw_size(int unicode, const char *utf8, int size) {
+draw_size(int unicode, const char *utf8, int size, int edge) {
 	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE);
 	if (rect == NULL) {
-		rect = gen_char(unicode,utf8,size);
+		rect = gen_char(unicode,utf8,size,edge);
 	}
 	if (rect) {
 		return (rect->w -1) * size / FONT_SIZE;
@@ -223,10 +229,10 @@ draw_size(int unicode, const char *utf8, int size) {
 }
 
 static int
-draw_height(int unicode, const char *utf8, int size) {
+draw_height(int unicode, const char *utf8, int size, int edge) {
 	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE);
 	if (rect == NULL) {
-		rect = gen_char(unicode,utf8,size);
+		rect = gen_char(unicode,utf8,size,edge);
 	}
 	if (rect) {
 		return rect->h * size / FONT_SIZE;
@@ -358,9 +364,9 @@ label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct
 			unicode = copystr(utf8,str+i,6);
 			i+=6;
 		}
-		w += draw_size(unicode, utf8, l->size);
+		w += draw_size(unicode, utf8, l->size, l->edge);
         if (ch == 0) {
-            ch = draw_height(unicode, utf8, l->size);
+            ch = draw_height(unicode, utf8, l->size, l->edge);
         }
         
         if(w > l->width || unicode == '\n') {
