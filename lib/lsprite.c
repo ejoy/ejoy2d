@@ -484,7 +484,7 @@ lmount(lua_State *L) {
 		lua_rawseti(L, -2, index+1);
 	} else {
 		if (child->parent) {
-			return luaL_error(L, "Can't mount sprite %p twice", child);
+			return luaL_error(L, "Can't mount sprite %p twice,pre parent:%p: %s", child,child->parent,child->name);
 		}
 		sprite_mount(s, index, child);
 		lua_pushvalue(L, 3);
