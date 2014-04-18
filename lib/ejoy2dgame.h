@@ -20,4 +20,7 @@ void ejoy2d_game_gesture(struct game *, int type,
 void
 ejoy2d_game_message(struct game* G,int id_, const char* state, const char* data);
 
+void
+ejoy2d_call_lua(lua_State *L, int n, int r);
+
 #endif
