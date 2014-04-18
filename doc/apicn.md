@@ -24,7 +24,7 @@ data 是一个 lua table ，它描述了一组图片以及动画。范例见 [ex
 
 这一对 api 可用于 meta 数据的打包与解包。
 
-spritepack.pack 打包一个很大的表时，可能会临时消耗大量的内存，并消耗很多的时间解析这张表。在移动设备上，很可能没有这么多的内存可供使用，过长的解析时间也对用户体验造成坏影响。可以用 spritepack.export 在开发期预处理 spritepack.pack 生成的结果。spritepack.export 返回一个字符串，可讲这个字符串持久化到文件中。
+spritepack.pack 打包一个很大的表时，可能会临时消耗大量的内存，并消耗很多的时间解析这张表。在移动设备上，很可能没有这么多的内存可供使用，过长的解析时间也对用户体验造成坏影响。可以用 spritepack.export 在开发期预处理 spritepack.pack 生成的结果。spritepack.export 返回一个字符串，可将这个字符串持久化到文件中。
 
 spritepack.import 接受 spritepack.export 生成的字符串，返回和 spritepack.pack 相同的结构，可供 spritepack.init 使用。
 
