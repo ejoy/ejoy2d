@@ -81,6 +81,21 @@ shader_init() {
 
 	RS = rs;
 }
+void
+shader_reset()
+{
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+
+	if (RS->current_program != -1)
+	{
+		glUseProgram(RS->program[RS->current_program].prog);
+	}
+
+	glBindTexture(GL_TEXTURE_2D, RS->tex);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RS->index_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, RS->vertex_buffer);
+}
 
 static GLuint
 compile(const char * source, int type) {

@@ -18,4 +18,8 @@ void texture_coord(int id, float *x, float *y);
 void texture_clearall();
 void texture_exit();
 
+///创建一个rt，格式rgba
+const char* texture_new_rt(int id, int width, int height);
+///激活id 的 rt
+const char* texture_active_rt(int id);
 #endif

@@ -10,6 +10,7 @@ struct texture {
 	float invw;
 	float invh;
 	GLuint id;
+	GLuint fb; /// rt ¶ÔÓ¦µÄframe buffer
 };
 
 struct texture_pool {
@@ -28,7 +29,7 @@ texture_load(int id, int pixel_format, int pixel_width, int pixel_height, void *
 	if (id >= POOL.count) {
 		POOL.count = id + 1;
 	} 
-
+	tex->fb = 0;
 	tex->width = pixel_width;
 	tex->height = pixel_height;
 	tex->invw = 1.0f / (float)pixel_width;
@@ -78,6 +79,68 @@ texture_load(int id, int pixel_format, int pixel_width, int pixel_height, void *
 	return NULL;
 }
 
+const char*
+texture_new_rt(int id, int w, int h){
+
+	if (id >= MAX_TEXTURE) {
+		return "Too many texture";
+	}
+
+	struct texture * tex = &POOL.tex[id];
+	if (id >= POOL.count) {
+		POOL.count = id + 1;
+	}
+
+	tex->width = w;
+	tex->height = h;
+	tex->invw = 1.0f / (float) w;
+	tex->invh = 1.0f / (float) h;
+	if (tex->id == 0) {
+		glGenTextures(1, &tex->id);
+		glGenFramebuffers(1, &tex->fb);
+	}
+
+	
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, tex->id);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei) w, (GLsizei) h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, tex->fb);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->id, 0);
+
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		return "frame buffer is not complete";
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	return NULL;
+}
+
+const char*
+texture_active_rt(int id) {
+	if (id < 0 || id >= POOL.count)
+		return "Invalid rt id";
+	struct texture *tex = &POOL.tex[id];
+
+	glBindFramebuffer(GL_FRAMEBUFFER, tex->fb);
+
+	return NULL;
+}
+
+
+
 void 
 texture_coord(int id, float *x, float *y) {
 	if (id < 0 || id >= POOL.count) {
@@ -97,6 +160,8 @@ texture_unload(int id) {
 	if (tex->id == 0)
 		return;
 	glDeleteTextures(1,&tex->id);
+	if (tex->fb != 0)
+		glDeleteFramebuffers(1, &tex->fb);
 	tex->id = 0;
 }
 

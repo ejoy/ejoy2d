@@ -20,6 +20,9 @@ void shader_drawpolygon(int n, const float *vb, uint32_t color);
 void shader_program(int n, uint32_t arg);
 void shader_flush();
 
+// 还原当前的环境，比如rt渲染之后
+void shader_reset();
+
 int ejoy2d_shader(lua_State *L);
 
 #endif
