@@ -43,6 +43,7 @@ struct color4f {
 struct particle {
 	struct point pos;
 	struct point startPos;
+	struct matrix* emitMatrix;
 
 	struct color4f color;
 	struct color4f deltaColor;
@@ -127,6 +128,7 @@ struct particle_config {
 
 	/** How many seconds the emitter will run. -1 means 'forever' */
 	float duration;
+	struct matrix* emitterMatrix;
 	/** sourcePosition of the emitter */
 	struct point sourcePosition;
 	/** Position variance of the emitter */

@@ -43,6 +43,7 @@ _initParticle(struct particle_system *ps, struct particle* particle) {
 		return;
 	}
 
+	particle->emitMatrix = ps->config->emitterMatrix;
 	particle->startPos = ps->config->sourcePosition;
 	particle->pos.x = ps->config->posVar.x * RANDOM_M11(&RANDSEED);
 	particle->pos.y = ps->config->posVar.y * RANDOM_M11(&RANDSEED);
@@ -261,6 +262,9 @@ calc_particle_system_mat(struct particle * p, struct matrix *m, int edge) {
 	srt.offx = (p->pos.x + p->startPos.x) * SCREEN_SCALE;
 	srt.offy = (p->pos.y + p->startPos.y) * SCREEN_SCALE;
 	matrix_srt(m, &srt);
+
+	if (p->emitMatrix)
+		matrix_mul(m, m, p->emitMatrix);
 }
 
 void
