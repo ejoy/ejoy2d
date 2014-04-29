@@ -96,7 +96,7 @@ function particle_meta.__index:is_particle_visible(particle)
 end
 
 function particle.preload(config_path)
-	particle_configs = load(load_asset(config_path.."_particle_config.lua"))()
+	particle_configs = dofile(config_path.."_particle_config.lua")
 end
 
 local function new_single(name, anchor)
