@@ -43,7 +43,7 @@ struct color4f {
 struct particle {
 	struct point pos;
 	struct point startPos;
-	struct matrix* emitMatrix;
+	struct matrix emitMatrix;
 
 	struct color4f color;
 	struct color4f deltaColor;

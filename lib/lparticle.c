@@ -98,7 +98,7 @@ _init_from_table(struct particle_config *ps, struct lua_State *L) {
 		ps->mode.B.startRadius = dict_float(L, "maxRadius");
 		ps->mode.B.startRadiusVar = dict_float(L, "maxRadiusVariance");
 		ps->mode.B.endRadius = dict_float(L, "minRadius");
-		ps->mode.B.endRadiusVar = 0.0f;
+		ps->mode.B.endRadiusVar = dict_float(L, "minRadiusVariance");
 		ps->mode.B.rotatePerSecond = dict_float(L, "rotatePerSecond");
 		ps->mode.B.rotatePerSecondVar = dict_float(L, "rotatePerSecondVariance");
 	} else {
