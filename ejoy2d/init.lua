@@ -34,6 +34,7 @@ function ejoy2d.start(callback)
 	end
 	fw.EJOY2D_MESSAGE = assert(callback.message)
   	fw.EJOY2D_HANDLE_ERROR = assert(callback.handle_error)
+  	fw.EJOY2D_RESUME = assert(callback.resume)
 	fw.inject()
 end
 

@@ -84,6 +84,11 @@ ejoy2d_win_frame() {
 }
 
 void
+ejoy2d_win_resume(){
+    ejoy2d_game_resume(G->game);
+}
+
+void
 ejoy2d_win_touch(int x, int y,int touch) {
 	switch (touch) {
 	case TOUCH_BEGIN:

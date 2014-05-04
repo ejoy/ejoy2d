@@ -12,5 +12,6 @@ void ejoy2d_win_init(int orix, int oriy, int width, int height, float scale, con
 void ejoy2d_win_frame();
 void ejoy2d_win_update();
 void ejoy2d_win_touch(int x, int y,int touch);
+void ejoy2d_win_resume();
 
 #endif
