@@ -98,7 +98,7 @@ _init_from_table(struct particle_config *ps, struct lua_State *L) {
 		ps->mode.B.startRadius = dict_float(L, "maxRadius");
 		ps->mode.B.startRadiusVar = dict_float(L, "maxRadiusVariance");
 		ps->mode.B.endRadius = dict_float(L, "minRadius");
-		ps->mode.B.endRadiusVar = 0.0f;
+		ps->mode.B.endRadiusVar = dict_float(L, "minRadiusVariance");
 		ps->mode.B.rotatePerSecond = dict_float(L, "rotatePerSecond");
 		ps->mode.B.rotatePerSecondVar = dict_float(L, "rotatePerSecondVariance");
 	} else {
@@ -152,15 +152,22 @@ lupdate(lua_State *L) {
 	struct particle_system *ps = (struct particle_system *)lua_touserdata(L, 1);
 	float dt = luaL_checknumber(L,2);
 
-	if (ps->config->positionType == POSITION_TYPE_GROUPED) {
+/*	if (ps->config->positionType == POSITION_TYPE_GROUPED) {
 		struct matrix *m = (struct matrix *)lua_touserdata(L, 3);
 		ps->config->sourcePosition.x = m->m[4] / SCREEN_SCALE;
 		ps->config->sourcePosition.y = m->m[5] / SCREEN_SCALE;
 	} else {
 		ps->config->sourcePosition.x = 0;
 		ps->config->sourcePosition.y = 0;
-	}
+	}*/
 
+	if (ps->config->positionType == POSITION_TYPE_GROUPED) {
+		ps->config->emitterMatrix = (struct matrix*)lua_touserdata(L, 3);
+	} else {
+		ps->config->emitterMatrix = NULL;
+	}
+	ps->config->sourcePosition.x = 0;
+	ps->config->sourcePosition.y = 0;
 	particle_system_update(ps, dt);
 
 	lua_pushboolean(L, ps->isActive || ps->isAlive);

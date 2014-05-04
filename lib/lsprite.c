@@ -590,7 +590,7 @@ lmatrix_multi_draw(lua_State *L) {
 	}
 
 	struct matrix *mat = (struct matrix *)lua_touserdata(L, 2);
-	
+
 	if (s->t.mat == NULL) {
 		s->t.mat = &s->mat;
 		matrix_identity(&s->mat);

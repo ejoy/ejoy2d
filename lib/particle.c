@@ -13,6 +13,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
 static inline float
 clampf(float x) {
@@ -43,6 +44,17 @@ _initParticle(struct particle_system *ps, struct particle* particle) {
 		return;
 	}
 
+	int *mat = particle->emitMatrix.m;
+	if (ps->config->emitterMatrix) {
+		memcpy(mat, ps->config->emitterMatrix->m, 6 * sizeof(int));
+	} else {
+		mat[0] = 1024;
+		mat[1] = 0;
+		mat[2] = 0;
+		mat[3] = 1024;
+		mat[4] = 0;
+		mat[5] = 0;
+	}
 	particle->startPos = ps->config->sourcePosition;
 	particle->pos.x = ps->config->posVar.x * RANDOM_M11(&RANDSEED);
 	particle->pos.y = ps->config->posVar.y * RANDOM_M11(&RANDSEED);
@@ -261,6 +273,8 @@ calc_particle_system_mat(struct particle * p, struct matrix *m, int edge) {
 	srt.offx = (p->pos.x + p->startPos.x) * SCREEN_SCALE;
 	srt.offy = (p->pos.y + p->startPos.y) * SCREEN_SCALE;
 	matrix_srt(m, &srt);
+
+	matrix_mul(m, m, &p->emitMatrix);
 }
 
 void

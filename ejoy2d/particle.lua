@@ -4,6 +4,7 @@ local c = require "ejoy2d.particle.c"
 local shader = require "ejoy2d.shader"
 local pack = require "ejoy2d.simplepackage"
 local fw = require "ejoy2d.framework"
+local matrix = require "ejoy2d.matrix"
 local math = require "math"
 
 local particle_configs = {}
@@ -54,8 +55,8 @@ function particle_meta.__index:update(dt)
 			end
 		end
 
-		-- print(self.group.frame, self.group.frame_count, stay_last, last_frame, loop_active)
-		if not stay_last then
+		--print(self.group.frame, self.group.frame_count, stay_last, last_frame, loop_active)
+		if not stay_last and not last_frame then
 			self.float_frame = self.float_frame + fw.AnimationFramePerFrame
 			self.group.frame = self.float_frame
 		end
@@ -95,18 +96,7 @@ function particle_meta.__index:is_particle_visible(particle)
 end
 
 function particle.preload(config_path)
-	-- TODO pack particle data to c
-	local meta = dofile(config_path..".lua")
 	particle_configs = dofile(config_path.."_particle_config.lua")
-	for _, v in ipairs(meta) do
-		if v.type == "animation" and v.export ~= nil then
-			comp = {}
-			for _, c in ipairs(v.component) do
-				rawset(comp, #comp+1, c.name)
-			end
-			rawset(particle_group_configs, v.export, comp)
-		end
-	end
 end
 
 local function new_single(name, anchor)
@@ -134,10 +124,9 @@ local function new_single(name, anchor)
 end
 
 function particle.new(name, callback)
-	local config = rawget(particle_group_configs, name)
-	assert(config ~= nil, "particle group not exists:"..name)
 
 	local group = ej.sprite("particle", name)
+	local config = table.pack(group:children_name())
 	local particles = {}
 	local loop = false
 	for _, v in ipairs(config) do

@@ -8,6 +8,7 @@
 
 #import "EJAppDelegate.h"
 #import "EJViewController.h"
+#import "winfw.h"
 
 @implementation EJAppDelegate
 
@@ -40,6 +41,7 @@
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
   // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    ejoy2d_win_resume();
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application
