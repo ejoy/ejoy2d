@@ -223,9 +223,9 @@ draw_rect(const struct dfont_rect *rect, int size, struct matrix *mat, uint32_t 
 }
 
 static int
-draw_size(int unicode, const char *utf8, int size) {
+draw_size(int unicode, const char *utf8, int size, int gen_new) {
 	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE);
-	if (rect == NULL) {
+	if (rect == NULL && gen_new) {
 		rect = gen_char(unicode,utf8,size,Outline);
 	}
 	if (rect) {
@@ -235,9 +235,9 @@ draw_size(int unicode, const char *utf8, int size) {
 }
 
 static int
-draw_height(int unicode, const char *utf8, int size) {
+draw_height(int unicode, const char *utf8, int size, int gen_new) {
 	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE);
-	if (rect == NULL) {
+	if (rect == NULL && gen_new) {
 		rect = gen_char(unicode,utf8,size,Outline);
 	}
 	if (rect) {
@@ -359,9 +359,9 @@ label_size(const char *str, struct pack_label * l, int* width, int* height) {
 			unicode = copystr(utf8,str+i,6);
 			i+=6;
 		}
-		w += draw_size(unicode, utf8, l->size);
+		w += draw_size(unicode, utf8, l->size, 0);
 		if (h == 0) {
-				h = draw_height(unicode, utf8, l->size);
+				h = draw_height(unicode, utf8, l->size, 0);
 		}
         
 		if(w > l->width || unicode == '\n') {
@@ -417,9 +417,9 @@ label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct
 			unicode = copystr(utf8,str+i,6);
 			i+=6;
 		}
-		w += draw_size(unicode, utf8, l->size);
+		w += draw_size(unicode, utf8, l->size, 1);
         if (ch == 0) {
-            ch = draw_height(unicode, utf8, l->size);
+            ch = draw_height(unicode, utf8, l->size, 1);
         }
         
         if(w > l->width || unicode == '\n') {
