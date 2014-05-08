@@ -333,6 +333,53 @@ draw_line(const char *str, struct pack_label * l, struct srt *srt, const struct 
 }
 
 void
+label_size(const char *str, struct pack_label * l, int* width, int* height) {
+	char utf8[7];
+	int i;
+	int w=0, max_w=0, h=0, max_h=0;
+	for (i=0; str[i];) {
+		int unicode;
+		uint8_t c = (uint8_t)str[i];
+		if ((c&0x80) == 0) {
+			unicode = copystr(utf8,str+i,1);
+			i+=1;
+		} else if ((c&0xe0) == 0xc0) {
+			unicode = copystr(utf8,str+i,2);
+			i+=2;
+		} else if ((c&0xf0) == 0xe0) {
+			unicode = copystr(utf8,str+i,3);
+			i+=3;
+		} else if ((c&0xf8) == 0xf0) {
+			unicode = copystr(utf8,str+i,4);
+			i+=4;
+		} else if ((c&0xfc) == 0xf8) {
+			unicode = copystr(utf8,str+i,5);
+			i+=5;
+		} else {
+			unicode = copystr(utf8,str+i,6);
+			i+=6;
+		}
+		w += draw_size(unicode, utf8, l->size);
+		if (h == 0) {
+				h = draw_height(unicode, utf8, l->size);
+		}
+        
+		if(w > l->width || unicode == '\n') {
+			max_h += h;
+			h = 0;
+			if (w > max_w) max_w = w;
+			w = 0;
+		}
+	}
+
+	max_h += h;
+	if (w > max_w) max_w = w;
+   
+	*width = max_w;
+	*height = max_h;
+}
+
+void
 label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg) {
 	shader_texture(Tex);
 	uint32_t color;
@@ -347,7 +394,7 @@ label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct
 
 	char utf8[7];
 	int i;
-    int ch = 0, w = 0, cy = 0, pre = 0;
+  int ch = 0, w = 0, cy = 0, pre = 0;
 	for (i=0; str[i];) {
 		int unicode;
 		uint8_t c = (uint8_t)str[i];
