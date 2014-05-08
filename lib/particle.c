@@ -274,7 +274,9 @@ calc_particle_system_mat(struct particle * p, struct matrix *m, int edge) {
 	srt.offy = (p->pos.y + p->startPos.y) * SCREEN_SCALE;
 	matrix_srt(m, &srt);
 
-	matrix_mul(m, m, &p->emitMatrix);
+	struct matrix tmp;
+	memcpy(tmp.m, m, sizeof(int) * 6);
+	matrix_mul(m, &tmp, &p->emitMatrix);
 }
 
 void

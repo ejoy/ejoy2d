@@ -3,7 +3,12 @@
 
 #include <lua.h>
 
-struct game;
+struct game {
+	lua_State *L;
+	float real_time;
+	float logic_time;
+};
+
 
 struct game * ejoy2d_game();
 void ejoy2d_game_exit(struct game *);

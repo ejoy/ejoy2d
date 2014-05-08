@@ -552,6 +552,20 @@ laabb(lua_State *L) {
 }
 
 static int
+ltext_size(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_LABEL) {
+		return luaL_error(L, "Ony label can get label_size");
+	}
+	int width = 0, height = 0;
+	label_size(s->data.text, s->s.label, &width, &height);
+	lua_pushinteger(L, width);
+	lua_pushinteger(L, height);
+	return 2;
+}
+
+
+static int
 lchild_visible(lua_State *L) {
 	struct sprite *s = self(L);
 	const char * name = luaL_checkstring(L,2);
@@ -866,6 +880,7 @@ lmethod(lua_State *L) {
 		{ "matrix_multi_draw", lmatrix_multi_draw },
 		{ "test", ltest },
 		{ "aabb", laabb },
+		{ "text_size", ltext_size},
 		{ "child_visible", lchild_visible },
 		{ "children_name", lchildren_name },
 		{ NULL, NULL, },
