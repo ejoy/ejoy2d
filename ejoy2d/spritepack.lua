@@ -139,7 +139,6 @@ local function pack_label(data, ret)
 	table.insert(ret, pack.word(data.width))
 	table.insert(ret, pack.word(data.height))
     table.insert(ret, pack.byte(data.noedge and 0 or 1))
-    table.insert(ret, pack.word(data.maxwidth or 0))
 	return pack.label_size()
 end
 

@@ -38,7 +38,6 @@ struct pack_label {
 	int align;
 	int size;
 	int edge;
-	int max_width;
 };
 
 #define SIZEOF_LABEL (sizeof(struct pack_label))

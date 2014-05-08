@@ -244,7 +244,6 @@ import_label(struct import_stream *is) {
 	pl->width = import_word(is);
 	pl->height = import_word(is);
 	pl->edge = import_byte(is);
-	pl->max_width = import_word(is);
 }
 
 static void
