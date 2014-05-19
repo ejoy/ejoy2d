@@ -298,6 +298,18 @@ lgetwmat(lua_State *L) {
 	}
 	return luaL_error(L, "Only anchor can get world matrix");
 }
+static int
+lgetwpos(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type == TYPE_ANCHOR) {
+		struct matrix* mat = s->s.mat;
+		lua_pushnumber(L,mat->m[4] /(float)SCREEN_SCALE);
+		lua_pushnumber(L,mat->m[5] /(float)SCREEN_SCALE);
+		return 2;
+	}
+	return luaL_error(L, "Only anchor can get world matrix");
+}
+
 
 static int
 lsetprogram(lua_State *L) {
@@ -883,6 +895,7 @@ lmethod(lua_State *L) {
 		{ "text_size", ltext_size},
 		{ "child_visible", lchild_visible },
 		{ "children_name", lchildren_name },
+		{ "world_pos", lgetwpos },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);
