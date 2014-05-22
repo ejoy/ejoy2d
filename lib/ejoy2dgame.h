@@ -11,6 +11,7 @@ struct game {
 
 
 struct game * ejoy2d_game();
+lua_State * ejoy2d_lua_init();
 void ejoy2d_game_exit(struct game *);
 void ejoy2d_close_lua(struct game *);
 lua_State *  ejoy2d_game_lua(struct game *);
