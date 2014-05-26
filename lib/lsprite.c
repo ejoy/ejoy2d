@@ -313,7 +313,6 @@ lgetwpos(lua_State *L) {
 	return luaL_error(L, "Only anchor can get world matrix");
 }
 
-
 static int
 lsetprogram(lua_State *L) {
 	struct sprite *s = self(L);
