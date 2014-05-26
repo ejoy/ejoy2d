@@ -186,6 +186,8 @@ sprite_mount(struct sprite *parent, int index, struct sprite *child) {
 		assert(child->parent == NULL);
 		child->name = ani->component[index].name;
 		child->parent = parent;
+		if (oldc && oldc->type == TYPE_ANCHOR)
+			child->message = oldc->message;
 	}
 }
 

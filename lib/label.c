@@ -223,9 +223,9 @@ draw_rect(const struct dfont_rect *rect, int size, struct matrix *mat, uint32_t 
 }
 
 static int
-draw_size(int unicode, const char *utf8, int size) {
+draw_size(int unicode, const char *utf8, int size, int gen_new) {
 	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE);
-	if (rect == NULL) {
+	if (rect == NULL && gen_new) {
 		rect = gen_char(unicode,utf8,size,Outline);
 	}
 	if (rect) {
@@ -235,9 +235,9 @@ draw_size(int unicode, const char *utf8, int size) {
 }
 
 static int
-draw_height(int unicode, const char *utf8, int size) {
+draw_height(int unicode, const char *utf8, int size, int gen_new) {
 	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE);
-	if (rect == NULL) {
+	if (rect == NULL && gen_new) {
 		rect = gen_char(unicode,utf8,size,Outline);
 	}
 	if (rect) {
@@ -272,7 +272,7 @@ draw_utf8(int unicode, int cx, int cy, int size, const struct srt *srt,
 		return 0;
 	}
 	struct matrix tmp;
-	struct matrix mat1 = {{ 1024,0,0,1024, cx* SCREEN_SCALE, cy*SCREEN_SCALE }};
+	struct matrix mat1 = {{ 1024,0,0,1024, cx * SCREEN_SCALE, cy*SCREEN_SCALE }};
 	struct matrix *m;
 
 	if (arg->mat) {
@@ -291,6 +291,14 @@ static void
 draw_line(const char *str, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg,
           uint32_t color, int cy, int w, int start, int end) {
     int cx, j;
+    int size = l->size;
+    if (l->auto_scale != 0 && w > l->width)
+    {
+        float scale = l->width * 1.0f / w;
+        size = scale * size;
+        cy = cy + (l->size - size) / 2;
+        w = l->width;
+    }
 
     switch (l->align) {
         case LABEL_ALIGN_LEFT:
@@ -328,7 +336,7 @@ draw_line(const char *str, struct pack_label * l, struct srt *srt, const struct 
         }
         
         if(unicode != '\n')
-            cx+=draw_utf8(unicode, cx, cy, l->size, srt, color, arg);
+            cx+=draw_utf8(unicode, cx, cy, size, srt, color, arg) + l->space_w;
     }
 }
 
@@ -359,12 +367,12 @@ label_size(const char *str, struct pack_label * l, int* width, int* height) {
 			unicode = copystr(utf8,str+i,6);
 			i+=6;
 		}
-		w += draw_size(unicode, utf8, l->size);
+		w += draw_size(unicode, utf8, l->size, 0) + l->space_w;
 		if (h == 0) {
-				h = draw_height(unicode, utf8, l->size);
+            h = draw_height(unicode, utf8, l->size, 0) + l->space_h;
 		}
         
-		if(w > l->width || unicode == '\n') {
+		if((l->auto_scale == 0 && w > l->width) || unicode == '\n') {
 			max_h += h;
 			h = 0;
 			if (w > max_w) max_w = w;
@@ -374,6 +382,8 @@ label_size(const char *str, struct pack_label * l, int* width, int* height) {
 
 	max_h += h;
 	if (w > max_w) max_w = w;
+    if (l->auto_scale > 0 && max_w > l->width)
+        max_w = l->width;
    
 	*width = max_w;
 	*height = max_h;
@@ -394,7 +404,7 @@ label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct
 
 	char utf8[7];
 	int i;
-  int ch = 0, w = 0, cy = 0, pre = 0;
+    int ch = 0, w = 0, cy = 0, pre = 0;
 	for (i=0; str[i];) {
 		int unicode;
 		uint8_t c = (uint8_t)str[i];
@@ -417,12 +427,12 @@ label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct
 			unicode = copystr(utf8,str+i,6);
 			i+=6;
 		}
-		w += draw_size(unicode, utf8, l->size);
+		w += draw_size(unicode, utf8, l->size, 1) + l->space_w;
         if (ch == 0) {
-            ch = draw_height(unicode, utf8, l->size);
+            ch = draw_height(unicode, utf8, l->size, 1) + l->space_h;
         }
         
-        if(w > l->width || unicode == '\n') {
+        if((l->auto_scale == 0 && w > l->width) || unicode == '\n') {
             draw_line(str, l, srt, arg, color, cy, w, pre, i);
             cy += ch;
             pre = i;

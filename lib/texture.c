@@ -70,6 +70,17 @@ texture_load(int id, int pixel_format, int pixel_width, int pixel_height, void *
 		case Texture2DPixelFormat_A8:
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, (GLsizei)pixel_width, (GLsizei)pixel_height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, data);
 			break;
+#if GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG
+		case Texture2DPixelFormat_PVRTC4:
+			{
+				int size = pixel_width * pixel_height * 4 / 8;
+				uint8_t* p = data+4;
+				glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG,
+																			(GLsizei)pixel_width, (GLsizei)pixel_height, 0, size, p);
+			
+			}
+			break;
+#endif
 		default:
 			glDeleteTextures(1,&tex->id);
 			tex->id = 0;

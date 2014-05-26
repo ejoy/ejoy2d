@@ -54,6 +54,9 @@ lnewlabel(lua_State *L) {
 	label.height = (int)luaL_checkinteger(L,2);
 	label.size = (int)luaL_checkinteger(L,3);
 	label.color = (uint32_t)luaL_optunsigned(L,4,0xffffffff);
+    label.space_w = 0;
+    label.space_h = 0;
+    label.auto_scale = 0;
 	const char * align = lua_tostring(L,5);
 	if (align == NULL) {
 		label.align = LABEL_ALIGN_LEFT;
@@ -298,6 +301,17 @@ lgetwmat(lua_State *L) {
 	}
 	return luaL_error(L, "Only anchor can get world matrix");
 }
+static int
+lgetwpos(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type == TYPE_ANCHOR) {
+		struct matrix* mat = s->s.mat;
+		lua_pushnumber(L,mat->m[4] /(float)SCREEN_SCALE);
+		lua_pushnumber(L,mat->m[5] /(float)SCREEN_SCALE);
+		return 2;
+	}
+	return luaL_error(L, "Only anchor can get world matrix");
+}
 
 static int
 lsetprogram(lua_State *L) {
@@ -402,6 +416,21 @@ lsetcolor(lua_State *L) {
 }
 
 static int
+lsetalpha(lua_State *L) {
+	struct sprite *s = self(L);
+	uint8_t alpha = luaL_checkunsigned(L, 2);
+	s->t.color = (s->t.color >> 8) | (alpha << 24);
+	return 0;
+}
+
+static int
+lgetalpha(lua_State *L) {
+	struct sprite *s = self(L);
+	lua_pushunsigned(L, s->t.color & 0x000000FF);
+	return 1;
+}
+
+static int
 lgetadditive(lua_State *L) {
 	struct sprite *s = self(L);
 	lua_pushunsigned(L, s->t.additive);
@@ -426,6 +455,7 @@ lgetter(lua_State *L) {
 		{"type", lgettype },
 		{"text", lgettext},
 		{"color", lgetcolor },
+		{"alpha", lgetalpha },
 		{"additive", lgetadditive },
 		{"message", lgetmessage },
 		{"matrix", lgetmat },
@@ -446,6 +476,7 @@ lsetter(lua_State *L) {
 		{"matrix" , lsetmat},
 		{"text", lsettext},
 		{"color", lsetcolor},
+		{"alpha", lsetalpha},
 		{"additive", lsetadditive },
 		{"message", lsetmessage },
 		{"program", lsetprogram },
@@ -585,7 +616,7 @@ lchildren_name(lua_State *L) {
 		if (ani->component[i].name != NULL) {
 			lua_pushstring(L, ani->component[i].name);
 			cnt++;
-		}		
+		}
 	}
 	return cnt;
 }
@@ -638,7 +669,7 @@ lmatrix_multi_draw(lua_State *L) {
 			sprite_draw(s, NULL);
 		}
 	}
-	
+
 	s->t.mat = parent_mat;
 	s->t.color = parent_color;
 
@@ -681,7 +712,7 @@ lmulti_draw(lua_State *L) {
             s->t.mat = (struct matrix *)lua_touserdata(L, -2);
             s->t.color = (uint32_t)lua_tounsigned(L, -1);
             lua_pop(L, 2);
-            
+
             sprite_draw_as_child(s, &srt, parent_mat, parent_color);
         }
     }else {
@@ -693,7 +724,7 @@ lmulti_draw(lua_State *L) {
             s->t.color = (uint32_t)lua_tounsigned(L, -2);
             s->t.additive = (uint32_t)lua_tounsigned(L, -1);
             lua_pop(L, 3);
-            
+
             sprite_draw_as_child(s, &srt, parent_mat, parent_color);
         }
     }
@@ -883,6 +914,7 @@ lmethod(lua_State *L) {
 		{ "text_size", ltext_size},
 		{ "child_visible", lchild_visible },
 		{ "children_name", lchildren_name },
+		{ "world_pos", lgetwpos },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);
