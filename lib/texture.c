@@ -159,8 +159,8 @@ texture_coord(int id, float *x, float *y) {
 		return;
 	}
 	struct texture *tex = &POOL.tex[id];
-	*x *= tex->invw;
-	*y *= tex->invh;
+	*x = (*x+0.5f) * tex->invw;
+	*y = (*y+0.5f) * tex->invh;
 }
 
 void 
