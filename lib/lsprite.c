@@ -623,12 +623,13 @@ ltext_size(lua_State *L) {
 		return luaL_error(L, "Ony label can get label_size");
 	}
 	int width = 0, height = 0;
-	label_size(s->data.text, s->s.label, &width, &height);
+    if (s->data.text != NULL)
+        label_size(s->data.text, s->s.label, &width, &height);
 	lua_pushinteger(L, width);
 	lua_pushinteger(L, height);
-	return 2;
+    lua_pushinteger(L, s->s.label->size);
+	return 3;
 }
-
 
 static int
 lchild_visible(lua_State *L) {
