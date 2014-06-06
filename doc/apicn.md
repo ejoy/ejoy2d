@@ -1,4 +1,12 @@
-## package
+
+- **[package](#package)**
+- **[simplepackage](#simplepackage)**
+- **[texture](#texture)**
+- **[matrix](#matrix)**
+- **[sprite](#sprite)**
+- **[particle](#particle)**
+
+## <span id="package">package</span>
 
 这是一个内部模块，你可以用它实现出适合你的项目的资源包。
 
@@ -24,7 +32,7 @@ data 是一个 lua table ，它描述了一组图片以及动画。范例见 [ex
 
 这一对 api 可用于 meta 数据的打包与解包。
 
-spritepack.pack 打包一个很大的表时，可能会临时消耗大量的内存，并消耗很多的时间解析这张表。在移动设备上，很可能没有这么多的内存可供使用，过长的解析时间也对用户体验造成坏影响。可以用 spritepack.export 在开发期预处理 spritepack.pack 生成的结果。spritepack.export 返回一个字符串，可讲这个字符串持久化到文件中。
+spritepack.pack 打包一个很大的表时，可能会临时消耗大量的内存，并消耗很多的时间解析这张表。在移动设备上，很可能没有这么多的内存可供使用，过长的解析时间也对用户体验造成坏影响。可以用 spritepack.export 在开发期预处理 spritepack.pack 生成的结果。spritepack.export 返回一个字符串，可将这个字符串持久化到文件中。
 
 spritepack.import 接受 spritepack.export 生成的字符串，返回和 spritepack.pack 相同的结构，可供 spritepack.init 使用。
 
@@ -34,7 +42,7 @@ spritepack.import 接受 spritepack.export 生成的字符串，返回和 sprite
 
 这是一个内部 api ，供 sprite 构造使用。
 
-## simplepackage
+## <span id="simplepackage">simplepackage</span>
 
 ```Lua
 local simplepackage = require "ejoy2d.simplepackage"
@@ -60,7 +68,7 @@ simplepackage.sprite( packname, name )
 ```
 从 packname 指代的包中构造名为 name 的对象并返回。
 
-## texture
+## <span id="texture">texture</span>
 
 ejoy2d 的开源版本暂时只提供 ppm/pgm 文件格式的支持，但你可以根据项目需要很容易的扩充其它文件格式，或自定义文件格式（如引入 libpng 库支持 .png 文件，或支持 PowerVR 压缩贴图等）。
 
@@ -116,7 +124,7 @@ ppm 的文件格式非常简单，可以很容易的用任何编程语言操作�
 
 > convert image.ppm image.pgm -compose copy-opacity -composite image.png
 
-## matrix
+## <span id="matrix">matrix</span>
 
 ejoy2d 使用一个 3*2 的 2D 变换矩阵，进行 2D 图像的各种变换操作。这个矩阵使用定点运算，所以矩阵即是一个 6 个整数构成的整数数组。ejoy2d.matrix 是一个方便开发者使用的针对矩阵数据类型处理的数学库。所有相关 API 在接受一个 matrix 参数时，可以是一个由 ejoy2d.matrix 构造程序来 lua userdata ，也可以是其它 C 模块传递过来的 lightuserdata （C 指针）。如果它是一个 lightuserdata ，需要调用者保证它指向的的确是一个长度为 6 的整数数组。
 ```Lua
@@ -172,7 +180,7 @@ matrix { sx = -1, sy = 1 }
 
 做一个平移变换。
 
-##sprite
+## <span id="sprite">sprite</span>
 
 sprite 是 ejoy2d 可以处理的基本图形对象。每个 sprite 都是若干图元以树状组合起来的。大部分情况下，不可以在运行期用 ejoy2d api 动态构建一棵 sprite 图元树，而只能从外部资源包中加载它。加载 ejoy2d.sprite 模块即可生成 sprite 对象。
 
@@ -187,7 +195,7 @@ local obj = sprite.new("packname", "objectname")
 
 构造出来的 sprite 对象都可以对其调用一系列方法，而下列方法仅仅是被记入文档的一部分。未被文档化的方法可以在源代码中找到，但它们更可能在未来有变动，需要酌情使用。
 
-###sprite 方法
+### sprite 方法
 
 ```Lua
 sprite:draw(srt)
@@ -242,7 +250,7 @@ sprite:mount(name, child)
 
 注：不能将同一个 sprite 对象 mount 到两个不同的 sprite 对象上。如果你需要这样做，请用同一份资源构造两个 sprite 对象。
 
-###sprite 属性
+### sprite 属性
 * `sprite.frame` 可读写
 对象当前帧号
 * `sprite.matrix` 可读写
@@ -268,7 +276,7 @@ sprite:mount(name, child)
 * `sprite.world_matrix` 只读
 anchor 类型的对象的特有只读属性。它会返回上一次这个 anchor 对象最终渲染的世界矩阵。注：anchor 类型的对象默认 visible 为 false ，当不可显时，引擎不计算 world matrix 。
 
-###sprite 资源结构
+### sprite 资源结构
 sprite 用 lua 表的形式描述在资源文件中。资源文件通常于开发期构建。不同于运行期 API ，资源的数据定义灵活度要更为灵活。开发者可以按格式手写资源文件，更可以用额外的工具生成它们。对于特殊的需求，还可以用另一段 lua 脚本生成需要的数据（比如用工具生成动画的关键帧，再用程序插值补上中间的运动帧）。
 
 资源的数据结构说明见：http://blog.codingnow.com/2013/12/ejoy2d.html
@@ -279,7 +287,7 @@ sprite 用 lua 表的形式描述在资源文件中。资源文件通常于开�
 
 详细文档待补充。
 
-##particle
+## <span id="particle">particle</span>
 
 ejoy2d粒子发射器的描述文件见[examples/asset/particle_particle_config.lua](https://github.com/cloudwu/ejoy2d/blob/master/examples/asset/particle_particle_config.lua)。该文件基于[Particle Designer](http://particledesigner.71squared.com/)的输出而生成，即可以使用Particle Designer来编辑粒子系统。
 
