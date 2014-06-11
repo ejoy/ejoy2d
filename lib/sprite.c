@@ -852,7 +852,8 @@ sprite_setframe(struct sprite *s, int frame, bool force_child) {
 	int i;
 	struct pack_animation * ani = s->s.ani;
 	for (i=0;i<ani->component_number;i++) {
-		if (force_child || ani->component[i].name == NULL) {
+		if (ani->component[i].id != ANCHOR_ID && 
+				(force_child || ani->component[i].name == NULL)) {
 			int t = sprite_setframe(s->data.children[i],frame, force_child);
 			if (t > total_frame) {
 				total_frame = t;
