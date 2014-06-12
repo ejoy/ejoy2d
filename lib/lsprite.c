@@ -335,6 +335,24 @@ lsetscissor(lua_State *L) {
 }
 
 static int
+lsetpicmask(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_PICTURE) {
+		return luaL_error(L, "Only picture can set mask");
+	}
+	struct sprite *mask = (struct sprite*) lua_touserdata(L, 2);
+	if (mask && mask->type != TYPE_PICTURE) {
+    return luaL_error(L, "Mask must be picture");
+	}
+	struct pack_picture *m = NULL;
+	if (mask) {
+		m = mask->s.pic;
+	}
+	s->data.mask = m;
+	return 0;
+}
+
+static int
 lgetname(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->name == NULL)
@@ -515,6 +533,7 @@ lsetter(lua_State *L) {
 		{"message", lsetmessage },
 		{"program", lsetprogram },
 		{"scissor", lsetscissor },
+		{"picture_mask", lsetpicmask },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);

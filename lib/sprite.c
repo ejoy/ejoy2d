@@ -14,7 +14,7 @@
 #include <limits.h>
 
 void
-sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const struct sprite_trans *arg) {
+sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt,  const struct sprite_trans *arg) {
 	struct matrix tmp;
 	float vb[16];
 	int i,j;
@@ -46,6 +46,16 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 			vb[j*4+2] = tx;
 			vb[j*4+3] = ty;
 		}
+		
+		if (mask != NULL) {
+			float tx = mask->rect[0].texture_coord[0];
+			float ty = mask->rect[0].texture_coord[1];
+			texture_coord(mask->rect[0].texid, &tx, &ty);
+			float delta_tx = tx - vb[2];
+			float delta_ty = ty - vb[3];
+			shader_mask(delta_tx, delta_ty);
+		}
+		
 		shader_draw(vb, arg->color);
 	}
 }
@@ -163,6 +173,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 		s->total_frame = 0;
 		s->frame = 0;
 		s->data.text = NULL;
+		s->data.mask = NULL;
 		assert(sz >= sizeof(struct sprite) - sizeof(struct sprite *));
 		if (s->type == TYPE_PANNEL) {
 			struct pack_pannel * pp = (struct pack_pannel *)pack->data[id];
@@ -382,7 +393,7 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 	switch (s->type) {
 	case TYPE_PICTURE:
 		switch_program(t, PROGRAM_PICTURE);
-		sprite_drawquad(s->s.pic, srt, t);
+		sprite_drawquad(s->s.pic, s->data.mask, srt, t);
 		return 0;
 	case TYPE_POLYGON:
 		switch_program(t, PROGRAM_PICTURE);

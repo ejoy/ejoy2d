@@ -9,7 +9,7 @@
 #include <assert.h>
 
 #define MAX_COMMBINE 1024
-#define MAX_PROGRAM 6
+#define MAX_PROGRAM 8
 
 #define ATTRIB_VERTEX 0
 #define ATTRIB_TEXTCOORD 1
@@ -21,6 +21,8 @@ struct program {
 	GLuint prog;
 	GLint additive;
 	uint32_t arg;
+	
+	GLint mask;
 };
 
 struct vertex {
@@ -176,6 +178,9 @@ program_init(struct program * p, const char *FS, const char *VS) {
 	p->arg = 0;
 	set_color(p->additive, 0);
 	
+	p->mask = glGetUniformLocation(p->prog, "mask");
+	glUniform2f(p->mask, 0.0f, 0.0f);
+		
 	glDetachShader(p->prog, fs);
 	glDeleteShader(fs);
 	glDetachShader(p->prog, vs);
@@ -235,6 +240,12 @@ shader_texture(int id) {
 		RS->tex = (GLuint)id;
 		glBindTexture(GL_TEXTURE_2D, id);
 	}
+}
+
+void
+shader_mask(float x, float y) {
+	struct program *p = &RS->program[RS->current_program];
+	glUniform2f(p->mask, x, y);
 }
 
 void
