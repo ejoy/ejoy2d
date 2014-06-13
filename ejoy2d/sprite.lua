@@ -6,6 +6,7 @@ local shader = require "ejoy2d.shader"
 local method = c.method
 local method_fetch = method.fetch
 local method_test = method.test
+local method_fetch_by_index = method.fetch_by_index
 local fetch
 local test
 
@@ -68,7 +69,15 @@ function test(...)
 	end
 end
 
+function fetch_by_index(spr, index)
+	local cobj = method_fetch_by_index(spr, index)
+	if cobj then
+		return debug.setmetatable(cobj, sprite_meta)
+	end
+end
+
 method.fetch = fetch
+method.fetch_by_index = fetch_by_index
 method.test = test
 
 local sprite = {}
@@ -92,6 +101,5 @@ function sprite.label(tbl)
 		return l
 	end
 end
-
 
 return sprite
