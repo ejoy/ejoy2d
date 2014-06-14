@@ -478,7 +478,7 @@ lsetalpha(lua_State *L) {
 static int
 lgetalpha(lua_State *L) {
 	struct sprite *s = self(L);
-	lua_pushunsigned(L, s->t.color & 0x000000FF);
+	lua_pushunsigned(L, s->t.color >> 24);
 	return 1;
 }
 
