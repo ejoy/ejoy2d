@@ -9,7 +9,7 @@
 #include <assert.h>
 
 #define MAX_COMMBINE 1024
-#define MAX_PROGRAM 6
+#define MAX_PROGRAM 8
 
 #define ATTRIB_VERTEX 0
 #define ATTRIB_TEXTCOORD 1
@@ -20,7 +20,11 @@
 struct program {
 	GLuint prog;
 	GLint additive;
-	uint32_t arg;
+	uint32_t arg_additive;
+	
+	GLint mask;
+  float arg_mask_x;
+  float arg_mask_y;
 };
 
 struct vertex {
@@ -173,9 +177,16 @@ program_init(struct program * p, const char *FS, const char *VS) {
 	link(p);
 
 	p->additive = glGetUniformLocation(p->prog, "additive");
-	p->arg = 0;
+	p->arg_additive = 0;
 	set_color(p->additive, 0);
 	
+	p->mask = glGetUniformLocation(p->prog, "mask");
+  p->arg_mask_x = 0.0f;
+  p->arg_mask_y = 0.0f;
+  if (p->mask != -1) {
+    glUniform2f(p->mask, 0.0f, 0.0f);
+  }
+		
 	glDetachShader(p->prog, fs);
 	glDeleteShader(fs);
 	glDetachShader(p->prog, vs);
@@ -245,11 +256,24 @@ shader_program(int n, uint32_t arg) {
 		glUseProgram(RS->program[n].prog);
 	}
 	struct program *p = &RS->program[RS->current_program];
-	if (p->arg != arg) {
+	if (p->arg_additive != arg) {
 		rs_commit();
-		p->arg = arg;
+		p->arg_additive = arg;
 		set_color(p->additive, arg);
 	}
+}
+
+void
+shader_mask(float x, float y) {
+	struct program *p = &RS->program[RS->current_program];
+  if (!p || p->mask == -1)
+    return;
+  if (p->arg_mask_x == x && p->arg_mask_y == y)
+    return;
+  p->arg_mask_x = x;
+  p->arg_mask_y = y;
+  rs_commit();
+	glUniform2f(p->mask, x, y);
 }
 
 void

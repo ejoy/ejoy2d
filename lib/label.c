@@ -246,6 +246,31 @@ draw_height(int unicode, const char *utf8, int size, int gen_new) {
 	return 0;
 }
 
+static struct font_context
+char_size(int unicode, const char *utf8, int size) {
+	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE);
+	struct font_context ctx;
+	font_create(FONT_SIZE, &ctx);
+	if (ctx.font == NULL) {
+		ctx.w = 0;
+		ctx.h = 0;
+		return ctx;
+	}
+
+	if (rect == NULL) {
+		font_size(utf8, unicode, &ctx);
+		//see gen_char
+		ctx.w += 1;
+		ctx.h += 1;
+		ctx.w = (ctx.w -1) * size / FONT_SIZE;
+		ctx.h = ctx.h * size / FONT_SIZE;
+	} else {
+		ctx.w = (rect->w -1) * size / FONT_SIZE;
+		ctx.h = rect->h * size / FONT_SIZE;
+	}
+	return ctx;
+}
+
 // also defined in sprite.c
 static inline uint32_t
 color_mul(uint32_t c1, uint32_t c2) {
@@ -367,11 +392,11 @@ label_size(const char *str, struct pack_label * l, int* width, int* height) {
 			unicode = copystr(utf8,str+i,6);
 			i+=6;
 		}
-		w += draw_size(unicode, utf8, l->size, 0) + l->space_w;
-		if (h == 0) {
-            h = draw_height(unicode, utf8, l->size, 0) + l->space_h;
+		struct font_context ct = char_size(unicode, utf8, l->size);
+		w += ct.w + l->space_w;
+		if (h==0) {
+			h = ct.h + l->space_h;
 		}
-        
 		if((l->auto_scale == 0 && w > l->width) || unicode == '\n') {
 			max_h += h;
 			h = 0;

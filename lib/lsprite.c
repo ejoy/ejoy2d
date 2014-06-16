@@ -335,6 +335,24 @@ lsetscissor(lua_State *L) {
 }
 
 static int
+lsetpicmask(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_PICTURE) {
+		return luaL_error(L, "Only picture can set mask");
+	}
+	struct sprite *mask = (struct sprite*) lua_touserdata(L, 2);
+	if (mask && mask->type != TYPE_PICTURE) {
+    return luaL_error(L, "Mask must be picture");
+	}
+	struct pack_picture *m = NULL;
+	if (mask) {
+		m = mask->s.pic;
+	}
+	s->data.mask = m;
+	return 0;
+}
+
+static int
 lgetname(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->name == NULL)
@@ -400,10 +418,44 @@ lgettext(lua_State *L) {
 	return 1;
 }
 
+// also defined in sprite.c
+static inline uint32_t
+color_mul(uint32_t c1, uint32_t c2) {
+	int r1 = (c1 >> 24) & 0xff;
+	int g1 = (c1 >> 16) & 0xff;
+	int b1 = (c1 >> 8) & 0xff;
+	int a1 = (c1) & 0xff;
+	int r2 = (c2 >> 24) & 0xff;
+	int g2 = (c2 >> 16) & 0xff;
+	int b2 = (c2 >> 8) & 0xff;
+	int a2 = c2 & 0xff;
+    
+	return (r1 * r2 /255) << 24 |
+    (g1 * g2 /255) << 16 |
+    (b1 * b2 /255) << 8 |
+    (a1 * a2 /255) ;
+}
+
 static int
 lgetcolor(lua_State *L) {
 	struct sprite *s = self(L);
-	lua_pushunsigned(L, s->t.color);
+    if (s->type != TYPE_LABEL)
+    {
+        lua_pushunsigned(L, s->t.color);
+    }
+    else
+    {
+        uint32_t color;
+        if (s->t.color == 0xffffffff) {
+            color = s->s.label->color;
+        }
+        else if (s->s.label->color == 0xffffffff){
+            color = s->t.color;
+        } else {
+            color = color_mul(s->s.label->color, s->t.color);
+        }
+        lua_pushunsigned(L, color);
+    }
 	return 1;
 }
 
@@ -426,7 +478,7 @@ lsetalpha(lua_State *L) {
 static int
 lgetalpha(lua_State *L) {
 	struct sprite *s = self(L);
-	lua_pushunsigned(L, s->t.color & 0x000000FF);
+	lua_pushunsigned(L, s->t.color >> 24);
 	return 1;
 }
 
@@ -481,6 +533,7 @@ lsetter(lua_State *L) {
 		{"message", lsetmessage },
 		{"program", lsetprogram },
 		{"scissor", lsetscissor },
+		{"picture_mask", lsetpicmask },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -497,6 +550,24 @@ lfetch(lua_State *L) {
 	lua_rawgeti(L, -1, index+1);
 
 	return 1;
+}
+
+static int
+lfetch_by_index(lua_State *L) {
+  struct sprite *s = self(L);
+  if (s->type != TYPE_ANIMATION) {
+    return luaL_error(L, "Only animation can fetch by index");
+  }
+  int index = (int)luaL_checkinteger(L, 2);
+  struct pack_animation *ani = s->s.ani;
+  if (index < 0 || index >= ani->component_number) {
+    return luaL_error(L, "Component index out of range:%d", index);
+  }
+  
+  lua_getuservalue(L, 1);
+  lua_rawgeti(L, -1, index+1);
+  
+  return 1;
 }
 
 static int
@@ -589,12 +660,13 @@ ltext_size(lua_State *L) {
 		return luaL_error(L, "Ony label can get label_size");
 	}
 	int width = 0, height = 0;
-	label_size(s->data.text, s->s.label, &width, &height);
+    if (s->data.text != NULL)
+        label_size(s->data.text, s->s.label, &width, &height);
 	lua_pushinteger(L, width);
 	lua_pushinteger(L, height);
-	return 2;
+    lua_pushinteger(L, s->s.label->size);
+	return 3;
 }
-
 
 static int
 lchild_visible(lua_State *L) {
@@ -892,6 +964,7 @@ static void
 lmethod(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "fetch", lfetch },
+    { "fetch_by_index", lfetch_by_index },
 		{ "mount", lmount },
 		{ NULL, NULL },
 	};
