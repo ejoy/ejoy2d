@@ -32,10 +32,11 @@ struct sprite {
 		struct sprite * children[1];
 		const char * text;
 		int scissor;
+		struct pack_picture *mask;  //for picture only
 	} data;
 };
 
-void sprite_drawquad(struct pack_picture *picture, const struct srt *srt, const struct sprite_trans *arg);
+void sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt, const struct sprite_trans *arg);
 void sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg);
 
 // sprite_size must be call before sprite_init

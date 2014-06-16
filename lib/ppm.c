@@ -133,6 +133,7 @@ loadppm_from_file(FILE *rgb, FILE *alpha, struct ppm *ppm) {
 			if (!ppm_header(alpha, ppm)) {
 				return 0;
 			}
+			alpha_id = ppm->type;
 		} else {
 			struct ppm pgm;
 			if (!ppm_header(alpha, &pgm)) {

@@ -336,6 +336,24 @@ lsetscissor(lua_State *L) {
 }
 
 static int
+lsetpicmask(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_PICTURE) {
+		return luaL_error(L, "Only picture can set mask");
+	}
+	struct sprite *mask = (struct sprite*) lua_touserdata(L, 2);
+	if (mask && mask->type != TYPE_PICTURE) {
+    return luaL_error(L, "Mask must be picture");
+	}
+	struct pack_picture *m = NULL;
+	if (mask) {
+		m = mask->s.pic;
+	}
+	s->data.mask = m;
+	return 0;
+}
+
+static int
 lgetname(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->name == NULL)
@@ -434,7 +452,7 @@ lsetalpha(lua_State *L) {
 static int
 lgetalpha(lua_State *L) {
 	struct sprite *s = self(L);
-	lua_pushunsigned(L, s->t.color & 0x000000FF);
+	lua_pushunsigned(L, s->t.color >> 24);
 	return 1;
 }
 
@@ -489,6 +507,7 @@ lsetter(lua_State *L) {
 		{"message", lsetmessage },
 		{"program", lsetprogram },
 		{"scissor", lsetscissor },
+		{"picture_mask", lsetpicmask },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -505,6 +524,24 @@ lfetch(lua_State *L) {
 	lua_rawgeti(L, -1, index+1);
 
 	return 1;
+}
+
+static int
+lfetch_by_index(lua_State *L) {
+  struct sprite *s = self(L);
+  if (s->type != TYPE_ANIMATION) {
+    return luaL_error(L, "Only animation can fetch by index");
+  }
+  int index = (int)luaL_checkinteger(L, 2);
+  struct pack_animation *ani = s->s.ani;
+  if (index < 0 || index >= ani->component_number) {
+    return luaL_error(L, "Component index out of range:%d", index);
+  }
+  
+  lua_getuservalue(L, 1);
+  lua_rawgeti(L, -1, index+1);
+  
+  return 1;
 }
 
 static int
@@ -901,6 +938,7 @@ static void
 lmethod(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "fetch", lfetch },
+    { "fetch_by_index", lfetch_by_index },
 		{ "mount", lmount },
 		{ NULL, NULL },
 	};
