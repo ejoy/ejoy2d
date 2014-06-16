@@ -414,10 +414,9 @@ label_size(const char *str, struct pack_label * l, int* width, int* height) {
 	*height = max_h;
 }
 
-void
-label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg) {
-	shader_texture(Tex);
-	uint32_t color;
+uint32_t
+label_get_color(struct pack_label * l, const struct sprite_trans *arg) {
+    uint32_t color;
 	if (arg->color == 0xffffffff) {
 		color = l->color;
 	}
@@ -426,6 +425,13 @@ label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct
 	} else {
 		color = color_mul(l->color, arg->color);
 	}
+    return color;
+}
+
+void
+label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg) {
+	shader_texture(Tex);
+	uint32_t color = label_get_color(l, arg);
 
 	char utf8[7];
 	int i;

@@ -56,7 +56,8 @@ lnewlabel(lua_State *L) {
 	label.color = (uint32_t)luaL_optunsigned(L,4,0xffffffff);
     label.space_w = 0;
     label.space_h = 0;
-    label.auto_scale = 0;
+    label.auto_scale = 1;
+    label.edge = 1;
 	const char * align = lua_tostring(L,5);
 	if (align == NULL) {
 		label.align = LABEL_ALIGN_LEFT;
@@ -400,24 +401,6 @@ lgettext(lua_State *L) {
 	return 1;
 }
 
-// also defined in sprite.c
-static inline uint32_t
-color_mul(uint32_t c1, uint32_t c2) {
-	int r1 = (c1 >> 24) & 0xff;
-	int g1 = (c1 >> 16) & 0xff;
-	int b1 = (c1 >> 8) & 0xff;
-	int a1 = (c1) & 0xff;
-	int r2 = (c2 >> 24) & 0xff;
-	int g2 = (c2 >> 16) & 0xff;
-	int b2 = (c2 >> 8) & 0xff;
-	int a2 = c2 & 0xff;
-    
-	return (r1 * r2 /255) << 24 |
-    (g1 * g2 /255) << 16 |
-    (b1 * b2 /255) << 8 |
-    (a1 * a2 /255) ;
-}
-
 static int
 lgetcolor(lua_State *L) {
 	struct sprite *s = self(L);
@@ -427,16 +410,7 @@ lgetcolor(lua_State *L) {
     }
     else
     {
-        uint32_t color;
-        if (s->t.color == 0xffffffff) {
-            color = s->s.label->color;
-        }
-        else if (s->s.label->color == 0xffffffff){
-            color = s->t.color;
-        } else {
-            color = color_mul(s->s.label->color, s->t.color);
-        }
-        lua_pushunsigned(L, color);
+        lua_pushunsigned(L, label_get_color(s->s.label, &s->t));
     }
 	return 1;
 }
