@@ -176,6 +176,7 @@ texture_unload(int id) {
 	if (tex->fb != 0)
 		glDeleteFramebuffers(1, &tex->fb);
 	tex->id = 0;
+    tex->fb = 0;
 }
 
 GLuint 
@@ -198,4 +199,49 @@ void
 texture_exit() {
 	texture_clearall();
 	POOL.count = 0;
+}
+
+void
+texture_set_inv(int id, float invw, float invh) {
+   if (id < 0 || id >= POOL.count)
+       return ;
+    
+    struct texture *tex = &POOL.tex[id];
+    tex->invw = invw;
+    tex->invh = invh;
+}
+
+void
+texture_swap(int ida, int idb) {
+    if (ida < 0 || idb < 0 || ida >= POOL.count || idb >= POOL.count)
+        return ;
+    
+    struct texture tex = POOL.tex[ida];
+    POOL.tex[ida] = POOL.tex[idb];
+    POOL.tex[idb] = tex;
+}
+
+void
+texture_size(int id, int *width, int *height) {
+    if (id < 0 || id >= POOL.count) {
+        *width = *height = 0;
+        return ;
+    }
+    
+    struct texture *tex = &POOL.tex[id];
+    *width = tex->width;
+    *height = tex->height;
+}
+
+void
+texture_delete_framebuffer(int id) {
+    if (id < 0 || id >= POOL.count) {
+        return;
+    }
+    
+    struct texture *tex = &POOL.tex[id];
+    if (tex->fb != 0) {
+        glDeleteFramebuffers(1, &tex->fb);
+        tex->fb = 0;
+    }
 }
