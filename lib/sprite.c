@@ -55,7 +55,8 @@ sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const s
 		
 		cx = cx * 0.25f;
 		cy = cy * 0.25f;
-		if(is_visible || screen_is_visible(cx,cy)) {
+		if(is_visible || screen_is_visible(cx,cy))
+		{
       if (mask != NULL) {
         float tx = mask->rect[0].texture_coord[0];
         float ty = mask->rect[0].texture_coord[1];

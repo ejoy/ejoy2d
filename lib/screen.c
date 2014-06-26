@@ -59,7 +59,8 @@ screen_scissor(int x, int y, int w, int h) {
 
 bool screen_is_visible(float x,float y)
 {
-	return x >=0 && x <= 2 && y>=-2 && y<= 0;
+	//略大于实际的屏幕
+	return x >= -0.1f && x <= 2.1f && y>=-2.1f && y<= 0.1f;
 }
 
 
