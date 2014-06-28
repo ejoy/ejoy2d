@@ -59,8 +59,30 @@ screen_scissor(int x, int y, int w, int h) {
 
 bool screen_is_visible(float x,float y)
 {
-	//略大于实际的屏幕
-	return x >= -0.1f && x <= 2.1f && y>=-2.1f && y<= 0.1f;
+	return x >= 0.0f && x <= 2.0f && y>=-2.0f && y<= 0.0f;
+}
+bool screen_is_poly_invisible(const float* points,int len,int stride)
+{
+	int i =0,idx = 0;
+	///测试 x
+	for(i =0; i < len;++i)
+	{
+		idx =i + stride;
+		if(points[idx] >= 0.0f || points[idx] <= 2.0f)
+		{
+			return false;
+		}
+	}
+	//测试 y
+	for(i =0; i < len;++i)
+	{
+		idx = stride + i + 1;
+		if(points[idx] <= 0.0f || points[idx] >= -2.0f)
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 

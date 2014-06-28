@@ -32,7 +32,6 @@ sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const s
 			continue;
 		shader_texture(glid);
 		bool is_visible = false;
-		float cx = 0.0f,cy = 0.0f;
 		for (j=0;j<4;j++) {
 			int xx = q->screen_coord[j*2+0];
 			int yy = q->screen_coord[j*2+1];
@@ -42,20 +41,14 @@ sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const s
 			float ty = q->texture_coord[j*2+1];
 
 			screen_trans(&vx,&vy);
-			if(screen_is_visible(vx, vy))
-				is_visible = true;
-			cx += vx;
-			cy += vy;
 			texture_coord(q->texid, &tx, &ty);
 			vb[j*4+0] = vx;
 			vb[j*4+1] = vy;
 			vb[j*4+2] = tx;
 			vb[j*4+3] = ty;
 		}
-		
-		cx = cx * 0.25f;
-		cy = cy * 0.25f;
-		if(is_visible || screen_is_visible(cx,cy))
+	
+		if(is_visible || !screen_is_poly_invisible(vb,4,4))
 		{
       if (mask != NULL) {
         float tx = mask->rect[0].texture_coord[0];
