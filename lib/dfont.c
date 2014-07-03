@@ -52,7 +52,7 @@ init_hash(struct dfont *df, int max) {
 
 static inline int
 hash(int c, int font) {
-	return (c ^ (font * 97)) % HASH_SIZE;
+	return ((unsigned)(c ^ (font * 97))) % HASH_SIZE;
 }
 
 struct dfont *
