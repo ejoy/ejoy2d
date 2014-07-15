@@ -59,6 +59,7 @@ int sprite_setframe(struct sprite *, int frame, bool force_child);
 void sprite_mount(struct sprite *, int index, struct sprite *);
 
 void sprite_aabb(struct sprite *s, struct srt *srt, int aabb[4]);
+int sprite_pos(struct sprite *s, struct srt *srt, struct sprite *t, int pos[2]);
 
 bool sprite_child_visible(struct sprite *s, const char * childname);
 

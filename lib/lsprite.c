@@ -83,6 +83,45 @@ lnewlabel(lua_State *L) {
 	return 1;
 }
 
+static double
+readkey(lua_State *L, int idx, int key, double def) {
+	lua_pushvalue(L, lua_upvalueindex(key));
+	lua_rawget(L, idx);
+	double ret = luaL_optnumber(L, -1, def);
+	lua_pop(L,1);
+	return ret;
+}
+
+static void
+fill_srt(lua_State *L, struct srt *srt, int idx) {
+	if (lua_isnoneornil(L, idx)) {
+		srt->offx = 0;
+		srt->offy = 0;
+		srt->rot = 0;
+		srt->scalex = 1024;
+		srt->scaley = 1024;
+		return;
+	}
+	luaL_checktype(L,idx,LUA_TTABLE);
+	double x = readkey(L, idx, SRT_X, 0);
+	double y = readkey(L, idx, SRT_Y, 0);
+	double scale = readkey(L, idx, SRT_SCALE, 0);
+	double sx;
+	double sy;
+	double rot = readkey(L, idx, SRT_ROT, 0);
+	if (scale > 0) {
+		sx = sy = scale;
+	} else {
+		sx = readkey(L, idx, SRT_SX, 1);
+		sy = readkey(L, idx, SRT_SY, 1);
+	}
+	srt->offx = x*SCREEN_SCALE;
+	srt->offy = y*SCREEN_SCALE;
+	srt->scalex = sx*1024;
+	srt->scaley = sy*1024;
+	srt->rot = rot * (1024.0 / 360.0);
+}
+
 static int
 lgenoutline(lua_State *L) {
   label_gen_outline(lua_toboolean(L, 1));
@@ -188,15 +227,6 @@ lnew(lua_State *L) {
 		return 1;
 	}
 	return 0;
-}
-
-static double
-readkey(lua_State *L, int idx, int key, double def) {
-	lua_pushvalue(L, lua_upvalueindex(key));
-	lua_rawget(L, idx);
-	double ret = luaL_optnumber(L, -1, def);
-	lua_pop(L,1);
-	return ret;
 }
 
 static struct sprite *
@@ -310,6 +340,22 @@ lgetwpos(lua_State *L) {
 		lua_pushnumber(L,mat->m[4] /(float)SCREEN_SCALE);
 		lua_pushnumber(L,mat->m[5] /(float)SCREEN_SCALE);
 		return 2;
+	} else {
+		struct srt srt;
+		fill_srt(L,&srt,2);
+		struct sprite *t = (struct sprite *)lua_touserdata(L, 3);
+		if (t == NULL) {
+			luaL_error(L, "Need target sprite");
+		}
+
+		int pos[2];
+		if (sprite_pos(s, &srt, t, pos) == 0) {
+			lua_pushinteger(L, pos[0]);
+			lua_pushinteger(L, pos[1]);
+			return 2;
+		} else {
+			return 0;
+		}
 	}
 	return luaL_error(L, "Only anchor can get world matrix");
 }
@@ -567,36 +613,6 @@ lmount(lua_State *L) {
 		lua_rawseti(L, -2, index+1);
 	}
 	return 0;
-}
-
-static void
-fill_srt(lua_State *L, struct srt *srt, int idx) {
-	if (lua_isnoneornil(L, idx)) {
-		srt->offx = 0;
-		srt->offy = 0;
-		srt->rot = 0;
-		srt->scalex = 1024;
-		srt->scaley = 1024;
-		return;
-	}
-	luaL_checktype(L,idx,LUA_TTABLE);
-	double x = readkey(L, idx, SRT_X, 0);
-	double y = readkey(L, idx, SRT_Y, 0);
-	double scale = readkey(L, idx, SRT_SCALE, 0);
-	double sx;
-	double sy;
-	double rot = readkey(L, idx, SRT_ROT, 0);
-	if (scale > 0) {
-		sx = sy = scale;
-	} else {
-		sx = readkey(L, idx, SRT_SX, 1);
-		sy = readkey(L, idx, SRT_SY, 1);
-	}
-	srt->offx = x*SCREEN_SCALE;
-	srt->offy = y*SCREEN_SCALE;
-	srt->scalex = sx*1024;
-	srt->scaley = sy*1024;
-	srt->rot = rot * (1024.0 / 360.0);
 }
 
 /*
