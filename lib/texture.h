@@ -22,4 +22,10 @@ void texture_exit();
 const char* texture_new_rt(int id, int width, int height);
 ///¼¤»îid µÄ rt
 const char* texture_active_rt(int id);
+
+void texture_set_inv(int id, float invw, float invh);
+void texture_swap(int ida, int idb);
+void texture_size(int id, int *width, int *height);
+void texture_delete_framebuffer(int id);
+
 #endif
