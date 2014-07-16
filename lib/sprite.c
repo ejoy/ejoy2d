@@ -7,6 +7,7 @@
 #include "label.h"
 #include "scissor.h"
 #include "array.h"
+#include "particle.h"
 
 #include <string.h>
 #include <assert.h>
@@ -161,6 +162,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	s->name = NULL;
 	s->id = id;
 	s->type = pack->type[id];
+	s->ps = NULL;
 	if (s->type == TYPE_ANIMATION) {
 		struct pack_animation * ani = (struct pack_animation *)pack->data[id];
 		s->s.ani = ani;
@@ -487,6 +489,31 @@ child_pos(struct sprite *s, struct srt *srt, struct sprite_trans *ts, struct spr
 	return 1;
 }
 
+void
+sprite_drawparticle(struct sprite *s, struct particle_system *ps, const struct srt *srt) {
+	int n = ps->particleCount;
+	int i;
+	struct sprite_trans temp;
+	struct matrix temp_matrix;
+	struct matrix *old_m = s->t.mat;
+	uint32_t old_c = s->t.color;
+
+	shader_blend(ps->config->srcBlend, ps->config->dstBlend);
+	for (i=0;i<n;i++) {
+		struct particle *p = &ps->particles[i];
+		struct matrix *mat = &ps->matrix[i];
+		uint32_t color = p->color_val;
+
+		s->t.mat = mat;
+		s->t.color = color;
+		sprite_drawquad(s->data.mask, NULL, NULL, &s->t);
+	}
+	shader_defaultblend();
+
+	s->t.mat = old_m;
+	s->t.color = old_c;
+}
+
 static int
 draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 	struct sprite_trans temp;
@@ -509,6 +536,10 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 		}
 		return 0;
 	case TYPE_ANCHOR:
+		if (s->ps){
+			switch_program(t, PROGRAM_PICTURE);
+			sprite_drawparticle(s, s->ps, srt);
+		}
 		anchor_update(s, srt, t);
 		return 0;
 	case TYPE_ANIMATION:

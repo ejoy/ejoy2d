@@ -26,7 +26,7 @@ function particle_meta.__index:update(dt)
 				v.is_visible = true
 				c.reset(v.particle)
 			end
-			local active = c.update(v.particle, dt, v.anchor.world_matrix)
+			local active = c.update(v.particle, dt, matrix(v.anchor.world_matrix), v.edge)
 
 			self.is_active = active or self.is_active
 			loop_active = loop_active or (self.is_active and v.is_loop or false)
@@ -63,25 +63,6 @@ function particle_meta.__index:update(dt)
 	end
 end
 
-function particle_meta.__index:data(ptc)
-	return c.data(ptc.particle, self.mat, self.col, ptc.edge)
-end
-
-function particle_meta.__index:draw()
-	local cnt = 0
-	for _, v in ipairs(self.particles) do
-		if v.is_visible then
-			cnt = self:data(v)
-			if cnt > 0 then
-				shader.blend(v.src_blend,v.dst_blend)
-				local mat = not v.emit_in_world and v.anchor.world_matrix
-				v.sprite:matrix_multi_draw(mat, cnt, self.mat, self.col)
-				shader.blend()
-			end
-		end
-	end
-end
-
 function particle_meta.__index:reset()
 	self.is_active = true
 	self.group.frame = 0
@@ -110,6 +91,7 @@ local function new_single(name, anchor)
 		local sprite = ej.sprite("particle", texid)
 		local x, y, w, h = sprite:aabb()
 		local edge = 2 * math.min(w, h)
+		anchor:anchor_particle(cobj, sprite)
 		return {particle = cobj,
 			sprite = sprite,
 			edge = edge,

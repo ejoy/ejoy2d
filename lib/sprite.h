@@ -34,9 +34,11 @@ struct sprite {
 		int scissor;
 		struct pack_picture *mask;  //for picture only
 	} data;
+	struct particle_system *ps;
 };
 
 void sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt, const struct sprite_trans *arg);
+void sprite_drawparticle(struct sprite *s, struct particle_system *ps, const struct srt *srt);
 void sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg);
 
 // sprite_size must be call before sprite_init

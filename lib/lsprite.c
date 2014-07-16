@@ -2,6 +2,7 @@
 #include "sprite.h"
 #include "label.h"
 #include "shader.h"
+#include "particle.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -35,6 +36,7 @@ newlabel(lua_State *L, struct pack_label *label) {
 	s->total_frame = 0;
 	s->frame = 0;
 	s->data.text = NULL;
+	s->ps = NULL;
 	return s;
 }
 
@@ -168,6 +170,7 @@ newanchor(lua_State *L) {
 	s->name = NULL;
 	s->id = ANCHOR_ID;
 	s->type = TYPE_ANCHOR;
+	s->ps = NULL;
 	s->s.mat = (struct matrix *)(s+1);
 	matrix_identity(s->s.mat);
 
@@ -686,6 +689,20 @@ lchildren_name(lua_State *L) {
 }
 
 static int
+lset_anchor_particle(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_ANCHOR)
+		return luaL_error(L, "need a anchor");
+	s->ps = (struct particle_system*)lua_touserdata(L, 2);
+	struct sprite *p = (struct sprite *)lua_touserdata(L, 3);
+	if (p==NULL)
+		return luaL_error(L, "need a sprite");
+	s->data.mask = p->s.pic;
+
+	return 0;
+}
+
+static int
 lmatrix_multi_draw(lua_State *L) {
 	struct sprite *s = self(L);
 	int cnt = (int)luaL_checkinteger(L,3);
@@ -693,9 +710,11 @@ lmatrix_multi_draw(lua_State *L) {
 		return 0;
 	luaL_checktype(L,4,LUA_TTABLE);
 	luaL_checktype(L,5,LUA_TTABLE);
-//    luaL_checktype(L,6,LUA_TTABLE);
 	if (lua_rawlen(L, 4) < cnt) {
-		return luaL_error(L, "matrix length less then particle count");
+		return luaL_error(L, "matrix length must less then particle count");
+	}
+	if (lua_rawlen(L, 5) < cnt) {
+		return luaL_error(L, "color length must less then particle count");
 	}
 
 	struct matrix *mat = (struct matrix *)lua_touserdata(L, 2);
@@ -980,6 +999,7 @@ lmethod(lua_State *L) {
 		{ "child_visible", lchild_visible },
 		{ "children_name", lchildren_name },
 		{ "world_pos", lgetwpos },
+		{ "anchor_particle", lset_anchor_particle },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);
