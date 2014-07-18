@@ -439,11 +439,24 @@ lsettext(lua_State *L) {
 	if (s->type != TYPE_LABEL) {
 		return luaL_error(L, "Only label can set rich text");
 	}
+	if (lua_isnoneornil(L, 2)) {
+		s->data.rich_text = NULL;
+		lua_pushnil(L);
+		lua_setuservalue(L, 1);
+		return 0;
+	}
   if (lua_isstring(L, 2)) {
     s->data.rich_text = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
     s->data.rich_text->text = lua_tostring(L, 2);
     s->data.rich_text->count = 0;
 		s->data.rich_text->fields = NULL;
+
+		lua_createtable(L, 2, 0);
+		lua_pushvalue(L, 2);
+		lua_rawseti(L, -2, 1);
+		lua_pushvalue(L, 3);
+		lua_rawseti(L, -2, 2);
+		lua_setuservalue(L, 1);
     return 0;
   }
   
@@ -452,15 +465,17 @@ lsettext(lua_State *L) {
     return luaL_error(L, "rich text must has a table with two items");
   }
   
-	struct rich_text *rich = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
   lua_rawgeti(L, 2, 1);
-  rich->text = luaL_checkstring(L, -1);
+  const char *txt = luaL_checkstring(L, -1);
   lua_pop(L, 1);
   
   lua_rawgeti(L, 2, 2);
 	int cnt = lua_rawlen(L, -1);
   lua_pop(L, 1);
   
+	struct rich_text *rich = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
+	
+	rich->text = txt;
   rich->count = cnt;
 	int size = cnt * sizeof(struct label_field);
 	rich->fields = (struct label_field*)lua_newuserdata(L, size);
@@ -491,6 +506,16 @@ lsettext(lua_State *L) {
 		lua_pop(L, 1);
 	}
   lua_pop(L, 1);
+
+	lua_createtable(L,3,0);
+	lua_pushvalue(L, 3);
+	lua_rawseti(L, -2, 1);
+	lua_pushvalue(L, 4);
+	lua_rawseti(L, -2, 2);
+	lua_rawgeti(L, 2, 1);
+	lua_rawseti(L, -2, 3);
+	lua_setuservalue(L, 1);
+
 	s->data.rich_text = rich;
 	return 0;
 }
