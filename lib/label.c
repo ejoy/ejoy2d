@@ -460,7 +460,7 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 	char utf8[7];
 	int i;
     int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0;
-	for (i=0; str[i];) {
+	for (i=0; str && str[i];) {
 		int unicode;
 		uint8_t c = (uint8_t)str[i];
 		if ((c&0x80) == 0) {
