@@ -179,8 +179,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 		s->start_frame = 0;
 		s->total_frame = 0;
 		s->frame = 0;
-		s->data.text = NULL;
-		s->data.mask = NULL;
+		s->data.rich_text = NULL;
 		assert(sz >= sizeof(struct sprite) - sizeof(struct sprite *));
 		if (s->type == TYPE_PANNEL) {
 			struct pack_pannel * pp = (struct pack_pannel *)pack->data[id];
@@ -529,10 +528,10 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 		sprite_drawpolygon(s->s.poly, srt, t);
 		return 0;
 	case TYPE_LABEL:
-		if (s->data.text) {
+		if (s->data.rich_text) {
 			t->program = PROGRAM_DEFAULT;	// label never set user defined program
 			switch_program(t, s->s.label->edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT);
-			label_draw(s->data.text, s->s.label,srt,t);
+			label_draw(s->data.rich_text, s->s.label, srt, t);
 		}
 		return 0;
 	case TYPE_ANCHOR:

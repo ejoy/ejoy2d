@@ -30,7 +30,7 @@ struct sprite {
 	const char *name;	// name for parent
 	union {
 		struct sprite * children[1];
-		const char * text;
+		struct rich_text * rich_text;
 		int scissor;
 		struct pack_picture *mask;  //for picture only
 	} data;

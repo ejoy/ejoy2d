@@ -35,8 +35,7 @@ newlabel(lua_State *L, struct pack_label *label) {
 	s->start_frame = 0;
 	s->total_frame = 0;
 	s->frame = 0;
-	s->data.text = NULL;
-	s->ps = NULL;
+	s->data.rich_text = NULL;
 	return s;
 }
 
@@ -438,19 +437,61 @@ static int
 lsettext(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->type != TYPE_LABEL) {
-		return luaL_error(L, "Only label can set text");
+		return luaL_error(L, "Only label can set rich text");
 	}
-	lua_settop(L,2);
-	if (lua_isnil(L,2)) {
-		s->data.text = NULL;
-		lua_setuservalue(L,1);
-		return 0;
+  if (lua_isstring(L, 2)) {
+    s->data.rich_text = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
+    s->data.rich_text->text = lua_tostring(L, 2);
+    s->data.rich_text->count = 0;
+		s->data.rich_text->fields = NULL;
+    return 0;
+  }
+  
+  s->data.rich_text = NULL;
+  if (!lua_istable(L, 2) || lua_rawlen(L, 2) != 2) {
+    return luaL_error(L, "rich text must has a table with two items");
+  }
+  
+	struct rich_text *rich = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
+  lua_rawgeti(L, 2, 1);
+  rich->text = luaL_checkstring(L, -1);
+  lua_pop(L, 1);
+  
+  lua_rawgeti(L, 2, 2);
+	int cnt = lua_rawlen(L, -1);
+  lua_pop(L, 1);
+  
+  rich->count = cnt;
+	int size = cnt * sizeof(struct label_field);
+	rich->fields = (struct label_field*)lua_newuserdata(L, size);
+
+	struct label_field *fields = rich->fields;
+	int i;
+  lua_rawgeti(L, 2, 2);
+	for (i=0; i<cnt; i++) {
+		lua_rawgeti(L, -1, i+1);
+		if (!lua_istable(L,-1)) {
+			return luaL_error(L, "rich text unit must be table");
+		}
+
+		lua_rawgeti(L, -1, 1);  //start
+		((struct label_field*)(fields+i))->start = luaL_checkinteger(L, -1);
+		lua_pop(L, 1);
+    
+    lua_rawgeti(L, -1, 2);  //end
+		((struct label_field*)(fields+i))->end = luaL_checkinteger(L, -1);
+    lua_pop(L, 1);
+
+		lua_rawgeti(L, -1, 3);  //color
+		((struct label_field*)(fields+i))->color = luaL_checkunsigned(L, -1); 
+		lua_pop(L, 1);
+
+		//extend here
+
+		lua_pop(L, 1);
 	}
-	s->data.text = luaL_checkstring(L,2);
-	lua_createtable(L,1,0);
-	lua_pushvalue(L, -2);
-	lua_rawseti(L, -2, 1);
-	lua_setuservalue(L, 1);
+  lua_pop(L, 1);
+	s->data.rich_text = rich;
 	return 0;
 }
 
@@ -460,12 +501,11 @@ lgettext(lua_State *L) {
 	if (s->type != TYPE_LABEL) {
 		return luaL_error(L, "Only label can get text");
 	}
-	lua_getuservalue(L, 1);
-	if (!lua_istable(L,-1)) {
-		return 0;
-	}
-	lua_rawgeti(L, -1, 1);
-	return 1;
+  if (s->data.rich_text) {
+    lua_pushstring(L, s->data.rich_text->text);
+    return 1;
+  }
+	return 0;
 }
 
 static int
@@ -655,8 +695,8 @@ ltext_size(lua_State *L) {
 		return luaL_error(L, "Ony label can get label_size");
 	}
 	int width = 0, height = 0;
-    if (s->data.text != NULL)
-        label_size(s->data.text, s->s.label, &width, &height);
+  if (s->data.rich_text != NULL)
+      label_size(s->data.rich_text->text, s->s.label, &width, &height);
 	lua_pushinteger(L, width);
 	lua_pushinteger(L, height);
     lua_pushinteger(L, s->s.label->size);
