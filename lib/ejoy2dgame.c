@@ -25,6 +25,7 @@
 #define EJOY_MESSAGE "EJOY2D_MESSAGE"
 #define EJOY_HANDLE_ERROR "EJOY2D_HANDLE_ERROR"
 #define EJOY_RESUME "EJOY2D_RESUME"
+#define EJOY_PAUSE "EJOY2D_PAUSE"
 
 #define TRACEBACK_FUNCTION 1
 #define UPDATE_FUNCTION 2
@@ -50,7 +51,8 @@ linject(lua_State *L) {
 		EJOY_GESTURE,
 		EJOY_MESSAGE,
 		EJOY_HANDLE_ERROR,
-        EJOY_RESUME,
+		EJOY_RESUME,
+		EJOY_PAUSE,
 	};
 	int i;
 	for (i=0;i<sizeof(ejoy_callback)/sizeof(ejoy_callback[0]);i++) {
@@ -181,7 +183,8 @@ ejoy2d_game_start(struct game *G) {
 	lua_getfield(L,LUA_REGISTRYINDEX, EJOY_UPDATE);
 	lua_getfield(L,LUA_REGISTRYINDEX, EJOY_DRAWFRAME);
 	lua_getfield(L,LUA_REGISTRYINDEX, EJOY_MESSAGE);
-    lua_getfield(L,LUA_REGISTRYINDEX, EJOY_RESUME);
+  lua_getfield(L,LUA_REGISTRYINDEX, EJOY_RESUME);
+	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_PAUSE);
 }
 
 
@@ -325,5 +328,13 @@ ejoy2d_game_resume(struct game* G){
     lua_getfield(L, LUA_REGISTRYINDEX, EJOY_RESUME);
     call(L, 0, 0);
     lua_settop(L, TOP_FUNCTION);
+}
+
+void
+ejoy2d_game_pause(struct game* G) {
+	lua_State *L = G->L;
+	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_PAUSE);
+	call(L, 0, 0);
+	lua_settop(L, TOP_FUNCTION);
 }
 
