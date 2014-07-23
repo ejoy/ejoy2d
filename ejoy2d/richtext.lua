@@ -56,7 +56,7 @@ function M:format(txt)
 		end
 	end
 
-	local count = #pos_pieces / 2
+	local count = pos_cnt / 2
 	local fields = {}
 	for i=1, count do
 		local pos = pos_pieces[2*i-1]
