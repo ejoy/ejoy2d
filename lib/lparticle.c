@@ -39,8 +39,8 @@ _init_from_table(struct particle_config *ps, struct lua_State *L) {
 	ps->duration = dict_float(L, "duration");
 
 	// avoid defined blend func
-	// int blendfunc_src = dict_float(L, "blendFuncSource");
-	// int blendfunc_dst = dict_float(L, "blendFuncDestination");
+	ps->srcBlend = dict_float(L, "blendFuncSource");
+	ps->dstBlend = dict_float(L, "blendFuncDestination");
 
 	ps->startColor.r = dict_float(L, "startColorRed");
 	ps->startColor.g = dict_float(L, "startColorGreen");
@@ -151,6 +151,8 @@ lupdate(lua_State *L) {
 	luaL_checktype(L,1,LUA_TUSERDATA);
 	struct particle_system *ps = (struct particle_system *)lua_touserdata(L, 1);
 	float dt = luaL_checknumber(L,2);
+	struct matrix *anchor = (struct matrix*)lua_touserdata(L, 3);
+	int edge = luaL_checkinteger(L, 4);
 
 /*	if (ps->config->positionType == POSITION_TYPE_GROUPED) {
 		struct matrix *m = (struct matrix *)lua_touserdata(L, 3);
@@ -162,7 +164,7 @@ lupdate(lua_State *L) {
 	}*/
 
 	if (ps->config->positionType == POSITION_TYPE_GROUPED) {
-		ps->config->emitterMatrix = (struct matrix*)lua_touserdata(L, 3);
+		ps->config->emitterMatrix = anchor;
 	} else {
 		ps->config->emitterMatrix = NULL;
 	}
@@ -170,7 +172,23 @@ lupdate(lua_State *L) {
 	ps->config->sourcePosition.y = 0;
 	particle_system_update(ps, dt);
 
-	lua_pushboolean(L, ps->isActive || ps->isAlive);
+	if (ps->isActive || ps->isAlive) {
+		lua_pushboolean(L, 1);
+		int n = ps->particleCount;
+		int i;
+		struct matrix tmp;
+		for (i=0;i<n;i++) {
+			struct particle *p = &ps->particles[i];
+			calc_particle_system_mat(p,&ps->matrix[i], edge);
+			if (ps->config->positionType != POSITION_TYPE_GROUPED) {
+				memcpy(tmp.m, &ps->matrix[i], sizeof(int) * 6);
+				matrix_mul(&ps->matrix[i], &tmp, anchor);
+			}
+			p->color_val = color4f(&p->color);
+		}
+	} else {
+		lua_pushboolean(L, 0);
+	}
 	return 1;
 }
 

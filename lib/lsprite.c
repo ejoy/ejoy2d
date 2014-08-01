@@ -2,6 +2,7 @@
 #include "sprite.h"
 #include "label.h"
 #include "shader.h"
+#include "particle.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -34,7 +35,7 @@ newlabel(lua_State *L, struct pack_label *label) {
 	s->start_frame = 0;
 	s->total_frame = 0;
 	s->frame = 0;
-	s->data.text = NULL;
+	s->data.rich_text = NULL;
 	return s;
 }
 
@@ -83,6 +84,45 @@ lnewlabel(lua_State *L) {
 	return 1;
 }
 
+static double
+readkey(lua_State *L, int idx, int key, double def) {
+	lua_pushvalue(L, lua_upvalueindex(key));
+	lua_rawget(L, idx);
+	double ret = luaL_optnumber(L, -1, def);
+	lua_pop(L,1);
+	return ret;
+}
+
+static void
+fill_srt(lua_State *L, struct srt *srt, int idx) {
+	if (lua_isnoneornil(L, idx)) {
+		srt->offx = 0;
+		srt->offy = 0;
+		srt->rot = 0;
+		srt->scalex = 1024;
+		srt->scaley = 1024;
+		return;
+	}
+	luaL_checktype(L,idx,LUA_TTABLE);
+	double x = readkey(L, idx, SRT_X, 0);
+	double y = readkey(L, idx, SRT_Y, 0);
+	double scale = readkey(L, idx, SRT_SCALE, 0);
+	double sx;
+	double sy;
+	double rot = readkey(L, idx, SRT_ROT, 0);
+	if (scale > 0) {
+		sx = sy = scale;
+	} else {
+		sx = readkey(L, idx, SRT_SX, 1);
+		sy = readkey(L, idx, SRT_SY, 1);
+	}
+	srt->offx = x*SCREEN_SCALE;
+	srt->offy = y*SCREEN_SCALE;
+	srt->scalex = sx*1024;
+	srt->scaley = sy*1024;
+	srt->rot = rot * (1024.0 / 360.0);
+}
+
 static int
 lgenoutline(lua_State *L) {
   label_gen_outline(lua_toboolean(L, 1));
@@ -129,6 +169,7 @@ newanchor(lua_State *L) {
 	s->name = NULL;
 	s->id = ANCHOR_ID;
 	s->type = TYPE_ANCHOR;
+	s->ps = NULL;
 	s->s.mat = (struct matrix *)(s+1);
 	matrix_identity(s->s.mat);
 
@@ -188,15 +229,6 @@ lnew(lua_State *L) {
 		return 1;
 	}
 	return 0;
-}
-
-static double
-readkey(lua_State *L, int idx, int key, double def) {
-	lua_pushvalue(L, lua_upvalueindex(key));
-	lua_rawget(L, idx);
-	double ret = luaL_optnumber(L, -1, def);
-	lua_pop(L,1);
-	return ret;
 }
 
 static struct sprite *
@@ -310,6 +342,22 @@ lgetwpos(lua_State *L) {
 		lua_pushnumber(L,mat->m[4] /(float)SCREEN_SCALE);
 		lua_pushnumber(L,mat->m[5] /(float)SCREEN_SCALE);
 		return 2;
+	} else {
+		struct srt srt;
+		fill_srt(L,&srt,2);
+		struct sprite *t = (struct sprite *)lua_touserdata(L, 3);
+		if (t == NULL) {
+			luaL_error(L, "Need target sprite");
+		}
+
+		int pos[2];
+		if (sprite_pos(s, &srt, t, pos) == 0) {
+			lua_pushinteger(L, pos[0]);
+			lua_pushinteger(L, pos[1]);
+			return 2;
+		} else {
+			return 0;
+		}
 	}
 	return luaL_error(L, "Only anchor can get world matrix");
 }
@@ -389,19 +437,86 @@ static int
 lsettext(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->type != TYPE_LABEL) {
-		return luaL_error(L, "Only label can set text");
+		return luaL_error(L, "Only label can set rich text");
 	}
-	lua_settop(L,2);
-	if (lua_isnil(L,2)) {
-		s->data.text = NULL;
-		lua_setuservalue(L,1);
+	if (lua_isnoneornil(L, 2)) {
+		s->data.rich_text = NULL;
+		lua_pushnil(L);
+		lua_setuservalue(L, 1);
 		return 0;
 	}
-	s->data.text = luaL_checkstring(L,2);
-	lua_createtable(L,1,0);
-	lua_pushvalue(L, -2);
+  if (lua_isstring(L, 2)) {
+    s->data.rich_text = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
+    s->data.rich_text->text = lua_tostring(L, 2);
+    s->data.rich_text->count = 0;
+		s->data.rich_text->fields = NULL;
+
+		lua_createtable(L, 2, 0);
+		lua_pushvalue(L, 2);
+		lua_rawseti(L, -2, 1);
+		lua_pushvalue(L, 3);
+		lua_rawseti(L, -2, 2);
+		lua_setuservalue(L, 1);
+    return 0;
+  }
+  
+  s->data.rich_text = NULL;
+  if (!lua_istable(L, 2) || lua_rawlen(L, 2) != 2) {
+    return luaL_error(L, "rich text must has a table with two items");
+  }
+  
+  lua_rawgeti(L, 2, 1);
+  const char *txt = luaL_checkstring(L, -1);
+  lua_pop(L, 1);
+  
+  lua_rawgeti(L, 2, 2);
+	int cnt = lua_rawlen(L, -1);
+  lua_pop(L, 1);
+  
+	struct rich_text *rich = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
+	
+	rich->text = txt;
+  rich->count = cnt;
+	int size = cnt * sizeof(struct label_field);
+	rich->fields = (struct label_field*)lua_newuserdata(L, size);
+
+	struct label_field *fields = rich->fields;
+	int i;
+  lua_rawgeti(L, 2, 2);
+	for (i=0; i<cnt; i++) {
+		lua_rawgeti(L, -1, i+1);
+		if (!lua_istable(L,-1)) {
+			return luaL_error(L, "rich text unit must be table");
+		}
+
+		lua_rawgeti(L, -1, 1);  //start
+		((struct label_field*)(fields+i))->start = luaL_checkinteger(L, -1);
+		lua_pop(L, 1);
+    
+    lua_rawgeti(L, -1, 2);  //end
+		((struct label_field*)(fields+i))->end = luaL_checkinteger(L, -1);
+    lua_pop(L, 1);
+
+		lua_rawgeti(L, -1, 3);  //color
+		((struct label_field*)(fields+i))->color = luaL_checkunsigned(L, -1); 
+		lua_pop(L, 1);
+
+		//extend here
+
+		lua_pop(L, 1);
+	}
+  lua_pop(L, 1);
+
+	lua_createtable(L,3,0);
+	lua_pushvalue(L, 3);
 	lua_rawseti(L, -2, 1);
+	lua_pushvalue(L, 4);
+	lua_rawseti(L, -2, 2);
+	lua_rawgeti(L, 2, 1);
+	lua_rawseti(L, -2, 3);
 	lua_setuservalue(L, 1);
+
+	s->data.rich_text = rich;
 	return 0;
 }
 
@@ -411,12 +526,11 @@ lgettext(lua_State *L) {
 	if (s->type != TYPE_LABEL) {
 		return luaL_error(L, "Only label can get text");
 	}
-	lua_getuservalue(L, 1);
-	if (!lua_istable(L,-1)) {
-		return 0;
-	}
-	lua_rawgeti(L, -1, 1);
-	return 1;
+  if (s->data.rich_text) {
+    lua_pushstring(L, s->data.rich_text->text);
+    return 1;
+  }
+	return 0;
 }
 
 static int
@@ -571,36 +685,6 @@ lmount(lua_State *L) {
 	return 0;
 }
 
-static void
-fill_srt(lua_State *L, struct srt *srt, int idx) {
-	if (lua_isnoneornil(L, idx)) {
-		srt->offx = 0;
-		srt->offy = 0;
-		srt->rot = 0;
-		srt->scalex = 1024;
-		srt->scaley = 1024;
-		return;
-	}
-	luaL_checktype(L,idx,LUA_TTABLE);
-	double x = readkey(L, idx, SRT_X, 0);
-	double y = readkey(L, idx, SRT_Y, 0);
-	double scale = readkey(L, idx, SRT_SCALE, 0);
-	double sx;
-	double sy;
-	double rot = readkey(L, idx, SRT_ROT, 0);
-	if (scale > 0) {
-		sx = sy = scale;
-	} else {
-		sx = readkey(L, idx, SRT_SX, 1);
-		sy = readkey(L, idx, SRT_SY, 1);
-	}
-	srt->offx = x*SCREEN_SCALE;
-	srt->offy = y*SCREEN_SCALE;
-	srt->scalex = sx*1024;
-	srt->scaley = sy*1024;
-	srt->rot = rot * (1024.0 / 360.0);
-}
-
 /*
 	userdata sprite
 	table { .x .y .sx .sy .rot }
@@ -636,8 +720,8 @@ ltext_size(lua_State *L) {
 		return luaL_error(L, "Ony label can get label_size");
 	}
 	int width = 0, height = 0;
-    if (s->data.text != NULL)
-        label_size(s->data.text, s->s.label, &width, &height);
+  if (s->data.rich_text != NULL)
+      label_size(s->data.rich_text->text, s->s.label, &width, &height);
 	lua_pushinteger(L, width);
 	lua_pushinteger(L, height);
     lua_pushinteger(L, s->s.label->size);
@@ -670,6 +754,20 @@ lchildren_name(lua_State *L) {
 }
 
 static int
+lset_anchor_particle(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_ANCHOR)
+		return luaL_error(L, "need a anchor");
+	s->ps = (struct particle_system*)lua_touserdata(L, 2);
+	struct sprite *p = (struct sprite *)lua_touserdata(L, 3);
+	if (p==NULL)
+		return luaL_error(L, "need a sprite");
+	s->data.mask = p->s.pic;
+
+	return 0;
+}
+
+static int
 lmatrix_multi_draw(lua_State *L) {
 	struct sprite *s = self(L);
 	int cnt = (int)luaL_checkinteger(L,3);
@@ -677,9 +775,11 @@ lmatrix_multi_draw(lua_State *L) {
 		return 0;
 	luaL_checktype(L,4,LUA_TTABLE);
 	luaL_checktype(L,5,LUA_TTABLE);
-//    luaL_checktype(L,6,LUA_TTABLE);
 	if (lua_rawlen(L, 4) < cnt) {
-		return luaL_error(L, "matrix length less then particle count");
+		return luaL_error(L, "matrix length must less then particle count");
+	}
+	if (lua_rawlen(L, 5) < cnt) {
+		return luaL_error(L, "color length must less then particle count");
 	}
 
 	struct matrix *mat = (struct matrix *)lua_touserdata(L, 2);
@@ -964,6 +1064,7 @@ lmethod(lua_State *L) {
 		{ "child_visible", lchild_visible },
 		{ "children_name", lchildren_name },
 		{ "world_pos", lgetwpos },
+		{ "anchor_particle", lset_anchor_particle },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);

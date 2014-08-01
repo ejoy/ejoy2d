@@ -312,9 +312,22 @@ draw_utf8(int unicode, int cx, int cy, int size, const struct srt *srt,
 	return (rect->w-1) * size / FONT_SIZE ;
 }
 
+static const struct label_field*
+get_rich_filed(const struct rich_text *rich, int idx) {
+  int i;
+  for (i=0;i<rich->count;i++) {
+    struct label_field *field = (struct label_field*)(rich->fields+i);
+    if (idx >= field->start && idx <= field->end) {
+      return field;
+    }
+  }
+  return NULL;
+}
+
 static void
-draw_line(const char *str, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg,
-          uint32_t color, int cy, int w, int start, int end) {
+draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg,
+          uint32_t color, int cy, int w, int start, int end, int *pre_char_cnt) {
+    const char *str = rich->text;
     int cx, j;
     int size = l->size;
     if (l->auto_scale != 0 && w > l->width)
@@ -336,10 +349,13 @@ draw_line(const char *str, struct pack_label * l, struct srt *srt, const struct 
             cx = (l->width - w)/2;
             break;
     }
-    
+  
+    int char_cnt = 0;
     for (j=start; j<end;) {
         int unicode;
         uint8_t c = (uint8_t)str[j];
+    
+        char_cnt++;
         if ((c&0x80) == 0) {
             unicode = get_unicode(str+j,1);
             j+=1;
@@ -359,10 +375,17 @@ draw_line(const char *str, struct pack_label * l, struct srt *srt, const struct 
             unicode = get_unicode(str+j,6);
             j+=6;
         }
-        
-        if(unicode != '\n')
-            cx+=draw_utf8(unicode, cx, cy, size, srt, color, arg) + l->space_w;
+      
+        if(unicode != '\n') {
+            const struct label_field *filed = get_rich_filed(rich, *pre_char_cnt+char_cnt);
+            int filed_color = color;
+            if (filed != NULL) {
+              filed_color = filed->color;
+            }
+            cx+=draw_utf8(unicode, cx, cy, size, srt, filed_color, arg) + l->space_w;
+        }
     }
+    *pre_char_cnt += char_cnt;
 }
 
 void
@@ -429,14 +452,15 @@ label_get_color(struct pack_label * l, const struct sprite_trans *arg) {
 }
 
 void
-label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg) {
+label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg) {
 	shader_texture(Tex);
 	uint32_t color = label_get_color(l, arg);
+  const char *str = rich->text;
 
 	char utf8[7];
 	int i;
-    int ch = 0, w = 0, cy = 0, pre = 0;
-	for (i=0; str[i];) {
+    int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0;
+	for (i=0; str && str[i];) {
 		int unicode;
 		uint8_t c = (uint8_t)str[i];
 		if ((c&0x80) == 0) {
@@ -464,13 +488,13 @@ label_draw(const char *str, struct pack_label * l, struct srt *srt, const struct
         }
         
         if((l->auto_scale == 0 && w > l->width) || unicode == '\n') {
-            draw_line(str, l, srt, arg, color, cy, w, pre, i);
+            draw_line(rich, l, srt, arg, color, cy, w, pre, i, &char_cnt);
             cy += ch;
             pre = i;
             w = 0; ch = 0;
         }
 	}
     
-    draw_line(str, l, srt, arg, color, cy, w, pre, i);
+	draw_line(rich, l, srt, arg, color, cy, w, pre, i, &char_cnt);
 }
 

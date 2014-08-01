@@ -30,13 +30,15 @@ struct sprite {
 	const char *name;	// name for parent
 	union {
 		struct sprite * children[1];
-		const char * text;
+		struct rich_text * rich_text;
 		int scissor;
 		struct pack_picture *mask;  //for picture only
 	} data;
+	struct particle_system *ps;
 };
 
 void sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt, const struct sprite_trans *arg);
+void sprite_drawparticle(struct sprite *s, struct particle_system *ps, const struct srt *srt);
 void sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg);
 
 // sprite_size must be call before sprite_init
@@ -59,6 +61,7 @@ int sprite_setframe(struct sprite *, int frame, bool force_child);
 void sprite_mount(struct sprite *, int index, struct sprite *);
 
 void sprite_aabb(struct sprite *s, struct srt *srt, int aabb[4]);
+int sprite_pos(struct sprite *s, struct srt *srt, struct sprite *t, int pos[2]);
 
 bool sprite_child_visible(struct sprite *s, const char * childname);
 
