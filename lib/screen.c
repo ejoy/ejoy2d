@@ -64,7 +64,7 @@ bool screen_is_visible(float x,float y)
 bool screen_is_poly_invisible(const float* points,int len,int stride)
 {
 	int i =0;
-	///测试在x的左边
+	// test left of x
 	bool invisible = true;
 	for(i =0; i < len && invisible;++i)
 	{
@@ -74,7 +74,7 @@ bool screen_is_poly_invisible(const float* points,int len,int stride)
 	if(invisible)
 		return true;
 	
-	//测试x轴的右边
+	// test right of axis x
 	invisible = true;
 	for(i =0; i < len && invisible;++i)
 	{
@@ -84,7 +84,7 @@ bool screen_is_poly_invisible(const float* points,int len,int stride)
 	if(invisible)
 		return true;
 
-	///测试在y的上边
+	// test above of axis y
 	invisible = true;
 	for(i =0; i < len && invisible;++i)
 	{
@@ -94,7 +94,7 @@ bool screen_is_poly_invisible(const float* points,int len,int stride)
 	if(invisible)
 		return true;
 	
-	//测试y轴的下边
+	// test below of axis y
 	invisible = true;
 	for(i =0; i < len && invisible;++i)
 	{
