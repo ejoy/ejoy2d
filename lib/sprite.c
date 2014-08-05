@@ -14,6 +14,11 @@
 #include <stdio.h>
 #include <limits.h>
 
+static bool enable_visible_test = true;
+void enable_screen_visible_test(bool enable) {
+	enable_visible_test = enable;
+}
+
 void
 sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt,  const struct sprite_trans *arg) {
 	struct matrix tmp;
@@ -32,7 +37,6 @@ sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const s
 		if (glid == 0)
 			continue;
 		shader_texture(glid);
-		bool is_visible = false;
 		for (j=0;j<4;j++) {
 			int xx = q->screen_coord[j*2+0];
 			int yy = q->screen_coord[j*2+1];
@@ -48,18 +52,18 @@ sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const s
 			vb[j*4+2] = tx;
 			vb[j*4+3] = ty;
 		}
-		if(is_visible || !screen_is_poly_invisible(vb,4,4))
+		if(!enable_visible_test || !screen_is_poly_invisible(vb,4,4))
 		{
-      if (mask != NULL) {
-        float tx = mask->rect[0].texture_coord[0];
-        float ty = mask->rect[0].texture_coord[1];
-        texture_coord(mask->rect[0].texid, &tx, &ty);
-        float delta_tx = tx - vb[2];
-        float delta_ty = ty - vb[3];
-        shader_mask(delta_tx, delta_ty);
-      }
+            if (mask != NULL) {
+                float tx = mask->rect[0].texture_coord[0];
+                float ty = mask->rect[0].texture_coord[1];
+                texture_coord(mask->rect[0].texid, &tx, &ty);
+                float delta_tx = tx - vb[2];
+                float delta_ty = ty - vb[3];
+                shader_mask(delta_tx, delta_ty);
+            }
 			shader_draw(vb, arg->color);
-    }
+        }
 	}
 }
 

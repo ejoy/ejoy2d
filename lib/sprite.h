@@ -67,4 +67,6 @@ bool sprite_child_visible(struct sprite *s, const char * childname);
 
 int ejoy2d_sprite(lua_State *L);
 
+void enable_screen_visible_test(bool enable);
+
 #endif

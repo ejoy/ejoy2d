@@ -1036,11 +1036,18 @@ lrecursion_frame(lua_State *L) {
 	return 1;
 }
 
+static int
+lenable_visible_test(lua_State *L) {
+    bool enable = lua_toboolean(L, 1);
+    enable_screen_visible_test(enable);
+    return 0;
+}
+
 static void
 lmethod(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "fetch", lfetch },
-    { "fetch_by_index", lfetch_by_index },
+        { "fetch_by_index", lfetch_by_index },
 		{ "mount", lmount },
 		{ NULL, NULL },
 	};
@@ -1076,6 +1083,7 @@ ejoy2d_sprite(lua_State *L) {
 		{ "new", lnew },
 		{ "label", lnewlabel },
 		{ "label_gen_outline", lgenoutline },
+        { "enable_visible_test", lenable_visible_test },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
