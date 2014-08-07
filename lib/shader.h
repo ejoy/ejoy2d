@@ -26,4 +26,7 @@ void shader_reset();
 
 int ejoy2d_shader(lua_State *L);
 
+
+void reset_drawcall_count();
+int drawcall_count();
 #endif

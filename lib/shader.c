@@ -222,10 +222,21 @@ shader_unload() {
 	RS = NULL;
 }
 
+static int drawcall = 0;
+void
+reset_drawcall_count() {
+	drawcall = 0;
+}
+int
+drawcall_count() {
+	return drawcall;
+}
+
 static void
 rs_commit() {
 	if (RS->object == 0)
 		return;
+	drawcall++;
 	glBindBuffer(GL_ARRAY_BUFFER, RS->vertex_buffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(struct quad) * RS->object, RS->vb, GL_DYNAMIC_DRAW);
 

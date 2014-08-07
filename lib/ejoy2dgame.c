@@ -273,11 +273,14 @@ ejoy2d_game_update(struct game *G, float time) {
 
 void
 ejoy2d_game_drawframe(struct game *G) {
+	reset_drawcall_count();
 	lua_pushvalue(G->L, DRAWFRAME_FUNCTION);
 	call(G->L, 0, 0);
 	lua_settop(G->L, TOP_FUNCTION);
 	shader_flush();
 	label_flush();
+	//int cnt = drawcall_count();
+	//printf("-> %d\n", cnt);
 }
 
 int
