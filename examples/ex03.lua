@@ -41,7 +41,10 @@ end
 function game.handle_error(...)
 end
 
-function game.resume()
+function game.on_resume()
+end
+
+function game.on_pause()
 end
 
 ej.start(game)
