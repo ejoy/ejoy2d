@@ -94,8 +94,8 @@ font_size(const char *str, int unicode, struct font_context *ctx) {
     FT_Face face = ctx->font;
     FT_UInt glyph_index = FT_Get_Char_Index(face, unicode);
 	if (!glyph_index) {
-		printf("cannot find glyph %d\n", unicode);
-		exit(1);
+		ctx->w = 0;
+		return;
 	}
     FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
     
