@@ -93,14 +93,14 @@ void
 font_size(const char *str, int unicode, struct font_context *ctx) {
     FT_Face face = ctx->font;
     FT_UInt glyph_index = FT_Get_Char_Index(face, unicode);
-	if (!glyph_index) {
-		printf("cannot find glyph %d\n", unicode);
-		exit(1);
-	}
+    if (!glyph_index) {
+        ctx->w = 0;
+        return;
+	  }
     FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
     
     int err = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
-	if (err)
+    if (err)
         _fault(err, "render failed");
 
     FT_GlyphSlot slot = face->glyph;
