@@ -2,6 +2,9 @@
 local ej = require "ejoy2d"
 local fw = require "ejoy2d.framework"
 local pack = require "ejoy2d.simplepackage"
+local matrix = require "ejoy2d.matrix"
+
+local config = require "examples.asset.config"
 
 pack.load {
 	pattern = fw.WorkDir..[[examples/asset/?]],
@@ -9,8 +12,6 @@ pack.load {
 }
 
 -- all sprites
-local pipeUp    = ej.sprite("birds", "PipeUp.png")
-local pipeDown  = ej.sprite("birds", "PipeDown.png")
 local spaceship = ej.sprite("birds", "Spaceship.png")
 local sky1 = ej.sprite("birds", "sky_bg")
 local sky2 = ej.sprite("birds", "sky_bg")
@@ -25,7 +26,7 @@ local function _width(s, scale)
   return -s:aabb({x=0,y=0, scale=scale})
 end
 
-local function _height(s, scale)
+local function _half_height(s, scale)
   local _, h1, _, h2 = s:aabb({x=0,y=0, scale=scale})
   return (-h1 + h2)/2
 end
@@ -81,21 +82,195 @@ function movingBg:update()
   self.obj2:ps(-self.diff, 0)
 end
 
-local land_height = _height(land1)
-local sky_height = _height(sky2)
+
+local half_land_height = _half_height(land1)
+local land_height = 2 * half_land_height
+local sky_height = _half_height(sky2)
+
+-- gen_matrix for birds_annimation
+-- 顶部向上拉长4倍
+-- 底部向下拉长四倍
+local function gen_matrix()
+  local scale = 4
+  local blank_height = config.blank_height * config.blank_height
+  local header_height = config.pipe_scale * config.header_height
+  local tail_height = config.pipe_scale * config.tail_height
+
+  local offset1 = (blank_height + tail_height)*0.5 + header_height
+  local offset2 = blank_height * 0.5 + header_height + scale * 0.5 * tail_height
+
+  local m1 = matrix{x=0, y=offset1}
+  m1 = m1:mul(matrix{sx=1,sy=scale, x=0, y=-offset2})
+  local m2 = matrix({x=0, y=-offset1})
+  m2 = m2:mul(matrix{sx=1, sy=scale, x=0, y=offset2})
+  print("----------m1:", m1:export())
+  print("----------m2:", m2:export())
+end
+gen_matrix()
+
+local pipe_obj = ej.sprite("birds", "pipe")
+
+math.randomseed(os.time())
+local pipe = {}
+pipe.__index = pipe
+
+pipe.blank_height = config.pipe_scale * config.blank_height
+pipe.init_x = -100
+pipe.min_init_y = pipe.blank_height * 0.5 + config.header_height * config.pipe_scale + 30
+pipe.max_init_y = screen_height - (0.5 * pipe.blank_height + land_height + config.header_height*config.pipe_scale + 10)
+
+function pipe.new()
+  local obj = {}
+  obj.sprite = ej.sprite("birds", "pipe")
+  obj.x = pipe.init_x
+  obj.y = math.random(pipe.min_init_y, pipe.max_init_y)
+
+  print("--------- sprite:", obj.x, obj.y)
+  --
+  obj.offset = 0
+  return setmetatable(obj, pipe)
+end
+
+function pipe:get_init_x()
+  return self.x
+end
+
+function pipe:get_x()
+  return self.x + self.offset
+end
+
+function pipe:get_y()
+  return self.y
+end
+
+function pipe:set_x(x)
+  self.offset = x - self.x
+end
+
+--
+function pipe:update(dist)
+  -- print("----------update:", dist, self.sprite, self.offset, dist, self.x, self.y)
+  self.offset = self.offset + dist
+  self.sprite:ps(self.offset, 0)
+end
+
+function pipe:draw()
+  self.sprite:draw({x=self.x, y=self.y})
+end
+
+local pipes = {}
+pipes.pool_length = 100
+pipes.pool = {} -- pipe pool
+pipes.choosed = {} -- choosed pipes
+pipes.width = 0 -- pipe width
+pipes.space = 190 -- pipe space
+pipes.speed = 0
+pipes.init_offset = screen_width + 200
+pipes.half_blank_height = pipe.blank_height / 2
+
+function pipes:init()
+  for i=1, self.pool_length do
+    self.pool[i] = pipe.new()
+  end
+  self.width = _real_width(self.pool[1].sprite)
+  self.max_pipes = math.ceil(screen_width / (self.width + self.space)) + 3
+  assert(self.max_pipes < self.pool_length)
+end
+
+function pipes:choose_pipe()
+  local i = math.random(#self.pool)
+  local p = table.remove(self.pool, i)
+  if #self.choosed == 0 then
+    p:set_x(self.init_offset)
+  else
+    local offset = self.choosed[#self.choosed]:get_x() + self.space + self.width
+    p:set_x(offset)
+  end
+  table.insert(self.choosed, p)
+end
+
+function pipes:reset()
+  self.offset = self.init_offset
+
+  while #self.choosed > 0 do
+    local p = table.remove(self.choosed)
+    table.insert(self.pool, p)
+  end
+  assert(#self.pool == self.pool_length)
+
+  for i=1, self.max_pipes do
+    self:choose_pipe()
+  end
+end
+
+function pipes:set_speed(speed)
+  self.speed = speed
+end
+
+function pipes:update()
+  if #self.choosed == 0 then
+    return
+  end
+
+  for _, p in ipairs(self.choosed) do
+    p:update(-self.speed)
+  end
+
+  local p1 = self.choosed[1]
+  local x = p1:get_x()
+  if x + self.width / 2 < 0 then
+    -- move out screen
+    -- choose new one
+    self:choose_pipe()
+    -- put back to pool
+    table.remove(self.choosed, 1)
+    table.insert(self.pool, p1)
+  end
+end
+
+function pipes:draw()
+  for _, p in ipairs(self.choosed) do
+    p:draw()
+  end
+end
+
+function pipes:front(x)
+  for _, p in ipairs(self.choosed) do
+    print("find front:", #self.choosed, x, p:get_x())
+    if p:get_x() >= x then
+      return p
+    end
+  end
+end
+
+function pipes:behind(x)
+  local ret
+  for _, p in ipairs(self.choosed) do
+    if p:get_x() >= x then
+      return ret
+    end
+    ret = p
+  end
+end
+
+pipes:init()
 
 local bg = {}
-bg.land = movingBg.new(land1, land2, screen_height - land_height)
-bg.sky = movingBg.new(sky1, sky2, screen_height - 2*land_height - sky_height)
+bg.land = movingBg.new(land1, land2, screen_height - half_land_height)
+bg.sky = movingBg.new(sky1, sky2, screen_height - land_height - sky_height)
+bg.pipes = pipes
 
 function bg:stop()
-  bg.land:set_speed(0)
   bg.sky:set_speed(0)
+  bg.pipes:set_speed(0)
+  bg.land:set_speed(0)
 end
 
 function bg:begin()
-  bg.land:set_speed(8)
+  pipes:reset()
   bg.sky:set_speed(2)
+  bg.pipes:set_speed(8)
+  bg.land:set_speed(8)
 end
 
 function bg:is_moving()
@@ -103,36 +278,39 @@ function bg:is_moving()
 end
 
 function bg:draw()
-  bg.land:draw()
   bg.sky:draw()
+  bg.pipes:draw()
+  bg.land:draw()
 end
 
 function bg:update()
-  bg.land:update()
   bg.sky:update()
+  bg.pipes:update()
+  bg.land:update()
 end
 
 local bird = {}
 bird.sprite = ej.sprite("birds", "bird")
-bird.scale = 5
 bird.x = 200
-bird.y = screen_height - 2 * land_height - _height(bird.sprite, bird.scale)
+bird.y = screen_height - land_height - _half_height(bird.sprite)
+bird.width = _width(bird.sprite)
+bird.height = _half_height(bird.sprite)
 
 -- const
-bird.touch_speed = 3.5
-bird.g = 0.09 -- 重力加速度
+bird.touch_speed = 10.5
+bird.g = 0.3 -- 重力加速度
 
 -- variable
 bird.speed = 0
 bird.dt = 0
 
-bird.height = 0
+bird.altitude = 0
 function bird:draw()
-  self.sprite:draw({x=self.x, y=self.y, scale = self.scale})
+  self.sprite:draw({x=self.x, y=self.y})
 end
 
-function bird:update()
-  print("jump:", self.speed, self.dt, self.height)
+function bird:update_altitude()
+  -- print("jump:", self.speed, self.dt, self.altitude)
   if self.speed > 0 then
     self.sprite:sr(360 - (self.speed/self.touch_speed) * 30)
   elseif self.speed == 0 then
@@ -141,28 +319,82 @@ function bird:update()
     self.sprite:sr((-self.speed /(self.touch_speed * 5))*75 % 75)
   end
 
-  self.height = self.height + self.speed
-  if self.height > 0 then
+  self.altitude = self.altitude + self.speed
+  if self.altitude > 0 then
     self.dt = self.dt + self.g
     self.speed = self.speed - self.dt
   else
-    self.height = 0
+    self.altitude = 0
     self.dt = 0
     self.speed = 0
     bg:stop()
   end
-  self.sprite:ps(0, -self.height)
+  self.sprite:ps(0, -self.altitude)
+end
+
+function bird:crash_with(p)
+  if not p then
+    return false
+  end
+
+  -- local offset_x = pipes.width + self.width
+  -- local offset_y = pipes.half_blank_height - self.height
+  local offset_x = pipes.width
+  local offset_y = pipes.half_blank_height
+  local x = p:get_x()
+  local y = p:get_y()
+
+  print("bird width/height", self.width, self.height)
+  print("blank width/height", pipes.width, pipes.half_blank_height)
+
+  print("-------- crash:", self.x, offset_x, x-offset_x, x+offset_x)
+  if self.x >= x - offset_x and self.x <= x + offset_x then
+    print("+++++++++ crash:", self.altitude, offset_y, y+offset_y, y-offset_y)
+    if self.altitude <= y + offset_y and self.altitude >= y - offset_y then
+      return false
+    end
+    return true
+  end
+  return false
+end
+
+function bird:crash()
+  local front = pipes:front(self.x)
+  if self:crash_with(front) then
+    print("========== crash front:", self.x, self.y, front:get_x(), front:get_y())
+    return true
+  end
+  local behind = pipes:behind(self.y)
+  if self:crash_with(behind) then
+    print("========== crash behind:", self.x, self.y, behind:get_x(), behind:get_y())
+    return true
+  end
+  return false
+end
+
+function bird:update()
+  --[[
+  if not bg:is_moving() then
+    return
+  end
+  ]]
+
+  self:update_altitude()
+  if self:crash() then
+    self.speed = -self.altitude
+  end
 end
 
 function bird:touch()
   if not bg:is_moving() then
-    self.height = 50
+    self.altitude = 50
     bg:begin()
   else
     self.speed = self.touch_speed
   end
   self.dt = 0
 end
+
 
 local game = {}
 
