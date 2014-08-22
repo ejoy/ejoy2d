@@ -692,16 +692,16 @@ lfetch_by_index(lua_State *L) {
 }
 
 static void
-unlink_parent(lua_State *L, const char * name, int idx) {
+unlink_parent(lua_State *L, struct sprite * child, int idx) {
 	lua_getuservalue(L, idx);	// reftable
 	lua_rawgeti(L, -1, 0);	// reftable parent
 	struct sprite * parent = lua_touserdata(L, -1);
 	if (parent == NULL) {
 		luaL_error(L, "No parent object");
 	}
-	int index = sprite_child(parent, name);
+	int index = sprite_child_ptr(parent, child);
 	if (index < 0) {
-		luaL_error(L, "Invalid parent child link");
+		luaL_error(L, "Invalid child object");
 	}
 	lua_getuservalue(L, -1);	// reftable parent parentref
 	lua_pushnil(L);
@@ -740,7 +740,7 @@ lmount(lua_State *L) {
 		lua_rawseti(L, -2, index+1);
 	} else {
 		if (child->parent) {
-			unlink_parent(L, child->name, 3);
+			unlink_parent(L, child, 3);
 		}
 		sprite_mount(s, index, child);
 		lua_pushvalue(L, 3);

@@ -243,6 +243,20 @@ sprite_child(struct sprite *s, const char * childname) {
 }
 
 int
+sprite_child_ptr(struct sprite *s, struct sprite *child) {
+	if (s->type != TYPE_ANIMATION)
+		return -1;
+	struct pack_animation *ani = s->s.ani;
+	int i;
+	for (i=0;i<ani->component_number;i++) {
+		struct sprite * c = s->data.children[i];
+		if (c == child)
+			return i;
+	}
+	return -1;
+}
+
+int
 sprite_component(struct sprite *s, int index) {
 	if (s->type != TYPE_ANIMATION)
 		return -1;
