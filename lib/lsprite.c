@@ -639,15 +639,24 @@ lsetter(lua_State *L) {
 }
 
 static void
+ref_parent(lua_State *L, int index, int parent) {
+	lua_getuservalue(L, index);
+	if (lua_isnil(L, -1)) {
+		lua_pop(L, 1);
+		lua_createtable(L, 0, 1);
+		lua_pushvalue(L, -1);
+		lua_setuservalue(L, -3);
+	}
+	lua_pushvalue(L, parent);
+	lua_rawseti(L, -2, 0);	// set self to uservalue[0] (parent)
+	lua_pop(L, 1);
+}
+
+static void
 fetch_parent(lua_State *L, int index) {
 	lua_getuservalue(L, 1);
 	lua_rawgeti(L, -1, index+1);
-	lua_getuservalue(L, -1);
-	if (lua_istable(L, -1)) {
-		lua_pushvalue(L, 1);
-		lua_rawseti(L, -2, 0);	// set self to uservalue[0] (parent)
-	}
-	lua_pop(L, 1);
+	ref_parent(L, -1, 1);
 }
 
 static int
@@ -735,12 +744,7 @@ lmount(lua_State *L) {
 		lua_rawseti(L, -2, index+1);
 
 		// set child's new parent
-		lua_getuservalue(L, 3);
-		if (lua_istable(L, -1)) {
-			lua_pushvalue(L, 1);
-			lua_rawseti(L, -2, 0);
-		}
-		lua_pop(L, 1);
+		ref_parent(L, 3, 1);
 	}
 	return 0;
 }
