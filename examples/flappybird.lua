@@ -4,22 +4,26 @@ local fw = require "ejoy2d.framework"
 local pack = require "ejoy2d.simplepackage"
 local matrix = require "ejoy2d.matrix"
 
-local config = require "examples.asset.config"
+local config = require "examples.asset.bird_config"
 
 pack.load {
 	pattern = fw.WorkDir..[[examples/asset/?]],
 	"birds",
 }
 
+local DEBUG = false
+
+local screen_width = 1024
+local screen_height = 768
+
 -- all sprites
-local spaceship = ej.sprite("birds", "Spaceship.png")
 local sky1 = ej.sprite("birds", "sky_bg")
 local sky2 = ej.sprite("birds", "sky_bg")
 local land1 = ej.sprite("birds", "land_bg")
 local land2 = ej.sprite("birds", "land_bg")
 
-local screen_width = 1024
-local screen_height = 768
+local scoreboard = ej.sprite("birds", "scoreboard")
+scoreboard.text = "0"
 
 -- util
 local function _width(s, scale)
@@ -89,10 +93,10 @@ local sky_height = _half_height(sky2)
 
 -- gen_matrix for birds_annimation
 -- 顶部向上拉长4倍
--- 底部向下拉长四倍
+-- 底部向下拉长4倍
 local function gen_matrix()
   local scale = 4
-  local blank_height = config.blank_height * config.blank_height
+  local blank_height = config.blank_height * config.pipe_scale
   local header_height = config.pipe_scale * config.header_height
   local tail_height = config.pipe_scale * config.tail_height
 
@@ -166,6 +170,7 @@ pipes.width = 0 -- pipe width
 pipes.space = 190 -- pipe space
 pipes.speed = 0
 pipes.init_offset = screen_width + 200
+--pipes.init_offset = screen_width
 pipes.half_blank_height = pipe.blank_height / 2
 
 function pipes:init()
@@ -187,6 +192,7 @@ function pipes:choose_pipe()
     p:set_x(offset)
   end
   table.insert(self.choosed, p)
+  print("---------------pipe:", #self.choosed, self.choosed[#self.choosed]:get_x(), self.choosed[#self.choosed]:get_y())
 end
 
 function pipes:reset()
@@ -234,20 +240,12 @@ function pipes:draw()
   end
 end
 
-function pipes:front(x)
-  for _, p in ipairs(self.choosed) do
-    print("find front:", #self.choosed, x, p:get_x())
-    if p:get_x() >= x then
-      return p
-    end
-  end
-end
-
-function pipes:behind(x)
+function pipes:find_clamp(x)
   local ret
-  for _, p in ipairs(self.choosed) do
+  for i, p in ipairs(self.choosed) do
     if p:get_x() >= x then
-      return ret
+      print("++++++ find clamp:", i, x, p:get_x(), p:get_y())
+      return p, ret
     end
     ret = p
   end
@@ -291,26 +289,48 @@ end
 
 local bird = {}
 bird.sprite = ej.sprite("birds", "bird")
-bird.x = 200
-bird.y = screen_height - land_height - _half_height(bird.sprite)
-bird.width = _width(bird.sprite)
-bird.height = _half_height(bird.sprite)
+bird.x = 350
+bird.half_width = _width(bird.sprite)
+bird.half_height = _half_height(bird.sprite)
+bird.y = screen_height - land_height - bird.half_height
 
 -- const
-bird.touch_speed = 10.5
-bird.g = 0.3 -- 重力加速度
+bird.touch_speed = 13.5
+bird.g = 1.5 -- 重力加速度
 
 -- variable
 bird.speed = 0
-bird.dt = 0
+bird.dt = bird.g
 
 bird.altitude = 0
+
+-- 死亡后保护一段时间才能开始游戏
+bird.guard_time = 0
+
+-- pipe
+bird.behind = nil
+bird.score = 0
+
+-- debug
+bird.stop = false
+
 function bird:draw()
   self.sprite:draw({x=self.x, y=self.y})
 end
 
+function bird:reset()
+  -- init height
+  self.altitude = 50
+  self.dt = self.g
+
+  self.guard_time = 0
+
+  self.behind = nil
+  self.score = 0
+end
+
 function bird:update_altitude()
-  -- print("jump:", self.speed, self.dt, self.altitude)
+  -- print("jump:", self.speed, self.altitude)
   if self.speed > 0 then
     self.sprite:sr(360 - (self.speed/self.touch_speed) * 30)
   elseif self.speed == 0 then
@@ -321,11 +341,9 @@ function bird:update_altitude()
 
   self.altitude = self.altitude + self.speed
   if self.altitude > 0 then
-    self.dt = self.dt + self.g
     self.speed = self.speed - self.dt
   else
     self.altitude = 0
-    self.dt = 0
     self.speed = 0
     bg:stop()
   end
@@ -339,65 +357,78 @@ function bird:crash_with(p)
 
   -- local offset_x = pipes.width + self.width
   -- local offset_y = pipes.half_blank_height - self.height
-  local offset_x = pipes.width
+  local offset_x = pipes.width/2
   local offset_y = pipes.half_blank_height
   local x = p:get_x()
   local y = p:get_y()
 
-  print("bird width/height", self.width, self.height)
-  print("blank width/height", pipes.width, pipes.half_blank_height)
+  local bird_x = self.x
+  local bird_y = self.y - self.altitude
 
-  print("-------- crash:", self.x, offset_x, x-offset_x, x+offset_x)
-  if self.x >= x - offset_x and self.x <= x + offset_x then
-    print("+++++++++ crash:", self.altitude, offset_y, y+offset_y, y-offset_y)
-    if self.altitude <= y + offset_y and self.altitude >= y - offset_y then
+  if x-offset_x <= bird_x and bird_x <= x + offset_x then
+    if y-offset_y <= bird_y and bird_y <= y+offset_y then
       return false
     end
+    print("-------------- crash -------------")
+    print(string.format("bird x:%d, y:%d, altitude:%d, half height:%d", bird_x, bird_y, self.altitude, self.half_height))
+    print(string.format("pipe x:%d, y:%d, offset_x:%d, offset_y:%d", x, y, offset_x, offset_y))
+    print("-------------- crash end-------------")
     return true
   end
   return false
 end
 
 function bird:crash()
-  local front = pipes:front(self.x)
-  if self:crash_with(front) then
-    print("========== crash front:", self.x, self.y, front:get_x(), front:get_y())
+  local front, behind = pipes:find_clamp(self.x)
+  if self:crash_with(front) or self:crash_with(behind) then
     return true
   end
-  local behind = pipes:behind(self.y)
-  if self:crash_with(behind) then
-    print("========== crash behind:", self.x, self.y, behind:get_x(), behind:get_y())
-    return true
+
+  if self.behind ~= behind then
+    self.behind = behind
+    self.score = self.score + 1
   end
+
   return false
 end
 
 function bird:update()
-  --[[
-  if not bg:is_moving() then
+  if self.stop then
     return
   end
-  ]]
+
+  if self.guard_time > 0 then
+    self.guard_time = self.guard_time - 1
+  end
+
+  if bg:is_moving() and self:crash() then
+    if DEBUG then
+      self.stop = true
+    else
+      self.dt = 10 * self.g
+      self.guard_time = 15
+    end
+    bg:stop()
+  end
 
   self:update_altitude()
-  if self:crash() then
-    self.speed = -self.altitude
-  end
+  scoreboard.text = tostring(self.score)
 end
 
 function bird:touch()
+  if self.stop or self.guard_time > 0 then
+    return
+  end
+
   if not bg:is_moving() then
-    self.altitude = 50
+    self:reset()
     bg:begin()
   else
     self.speed = self.touch_speed
   end
-  self.dt = 0
 end
 
-
 local game = {}
-
 function game.update()
   bg:update()
   bird:update()
@@ -408,6 +439,7 @@ function game.drawframe()
 
   bg:draw()
   bird:draw()
+  scoreboard:draw{x=screen_width/2, y=150}
 end
 
 function game.touch(what, x, y)
