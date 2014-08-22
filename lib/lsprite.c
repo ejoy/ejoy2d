@@ -720,10 +720,17 @@ lmount(lua_State *L) {
 	}
 	lua_getuservalue(L, 1);
 
+	struct sprite * child = (struct sprite *)lua_touserdata(L, 3);
+
 	lua_rawgeti(L, -1, index+1);
 	if (lua_isnil(L, -1)) {
 		lua_pop(L, 1);
 	} else {
+		struct sprite * c = lua_touserdata(L, -1);
+		if (c == child) {
+			// mount not change
+			return 0;
+		}
 		// try to remove parent ref
 		lua_getuservalue(L, -1);
 		if (lua_istable(L, -1)) {
@@ -733,7 +740,6 @@ lmount(lua_State *L) {
 		lua_pop(L, 2);
 	}
 
-	struct sprite * child = (struct sprite *)lua_touserdata(L, 3);
 	if (child == NULL) {
 		sprite_mount(s, index, NULL);
 		lua_pushnil(L);
