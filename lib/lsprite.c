@@ -198,10 +198,10 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 			lua_setuservalue(L, -3);	// set uservalue for sprite
 		}
 		struct sprite *c = newsprite(L, pack, childid);
-		c->name = sprite_childname(s, i);
-		sprite_mount(s, i, c);
-		update_message(c, pack, id, i, s->frame);
 		if (c) {
+			c->name = sprite_childname(s, i);
+			sprite_mount(s, i, c);
+			update_message(c, pack, id, i, s->frame);
 			lua_rawseti(L, -2, i+1);
 		}
 	}
@@ -710,7 +710,7 @@ unlink_parent(lua_State *L, struct sprite * child, int idx) {
 	}
 	lua_getuservalue(L, -1);	// reftable parent parentref
 	lua_pushnil(L);
-	lua_rawseti(L, -2, index);
+	lua_rawseti(L, -2, index+1);
 	lua_pop(L, 3);
 	sprite_mount(parent, index, NULL);
 }
