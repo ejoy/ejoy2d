@@ -283,7 +283,7 @@ shader_mask(float x, float y) {
     return;
   p->arg_mask_x = x;
   p->arg_mask_y = y;
-  rs_commit();
+//  rs_commit();
 	glUniform2f(p->mask, x, y);
 }
 
