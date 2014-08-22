@@ -169,7 +169,7 @@ newanchor(lua_State *L) {
 	s->name = NULL;
 	s->id = ANCHOR_ID;
 	s->type = TYPE_ANCHOR;
-	s->data.ps = NULL;
+	s->ps = NULL;
 	s->s.mat = (struct matrix *)(s+1);
 	matrix_identity(s->s.mat);
 
@@ -843,7 +843,7 @@ lset_anchor_particle(lua_State *L) {
 	lua_rawseti(L, -2, 0);
 	lua_pop(L, 1);
 
-	s->data.ps = (struct particle_system*)lua_touserdata(L, 2);
+	s->ps = (struct particle_system*)lua_touserdata(L, 2);
 	struct sprite *p = (struct sprite *)lua_touserdata(L, 3);
 	if (p==NULL)
 		return luaL_error(L, "need a sprite");

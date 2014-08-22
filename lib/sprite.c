@@ -551,9 +551,9 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 		}
 		return 0;
 	case TYPE_ANCHOR:
-		if (s->data.ps){
+		if (s->ps){
 			switch_program(t, PROGRAM_PICTURE);
-			sprite_drawparticle(s, s->data.ps, srt);
+			sprite_drawparticle(s, s->ps, srt);
 		}
 		anchor_update(s, srt, t);
 		return 0;
