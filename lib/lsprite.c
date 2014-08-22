@@ -740,7 +740,7 @@ lmount(lua_State *L) {
 		lua_rawseti(L, -2, index+1);
 	} else {
 		if (child->parent) {
-			unlink_parent(L, name, 3);
+			unlink_parent(L, child->name, 3);
 		}
 		sprite_mount(s, index, child);
 		lua_pushvalue(L, 3);
