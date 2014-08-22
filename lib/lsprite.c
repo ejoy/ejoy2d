@@ -169,7 +169,7 @@ newanchor(lua_State *L) {
 	s->name = NULL;
 	s->id = ANCHOR_ID;
 	s->type = TYPE_ANCHOR;
-	s->ps = NULL;
+	s->data.ps = NULL;
 	s->s.mat = (struct matrix *)(s+1);
 	matrix_identity(s->s.mat);
 
@@ -639,7 +639,7 @@ lsetter(lua_State *L) {
 }
 
 static void
-ref_parent(lua_State *L, int index, int parent) {
+get_reftable(lua_State *L, int index) {
 	lua_getuservalue(L, index);
 	if (lua_isnil(L, -1)) {
 		lua_pop(L, 1);
@@ -647,6 +647,11 @@ ref_parent(lua_State *L, int index, int parent) {
 		lua_pushvalue(L, -1);
 		lua_setuservalue(L, index);
 	}
+}
+
+static void
+ref_parent(lua_State *L, int index, int parent) {
+	get_reftable(L, index);
 	lua_pushvalue(L, parent);
 	lua_rawseti(L, -2, 0);	// set self to uservalue[0] (parent)
 	lua_pop(L, 1);
@@ -831,7 +836,14 @@ lset_anchor_particle(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->type != TYPE_ANCHOR)
 		return luaL_error(L, "need a anchor");
-	s->ps = (struct particle_system*)lua_touserdata(L, 2);
+
+	// ref the ps object to anchor object
+	get_reftable(L, 1);
+	lua_pushvalue(L, 2);
+	lua_rawseti(L, -2, 0);
+	lua_pop(L, 1);
+
+	s->data.ps = (struct particle_system*)lua_touserdata(L, 2);
 	struct sprite *p = (struct sprite *)lua_touserdata(L, 3);
 	if (p==NULL)
 		return luaL_error(L, "need a sprite");

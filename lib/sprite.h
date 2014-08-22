@@ -33,8 +33,8 @@ struct sprite {
 		struct rich_text * rich_text;
 		int scissor;
 		struct pack_picture *mask;  //for picture only
+		struct particle_system *ps;
 	} data;
-	struct particle_system *ps;
 };
 
 void sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt, const struct sprite_trans *arg);

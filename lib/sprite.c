@@ -166,7 +166,6 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	s->name = NULL;
 	s->id = id;
 	s->type = pack->type[id];
-	s->ps = NULL;
 	if (s->type == TYPE_ANIMATION) {
 		struct pack_animation * ani = (struct pack_animation *)pack->data[id];
 		s->s.ani = ani;
@@ -552,9 +551,9 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 		}
 		return 0;
 	case TYPE_ANCHOR:
-		if (s->ps){
+		if (s->data.ps){
 			switch_program(t, PROGRAM_PICTURE);
-			sprite_drawparticle(s, s->ps, srt);
+			sprite_drawparticle(s, s->data.ps, srt);
 		}
 		anchor_update(s, srt, t);
 		return 0;
