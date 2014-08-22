@@ -645,7 +645,7 @@ ref_parent(lua_State *L, int index, int parent) {
 		lua_pop(L, 1);
 		lua_createtable(L, 0, 1);
 		lua_pushvalue(L, -1);
-		lua_setuservalue(L, -3);
+		lua_setuservalue(L, index);
 	}
 	lua_pushvalue(L, parent);
 	lua_rawseti(L, -2, 0);	// set self to uservalue[0] (parent)
