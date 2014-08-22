@@ -837,10 +837,12 @@ lset_anchor_particle(lua_State *L) {
 	if (s->type != TYPE_ANCHOR)
 		return luaL_error(L, "need a anchor");
 
-	// ref the ps object to anchor object
+	// ref the ps object and pic to anchor object
 	get_reftable(L, 1);
 	lua_pushvalue(L, 2);
 	lua_rawseti(L, -2, 0);
+	lua_pushvalue(L, 3);
+	lua_rawseti(L, -2, 1);
 	lua_pop(L, 1);
 
 	s->ps = (struct particle_system*)lua_touserdata(L, 2);
