@@ -670,13 +670,17 @@ lmount(lua_State *L) {
 	struct sprite * child = (struct sprite *)lua_touserdata(L, 3);
 	if (child == NULL) {
 		sprite_mount(s, index, NULL);
+		lua_rawgeti(L, -2, index+1);
+		struct sprite * oldchild = (struct sprite *)lua_touserdata(L, -1);
+		if (oldchild) {
+			oldchild->parent = NULL;
+		}
+		lua_pop(L, 1);
 		lua_pushnil(L);
 		lua_rawseti(L, -2, index+1);
 	} else {
 		if (child->parent) {
-			struct sprite* p = child->parent;
-			sprite_mount(p, index, NULL);
-			//return luaL_error(L, "Can't mount sprite %p twice,pre parent:%p: %s", child,child->parent,child->name);
+			return luaL_error(L, "Can't mount sprite %p twice,pre parent:%p: %s", child,child->parent,child->name);
 		}
 		sprite_mount(s, index, child);
 		lua_pushvalue(L, 3);
@@ -1096,4 +1100,26 @@ ejoy2d_sprite(lua_State *L) {
 	lua_setfield(L, -2, "set");
 
 	return 1;
+}
+return NULL;
+}
+
+int
+sprite_setframe(struct sprite *s, int frame, bool force_child) {
+	if (s == NULL || s->type != TYPE_ANIMATION)
+		return 0;
+	s->frame = frame;
+	int total_frame = s->total_frame;
+	int i;
+	struct pack_animation * ani = s->s.ani;
+	for (i=0;i<ani->component_number;i++) {
+		if (ani->component[i].id != ANCHOR_ID && 
+				(force_child || ani->component[i].name == NULL)) {
+			int t = sprite_setframe(s->data.children[i],frame, force_child);
+			if (t > total_frame) {
+				total_frame = t;
+			}
+		}
+	}
+	return total_frame;
 }
