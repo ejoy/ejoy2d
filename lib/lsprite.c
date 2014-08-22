@@ -656,7 +656,10 @@ static void
 fetch_parent(lua_State *L, int index) {
 	lua_getuservalue(L, 1);
 	lua_rawgeti(L, -1, index+1);
-	ref_parent(L, lua_gettop(L), 1);
+	// A child may not exist, but the name is valid. (empty dummy child)
+	if (!lua_isnil(L, -1)) {
+		ref_parent(L, lua_gettop(L), 1);
+	}
 }
 
 static int
