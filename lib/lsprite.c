@@ -667,15 +667,17 @@ lmount(lua_State *L) {
 		return luaL_error(L, "No child name %s", name);
 	}
 	lua_getuservalue(L, 1);
+
+	lua_rawgeti(L, -1, index+1);
+	struct sprite * oldchild = (struct sprite *)lua_touserdata(L, -1);
+	if (oldchild) {
+		oldchild->parent = NULL;
+	}
+	lua_pop(L, 1);
+
 	struct sprite * child = (struct sprite *)lua_touserdata(L, 3);
 	if (child == NULL) {
 		sprite_mount(s, index, NULL);
-		lua_rawgeti(L, -2, index+1);
-		struct sprite * oldchild = (struct sprite *)lua_touserdata(L, -1);
-		if (oldchild) {
-			oldchild->parent = NULL;
-		}
-		lua_pop(L, 1);
 		lua_pushnil(L);
 		lua_rawseti(L, -2, index+1);
 	} else {
