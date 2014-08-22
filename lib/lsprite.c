@@ -656,7 +656,7 @@ static void
 fetch_parent(lua_State *L, int index) {
 	lua_getuservalue(L, 1);
 	lua_rawgeti(L, -1, index+1);
-	ref_parent(L, -1, 1);
+	ref_parent(L, lua_gettop(L), 1);
 }
 
 static int
