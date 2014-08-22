@@ -648,8 +648,10 @@ lfetch(lua_State *L) {
 	lua_getuservalue(L, 1);
 	lua_rawgeti(L, -1, index+1);
 	lua_getuservalue(L, -1);
-	lua_pushvalue(L, 1);
-	lua_rawseti(L, -2, 0);	// set self to uservalue[0] (parent)
+	if (lua_istable(L, -1)) {
+		lua_pushvalue(L, 1);
+		lua_rawseti(L, -2, 0);	// set self to uservalue[0] (parent)
+	}
 	lua_pop(L, 1);
 
 	return 1;
@@ -670,8 +672,12 @@ lfetch_by_index(lua_State *L) {
 	lua_getuservalue(L, 1);
 	lua_rawgeti(L, -1, index+1);
 
-	lua_pushvalue(L, 1);
-	lua_rawseti(L, -3, 0);	// set self to uservalue[0] (parent)
+	lua_getuservalue(L, -1);
+	if (lua_istable(L,-1)) {
+		lua_pushvalue(L, 1);
+		lua_rawseti(L, -2, 0);	// set self to uservalue[0] (parent)
+	}
+	lua_pop(L, 1);
 
 	return 1;
 }
