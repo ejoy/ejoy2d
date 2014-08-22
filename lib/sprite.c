@@ -403,6 +403,7 @@ label_pos(int m[6], struct pack_label * l, struct srt *srt, const struct sprite_
 	pos[1] = (int)((c_x * m[1] + c_y * m[3]) / 1024 + m[5])/SCREEN_SCALE;
 }
 
+/*
 static void
 panel_pos(int m[6], struct pack_pannel * l, struct srt *srt, const struct sprite_trans *arg, int pos[2]) {
 	float c_x = l->width * SCREEN_SCALE / 2.0;
@@ -410,7 +411,7 @@ panel_pos(int m[6], struct pack_pannel * l, struct srt *srt, const struct sprite
 	pos[0] = (int)((c_x * m[0] + c_y * m[2]) / 1024 + m[4])/SCREEN_SCALE;
 	pos[1] = (int)((c_x * m[1] + c_y * m[3]) / 1024 + m[5])/SCREEN_SCALE;
 }
-
+*/
 static void
 picture_pos(int m[6], struct pack_picture *picture, const struct srt *srt,  const struct sprite_trans *arg, int pos[2]) {
 	int max_x = INT_MIN;
@@ -496,8 +497,6 @@ void
 sprite_drawparticle(struct sprite *s, struct particle_system *ps, const struct srt *srt) {
 	int n = ps->particleCount;
 	int i;
-	struct sprite_trans temp;
-	struct matrix temp_matrix;
 	struct matrix *old_m = s->t.mat;
 	uint32_t old_c = s->t.color;
 
