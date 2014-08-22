@@ -10,17 +10,6 @@ pack.load {
 local obj = ej.sprite("sample","cannon")
 local turret = obj.turret
 
-
-local obj_ = ej.sprite("sample","cannon")
-local turret_ = obj_.turret
-
-turret_.parent[turret_.name] =  nil
---obj_.turret = nil
-obj.turret = turret_
-
-turret = turret_
-
-
 -- set position (-100,0) scale (0.5)
 obj:ps(-100,0,0.5)
 
