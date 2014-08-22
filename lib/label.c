@@ -313,7 +313,7 @@ draw_utf8(int unicode, int cx, int cy, int size, const struct srt *srt,
 }
 
 static const struct label_field*
-get_rich_filed(const struct rich_text *rich, int idx) {
+get_rich_field(const struct rich_text *rich, int idx) {
   int i;
   for (i=0;i<rich->count;i++) {
     struct label_field *field = (struct label_field*)(rich->fields+i);
@@ -377,12 +377,12 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
         }
       
         if(unicode != '\n') {
-            const struct label_field *filed = get_rich_filed(rich, *pre_char_cnt+char_cnt);
-            int filed_color = color;
-            if (filed != NULL) {
-              filed_color = filed->color;
+            const struct label_field *field = get_rich_field(rich, *pre_char_cnt+char_cnt);
+            int field_color = color;
+            if (field != NULL) {
+              field_color = color_mul(field->color,  color | 0xffffff);
             }
-            cx+=draw_utf8(unicode, cx, cy, size, srt, filed_color, arg) + l->space_w;
+            cx+=draw_utf8(unicode, cx, cy, size, srt, field_color, arg) + l->space_w;
         }
     }
     *pre_char_cnt += char_cnt;
