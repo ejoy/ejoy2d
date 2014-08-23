@@ -8,6 +8,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+struct anchor_data {
+	struct particle_system *ps;
+	struct pack_picture *pic;
+	struct matrix mat;
+};
+
 struct sprite {
 	struct sprite * parent;
 	uint16_t type;
@@ -33,12 +39,12 @@ struct sprite {
 		struct rich_text * rich_text;
 		int scissor;
 		struct pack_picture *mask;  //for picture only
+		struct anchor_data *anchor;
 	} data;
 	struct particle_system *ps;	// todo: can ps move into union ?
 };
 
 void sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt, const struct sprite_trans *arg);
-void sprite_drawparticle(struct sprite *s, struct particle_system *ps, const struct srt *srt);
 void sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg);
 
 // sprite_size must be call before sprite_init

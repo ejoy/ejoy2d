@@ -182,7 +182,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 		s->start_frame = 0;
 		s->total_frame = 0;
 		s->frame = 0;
-		s->data.rich_text = NULL;
+		memset(&s->data, 0, sizeof(s->data));
 		assert(sz >= sizeof(struct sprite) - sizeof(struct sprite *));
 		if (s->type == TYPE_PANNEL) {
 			struct pack_pannel * pp = (struct pack_pannel *)pack->data[id];
@@ -506,8 +506,8 @@ child_pos(struct sprite *s, struct srt *srt, struct sprite_trans *ts, struct spr
 	return 1;
 }
 
-void
-sprite_drawparticle(struct sprite *s, struct particle_system *ps, const struct srt *srt) {
+static void
+drawparticle(struct sprite *s, struct particle_system *ps, struct pack_picture *pic, const struct srt *srt) {
 	int n = ps->particleCount;
 	int i;
 	struct matrix *old_m = s->t.mat;
@@ -521,7 +521,7 @@ sprite_drawparticle(struct sprite *s, struct particle_system *ps, const struct s
 
 		s->t.mat = mat;
 		s->t.color = color;
-		sprite_drawquad(s->data.mask, NULL, NULL, &s->t);
+		sprite_drawquad(pic, NULL, NULL, &s->t);
 	}
 	shader_defaultblend();
 
@@ -551,9 +551,9 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 		}
 		return 0;
 	case TYPE_ANCHOR:
-		if (s->ps){
+		if (s->data.anchor->ps){
 			switch_program(t, PROGRAM_PICTURE);
-			sprite_drawparticle(s, s->ps, srt);
+			drawparticle(s, s->data.anchor->ps, s->data.anchor->pic, srt);
 		}
 		anchor_update(s, srt, t);
 		return 0;

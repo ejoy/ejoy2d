@@ -157,7 +157,7 @@ update_message(struct sprite * s, struct sprite_pack * pack, int parentid, int c
 
 static struct sprite *
 newanchor(lua_State *L) {
-	int sz = sizeof(struct sprite) + sizeof(struct matrix);
+	int sz = sizeof(struct sprite) + sizeof(struct anchor_data);
 	struct sprite * s = (struct sprite *)lua_newuserdata(L, sz);
 	s->parent = NULL;
 	s->t.mat = NULL;
@@ -169,8 +169,10 @@ newanchor(lua_State *L) {
 	s->name = NULL;
 	s->id = ANCHOR_ID;
 	s->type = TYPE_ANCHOR;
-	s->ps = NULL;
-	s->s.mat = (struct matrix *)(s+1);
+	s->data.anchor = (struct anchor_data *)(s+1);
+	s->data.anchor->ps = NULL;
+	s->data.anchor->pic = NULL;
+	s->s.mat = &s->data.anchor->mat;
 	matrix_identity(s->s.mat);
 
 	return s;
@@ -841,15 +843,13 @@ lset_anchor_particle(lua_State *L) {
 	get_reftable(L, 1);
 	lua_pushvalue(L, 2);
 	lua_rawseti(L, -2, 0);
-	lua_pushvalue(L, 3);
-	lua_rawseti(L, -2, 1);
 	lua_pop(L, 1);
 
-	s->ps = (struct particle_system*)lua_touserdata(L, 2);
+	s->data.anchor->ps = (struct particle_system*)lua_touserdata(L, 2);
 	struct sprite *p = (struct sprite *)lua_touserdata(L, 3);
-	if (p==NULL)
-		return luaL_error(L, "need a sprite");
-	s->data.mask = p->s.pic;
+	if (p==NULL || p->type != TYPE_PICTURE)
+		return luaL_error(L, "need a picture sprite");
+	s->data.anchor->pic = p->s.pic;
 
 	return 0;
 }
