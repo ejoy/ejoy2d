@@ -29,6 +29,7 @@ newlabel(lua_State *L, struct pack_label *label) {
 	s->t.program = PROGRAM_DEFAULT;
 	s->message = false;
 	s->visible = true;
+	s->multimount = false;
 	s->name = NULL;
 	s->id = 0;
 	s->type = TYPE_LABEL;
@@ -166,6 +167,7 @@ newanchor(lua_State *L) {
 	s->t.program = PROGRAM_DEFAULT;
 	s->message = false;
 	s->visible = false;	// anchor is invisible by default
+	s->multimount = false;
 	s->name = NULL;
 	s->id = ANCHOR_ID;
 	s->type = TYPE_ANCHOR;
@@ -612,8 +614,8 @@ lgetter(lua_State *L) {
 		{"message", lgetmessage },
 		{"matrix", lgetmat },
 		{"world_matrix", lgetwmat },
-		{"parent_name", lgetparentname },
-		{"has_parent", lhasparent },
+		{"parent_name", lgetparentname },	// todo: maybe unused , use parent instead
+		{"has_parent", lhasparent },	// todo: maybe unused , use parent instead
 		{"parent", lgetparent },
 		{NULL, NULL},
 	};
@@ -676,7 +678,9 @@ lfetch(lua_State *L) {
 	int index = sprite_child(s, name);
 	if (index < 0)
 		return 0;
-	fetch_parent(L, index);
+	if (!s->multimount)	{ // multimount has no parent
+		fetch_parent(L, index);
+	}
 
 	return 1;
 }
@@ -738,13 +742,17 @@ lmount(lua_State *L) {
 			// mount not change
 			return 0;
 		}
-		// try to remove parent ref
-		lua_getuservalue(L, -1);
-		if (lua_istable(L, -1)) {
-			lua_pushnil(L);
-			lua_rawseti(L, -2, 0);
+		if (!c->multimount) {
+			// try to remove parent ref
+			lua_getuservalue(L, -1);
+			if (lua_istable(L, -1)) {
+				lua_pushnil(L);
+				lua_rawseti(L, -2, 0);
+			}
+			lua_pop(L, 2);
+		} else {
+			lua_pop(L, 1);
 		}
-		lua_pop(L, 2);
 	}
 
 	if (child == NULL) {
@@ -759,8 +767,10 @@ lmount(lua_State *L) {
 		lua_pushvalue(L, 3);
 		lua_rawseti(L, -2, index+1);
 
-		// set child's new parent
-		ref_parent(L, 3, 1);
+		if (!child->multimount)	{ // multimount has no parent
+			// set child's new parent
+			ref_parent(L, 3, 1);
+		}
 	}
 	return 0;
 }
@@ -1164,11 +1174,73 @@ lmethod(lua_State *L) {
 	luaL_setfuncs(L,l2,nk);
 }
 
+static int
+lnewproxy(lua_State *L) {
+	static struct pack_part part = {
+		{
+			NULL,	// mat
+			0xffffffff,	// color
+			0,	// additive
+			PROGRAM_DEFAULT,
+			0,	// _dummy
+		},	// trans
+		0,	// component_id
+		0,	// touchable
+	};
+	static struct pack_frame frame = {
+		&part,
+		1,	// n
+		0,	// _dummy
+	};
+	static struct pack_action action = {
+		NULL,	// name
+		1,	// number
+		0,	// start_frame
+	};
+	static struct pack_animation ani = {
+		&frame,
+		&action,
+		1,	// frame_number
+		1,	// action_number
+		1,	// component_number
+		0,	// _dummy
+		{{
+			"proxy",	// name
+			0,	// id
+			0,	// _dummy
+		}},
+	};
+	struct sprite * s = lua_newuserdata(L, sizeof(struct sprite));
+	lua_newtable(L);
+	lua_setuservalue(L, -2);
+
+	s->parent = NULL;
+	s->s.ani = &ani;
+	s->t.mat = NULL;
+	s->t.color = 0xffffffff;
+	s->t.additive = 0;
+	s->t.program = PROGRAM_DEFAULT;
+	s->message = false;
+	s->visible = true;
+	s->multimount = true;
+	s->name = NULL;
+	s->id = 0;
+	s->type = TYPE_ANIMATION;
+	s->start_frame = 0;
+	s->total_frame = 0;
+	s->frame = 0;
+	s->data.children[0] = NULL;
+	sprite_action(s, NULL);
+
+	return 1;
+}
+
 int
 ejoy2d_sprite(lua_State *L) {
 	luaL_Reg l[] ={
 		{ "new", lnew },
 		{ "label", lnewlabel },
+		{ "proxy", lnewproxy },
 		{ "label_gen_outline", lgenoutline },
         { "enable_visible_test", lenable_visible_test },
 		{ NULL, NULL },

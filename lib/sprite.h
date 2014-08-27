@@ -33,6 +33,7 @@ struct sprite {
 	int frame;
 	bool visible;
 	bool message;
+	bool multimount;
 	const char *name;	// name for parent
 	union {
 		struct sprite * children[1];

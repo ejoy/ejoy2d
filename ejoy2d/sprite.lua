@@ -111,4 +111,9 @@ function sprite.label(tbl)
 	end
 end
 
+function sprite.proxy()
+	local cobj = c.proxy()
+	return debug.setmetatable(cobj, sprite_meta)
+end
+
 return sprite

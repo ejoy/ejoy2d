@@ -163,6 +163,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	s->t.program = PROGRAM_DEFAULT;
 	s->message = false;
 	s->visible = true;
+	s->multimount = false;
 	s->name = NULL;
 	s->id = id;
 	s->type = pack->type[id];
@@ -199,13 +200,15 @@ sprite_mount(struct sprite *parent, int index, struct sprite *child) {
 	struct sprite * oldc = parent->data.children[index];
 	if (oldc) {
 		oldc->parent = NULL;
-    oldc->name = NULL;
+		oldc->name = NULL;
 	}
 	parent->data.children[index] = child;
 	if (child) {
 		assert(child->parent == NULL);
-		child->name = ani->component[index].name;
-		child->parent = parent;
+		if (!child->multimount) {
+			child->name = ani->component[index].name;
+			child->parent = parent;
+		}
 		if (oldc && oldc->type == TYPE_ANCHOR)
 			child->message = oldc->message;
 	}
