@@ -41,7 +41,6 @@ struct sprite {
 		struct pack_picture *mask;  //for picture only
 		struct anchor_data *anchor;
 	} data;
-	struct particle_system *ps;	// todo: can ps move into union ?
 };
 
 void sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt, const struct sprite_trans *arg);
