@@ -1,10 +1,12 @@
 local s = require "ejoy2d.shader.c"
 
 local PRECISION = ""
+local PRECISION_HIGH = ""
 
 if s.version() == 2 then
 	-- Opengl ES 2.0 need float precision specifiers
 	PRECISION = "precision lowp float;\n"
+	PRECISION_HIGH = "precision highp float;\n"
 end
 
 local sprite_fs = [[
@@ -31,7 +33,7 @@ varying vec2 v_texcoord;
 varying vec4 v_color;
 
 void main() {
-	gl_Position = position + vec4(-1,1,0,0);
+	gl_Position = position + vec4(-1.0,1.0,0,0);
 	v_texcoord = texcoord;
 	v_color = color;
 }
@@ -147,15 +149,34 @@ void main() {
 }
 ]]
 
+local renderbuffer_vs = [[
+attribute vec4 position;
+attribute vec2 texcoord;
+attribute vec4 color;
+
+varying vec2 v_texcoord;
+varying vec4 v_color;
+
+uniform vec4 st;
+
+void main() {
+	gl_Position.x = position.x * st.x + st.z -1.0;
+	gl_Position.y = position.y * st.y + st.w +1.0;
+	v_texcoord = texcoord;
+	v_color = color;
+}
+]]
+
 local shader = {}
 
 local shader_name = {
 	NORMAL = 0,
-	TEXT = 1,
-	EDGE = 2,
-	GRAY = 3,
-	COLOR = 4,
-	BLEND = 5,
+	RENDERBUFFER = 1,
+	TEXT = 2,
+	EDGE = 3,
+	GRAY = 4,
+	COLOR = 5,
+	BLEND = 6,
 }
 
 function shader.init()
@@ -165,6 +186,7 @@ function shader.init()
 	s.load(shader_name.GRAY, PRECISION .. gray_fs, PRECISION .. sprite_vs)
 	s.load(shader_name.COLOR, PRECISION .. color_fs, PRECISION .. sprite_vs)
 	s.load(shader_name.BLEND, PRECISION .. blend_fs, PRECISION .. blend_vs)
+	s.load(shader_name.RENDERBUFFER, PRECISION .. sprite_fs, PRECISION_HIGH .. renderbuffer_vs)
 end
 
 shader.draw = s.draw

@@ -315,8 +315,8 @@ color_add(uint32_t c1, uint32_t c2) {
 		clamp(b1+b2);
 }
 
-static struct sprite_trans *
-trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_trans *t, struct matrix *tmp_matrix) {
+struct sprite_trans * 
+sprite_trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_trans *t, struct matrix *tmp_matrix) {
 	if (b == NULL) {
 		return a;
 	}
@@ -458,7 +458,7 @@ static int
 child_pos(struct sprite *s, struct srt *srt, struct sprite_trans *ts, struct sprite *t, int pos[2]) {
 	struct sprite_trans temp;
 	struct matrix temp_matrix;
-	struct sprite_trans *st = trans_mul(&s->t, ts, &temp, &temp_matrix);
+	struct sprite_trans *st = sprite_trans_mul(&s->t, ts, &temp, &temp_matrix);
 	if (s == t) {
 		struct matrix tmp;
 		if (st->mat == NULL) {
@@ -501,7 +501,7 @@ child_pos(struct sprite *s, struct srt *srt, struct sprite_trans *ts, struct spr
 		}
 		struct sprite_trans temp2;
 		struct matrix temp_matrix2;
-		struct sprite_trans *ct = trans_mul(&pp->t, st, &temp2, &temp_matrix2);
+		struct sprite_trans *ct = sprite_trans_mul(&pp->t, st, &temp2, &temp_matrix2);
 		if (child_pos(child, srt, ct, t, pos) == 0) {
 			return 0;
 		}
@@ -536,7 +536,7 @@ static int
 draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 	struct sprite_trans temp;
 	struct matrix temp_matrix;
-	struct sprite_trans *t = trans_mul(&s->t, ts, &temp, &temp_matrix);
+	struct sprite_trans *t = sprite_trans_mul(&s->t, ts, &temp, &temp_matrix);
 	switch (s->type) {
 	case TYPE_PICTURE:
 		switch_program(t, PROGRAM_PICTURE);
@@ -589,7 +589,7 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 		}
 		struct sprite_trans temp2;
 		struct matrix temp_matrix2;
-		struct sprite_trans *ct = trans_mul(&pp->t, t, &temp2, &temp_matrix2);
+		struct sprite_trans *ct = sprite_trans_mul(&pp->t, t, &temp2, &temp_matrix2);
 		scissor += draw_child(child, srt, ct);
 	}
 	for (i=0;i<scissor;i++) {
