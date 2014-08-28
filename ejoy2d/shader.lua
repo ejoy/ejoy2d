@@ -149,6 +149,19 @@ void main() {
 }
 ]]
 
+local renderbuffer_fs = [[
+varying vec2 v_texcoord;
+varying vec4 v_color;
+uniform sampler2D texture0;
+
+void main() {
+	vec4 tmp = texture2D(texture0, v_texcoord);
+	gl_FragColor.xyz = tmp.xyz * v_color.xyz;
+	gl_FragColor.w = tmp.w;
+	gl_FragColor *= v_color.w;
+}
+]]
+
 local renderbuffer_vs = [[
 attribute vec4 position;
 attribute vec2 texcoord;
@@ -162,6 +175,8 @@ uniform vec4 st;
 void main() {
 	gl_Position.x = position.x * st.x + st.z -1.0;
 	gl_Position.y = position.y * st.y + st.w +1.0;
+	gl_Position.z = position.z;
+	gl_Position.w = position.w;
 	v_texcoord = texcoord;
 	v_color = color;
 }
@@ -186,7 +201,7 @@ function shader.init()
 	s.load(shader_name.GRAY, PRECISION .. gray_fs, PRECISION .. sprite_vs)
 	s.load(shader_name.COLOR, PRECISION .. color_fs, PRECISION .. sprite_vs)
 	s.load(shader_name.BLEND, PRECISION .. blend_fs, PRECISION .. blend_vs)
-	s.load(shader_name.RENDERBUFFER, PRECISION .. sprite_fs, PRECISION_HIGH .. renderbuffer_vs)
+	s.load(shader_name.RENDERBUFFER, PRECISION .. renderbuffer_fs, PRECISION_HIGH .. renderbuffer_vs)
 end
 
 shader.draw = s.draw
