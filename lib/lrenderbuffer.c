@@ -43,7 +43,7 @@ ldrawbuffer(lua_State *L) {
 	float x = luaL_checknumber(L, 2);
 	float y = luaL_checknumber(L, 3);
 	float scale = luaL_optnumber(L, 4, 1.0);
-	shader_drawbuffer(rb, x,y,scale);
+	shader_drawbuffer(rb, x * SCREEN_SCALE,y * SCREEN_SCALE,scale);
 	return 0;
 }
 

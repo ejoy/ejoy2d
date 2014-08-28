@@ -25,7 +25,7 @@ local screencoord = { x = 512, y = 384, scale = 1.2 }
 local p = 0
 
 function game.update()
-	p=p+10
+	p=p+1
 end
 
 function game.drawframe()
