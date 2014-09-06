@@ -1140,6 +1140,26 @@ lenable_visible_test(lua_State *L) {
     return 0;
 }
 
+static int
+lcalc_matrix(lua_State *L) {
+	struct sprite * s = self(L);
+	struct matrix * mat = lua_touserdata(L, 2);
+	if (mat == NULL) {
+		return luaL_argerror(L, 2, "need a matrix");
+	}
+	struct matrix *local_matrix = s->t.mat;
+	if (local_matrix) {
+		struct matrix tmp;
+		sprite_matrix(s, &tmp);
+		matrix_mul(mat, local_matrix, &tmp);
+	} else {
+		sprite_matrix(s, mat);
+	}
+
+	lua_settop(L, 2);
+	return 1;
+}
+
 static void
 lmethod(lua_State *L) {
 	luaL_Reg l[] = {
@@ -1169,6 +1189,7 @@ lmethod(lua_State *L) {
 		{ "children_name", lchildren_name },
 		{ "world_pos", lgetwpos },
 		{ "anchor_particle", lset_anchor_particle },
+		{ "calc_matrix", lcalc_matrix },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);

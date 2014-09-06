@@ -639,6 +639,49 @@ sprite_pos(struct sprite *s, struct srt *srt, struct sprite *t, int pos[2]) {
 	return child_pos(s, srt, NULL, t, pos);
 }
 
+void 
+sprite_matrix(struct sprite * self, struct matrix *mat) {
+	struct sprite * parent = self->parent;
+	if (parent) {
+		assert(parent->type == TYPE_ANIMATION);
+		sprite_matrix(parent, mat);
+		struct matrix tmp;
+		struct matrix * parent_mat = parent->t.mat;
+
+		struct matrix * child_mat = NULL;
+		struct pack_animation *ani = parent->s.ani;
+		int frame = real_frame(parent) + parent->start_frame;
+		struct pack_frame * pf = &ani->frame[frame];
+		int i;
+		for (i=0;i<pf->n;i++) {
+			struct pack_part *pp = &pf->part[i];
+			int index = pp->component_id;
+			struct sprite * child = parent->data.children[index];
+			if (child == self) {
+				child_mat = pp->t.mat;
+				break;
+			}
+		}
+
+		if (parent_mat == NULL && child_mat == NULL)
+			return;
+
+		if (parent_mat) {
+			matrix_mul(&tmp, parent_mat, mat);
+		} else {
+			tmp = *mat;
+		}
+
+		if (child_mat) {
+			matrix_mul(mat, child_mat, &tmp);
+		} else {
+			*mat = tmp;
+		}
+	} else {
+		matrix_identity(mat);
+	}
+}
+
 // aabb
 
 static void
@@ -757,11 +800,13 @@ void
 sprite_aabb(struct sprite *s, struct srt *srt, int aabb[4]) {
 	int i;
 	if (s->visible) {
+		struct matrix tmp;
+		sprite_matrix(s, &tmp);
 		aabb[0] = INT_MAX;
 		aabb[1] = INT_MAX;
 		aabb[2] = INT_MIN;
 		aabb[3] = INT_MIN;
-		child_aabb(s,srt,NULL,aabb);
+		child_aabb(s,srt,&tmp,aabb);
 		for (i=0;i<4;i++)
 			aabb[i] /= SCREEN_SCALE;
 	} else {
