@@ -338,6 +338,7 @@ lgetwmat(lua_State *L) {
 	}
 	return luaL_error(L, "Only anchor can get world matrix");
 }
+
 static int
 lgetwpos(lua_State *L) {
 	struct sprite *s = self(L);
@@ -349,13 +350,12 @@ lgetwpos(lua_State *L) {
 	} else {
 		struct srt srt;
 		fill_srt(L,&srt,2);
-		struct sprite *t = (struct sprite *)lua_touserdata(L, 3);
-		if (t == NULL) {
-			luaL_error(L, "Need target sprite");
-		}
+
+		struct matrix tmp;
+		sprite_matrix(s, &tmp);
 
 		int pos[2];
-		if (sprite_pos(s, &srt, t, pos) == 0) {
+		if (sprite_pos(s, &srt, &tmp, pos) == 0) {
 			lua_pushinteger(L, pos[0]);
 			lua_pushinteger(L, pos[1]);
 			return 2;
@@ -463,22 +463,22 @@ lsettext(lua_State *L) {
 		lua_setuservalue(L, 1);
     return 0;
   }
-  
+
   s->data.rich_text = NULL;
   if (!lua_istable(L, 2) || lua_rawlen(L, 2) != 2) {
     return luaL_error(L, "rich text must has a table with two items");
   }
-  
+
   lua_rawgeti(L, 2, 1);
   const char *txt = luaL_checkstring(L, -1);
   lua_pop(L, 1);
-  
+
   lua_rawgeti(L, 2, 2);
 	int cnt = lua_rawlen(L, -1);
   lua_pop(L, 1);
-  
+
 	struct rich_text *rich = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
-	
+
 	rich->text = txt;
   rich->count = cnt;
 	int size = cnt * sizeof(struct label_field);
@@ -496,13 +496,13 @@ lsettext(lua_State *L) {
 		lua_rawgeti(L, -1, 1);  //start
 		((struct label_field*)(fields+i))->start = luaL_checkinteger(L, -1);
 		lua_pop(L, 1);
-    
+
     lua_rawgeti(L, -1, 2);  //end
 		((struct label_field*)(fields+i))->end = luaL_checkinteger(L, -1);
     lua_pop(L, 1);
 
 		lua_rawgeti(L, -1, 3);  //color
-		((struct label_field*)(fields+i))->color = luaL_checkunsigned(L, -1); 
+		((struct label_field*)(fields+i))->color = luaL_checkunsigned(L, -1);
 		lua_pop(L, 1);
 
 		//extend here
