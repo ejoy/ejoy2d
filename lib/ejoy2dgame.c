@@ -14,6 +14,7 @@
 #include "lmatrix.h"
 #include "label.h"
 #include "particle.h"
+#include "lrenderbuffer.h"
 
 //#define LOGIC_FRAME 30
 
@@ -120,6 +121,7 @@ ejoy2d_game() {
 	luaL_requiref(L, "ejoy2d.ppm", ejoy2d_ppm, 0);
 	luaL_requiref(L, "ejoy2d.spritepack.c", ejoy2d_spritepack, 0);
 	luaL_requiref(L, "ejoy2d.sprite.c", ejoy2d_sprite, 0);
+	luaL_requiref(L, "ejoy2d.renderbuffer", ejoy2d_renderbuffer, 0);
 	luaL_requiref(L, "ejoy2d.matrix.c", ejoy2d_matrix, 0);
 	luaL_requiref(L, "ejoy2d.particle.c", ejoy2d_particle, 0);
 

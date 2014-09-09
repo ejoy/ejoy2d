@@ -2,13 +2,17 @@
 #include "opengl.h"
 #include "fault.h"
 #include "array.h"
+#include "renderbuffer.h"
+#include "texture.h"
+#include "matrix.h"
+#include "spritepack.h"
+#include "screen.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
-#define MAX_COMMBINE 1024
 #define MAX_PROGRAM 8
 
 #define ATTRIB_VERTEX 0
@@ -23,31 +27,20 @@ struct program {
 	uint32_t arg_additive;
 	
 	GLint mask;
+	GLint st;
   float arg_mask_x;
   float arg_mask_y;
-};
-
-struct vertex {
-	float vx;
-	float vy;
-	float tx;
-	float ty;
-	uint8_t rgba[4];
-};
-
-struct quad {
-	struct vertex p[4];
 };
 
 struct render_state {
 	int current_program;
 	struct program program[MAX_PROGRAM];
 	int tex;
-	int object;
 	int blendchange;
+	int drawcall;
 	GLuint vertex_buffer;
 	GLuint index_buffer;
-	struct quad vb[MAX_COMMBINE];
+	struct render_buffer vb;
 };
 
 static struct render_state *RS = NULL;
@@ -132,7 +125,11 @@ link(struct program *p) {
 	
 	glGetProgramiv(p->prog, GL_LINK_STATUS, &status);
 	if (status == 0) {
-		fault("Can't link program");
+		char buf[1024];
+		GLint len;
+		glGetProgramInfoLog(p->prog, 1024, &len, buf);
+
+		fault("link failed:%s\n", buf);
 	}
 }
 
@@ -181,11 +178,12 @@ program_init(struct program * p, const char *FS, const char *VS) {
 	set_color(p->additive, 0);
 	
 	p->mask = glGetUniformLocation(p->prog, "mask");
-  p->arg_mask_x = 0.0f;
-  p->arg_mask_y = 0.0f;
-  if (p->mask != -1) {
-    glUniform2f(p->mask, 0.0f, 0.0f);
-  }
+	p->arg_mask_x = 0.0f;
+	p->arg_mask_y = 0.0f;
+	if (p->mask != -1) {
+		glUniform2f(p->mask, 0.0f, 0.0f);
+	}
+	p->st = glGetUniformLocation(p->prog, "st");
 		
 	glDetachShader(p->prog, fs);
 	glDeleteShader(fs);
@@ -222,32 +220,66 @@ shader_unload() {
 	RS = NULL;
 }
 
-static int drawcall = 0;
 void
 reset_drawcall_count() {
-	drawcall = 0;
+	if (RS) {
+		RS->drawcall = 0;
+	}
 }
+
 int
 drawcall_count() {
-	return drawcall;
+	if (RS) {
+		return RS->drawcall;
+	} else {
+		return 0;
+	}
 }
 
-static void
-rs_commit() {
-	if (RS->object == 0)
-		return;
-	drawcall++;
-	glBindBuffer(GL_ARRAY_BUFFER, RS->vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(struct quad) * RS->object, RS->vb, GL_DYNAMIC_DRAW);
-
+static void 
+renderbuffer_commit(struct render_buffer * rb) {
 	glEnableVertexAttribArray(ATTRIB_VERTEX);
 	glVertexAttribPointer(ATTRIB_VERTEX, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), BUFFER_OFFSET(0));
 	glEnableVertexAttribArray(ATTRIB_TEXTCOORD);
 	glVertexAttribPointer(ATTRIB_TEXTCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), BUFFER_OFFSET(8));
 	glEnableVertexAttribArray(ATTRIB_COLOR);
 	glVertexAttribPointer(ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(struct vertex), BUFFER_OFFSET(16));
-	glDrawElements(GL_TRIANGLES, 6 * RS->object, GL_UNSIGNED_SHORT, 0);
-	RS->object = 0;
+	glDrawElements(GL_TRIANGLES, 6 * rb->object, GL_UNSIGNED_SHORT, 0);
+}
+
+static void
+rs_commit() {
+	struct render_buffer * rb = &(RS->vb);
+	if (rb->object == 0)
+		return;
+	RS->drawcall++;
+	glBindBuffer(GL_ARRAY_BUFFER, RS->vertex_buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(struct quad) * rb->object, rb->vb, GL_DYNAMIC_DRAW);
+
+	renderbuffer_commit(rb);
+
+	rb->object = 0;
+}
+
+void 
+shader_drawbuffer(struct render_buffer * rb, float tx, float ty, float scale) {
+	rs_commit();
+	int glid = texture_glid(rb->texid);
+	if (glid == 0)
+		return;
+	shader_texture(glid);
+	shader_program(PROGRAM_RENDERBUFFER, 0);
+	RS->drawcall++;
+	glBindBuffer(GL_ARRAY_BUFFER, rb->vbid);
+
+	float sx = scale;
+	float sy = scale;
+	screen_trans(&sx, &sy);
+	screen_trans(&tx, &ty);
+	struct program *p = &RS->program[RS->current_program];
+	glUniform4f(p->st, sx, sy, tx, ty);
+
+	renderbuffer_commit(rb);
 }
 
 void
@@ -289,19 +321,7 @@ shader_mask(float x, float y) {
 
 void
 shader_draw(const float vb[16], uint32_t color) {
-	struct quad *q = RS->vb + RS->object;
-	int i;
-	for (i=0;i<4;i++) {
-		q->p[i].vx = vb[i*4+0];
-		q->p[i].vy = vb[i*4+1];
-		q->p[i].tx = vb[i*4+2];
-		q->p[i].ty = vb[i*4+3];
-		q->p[i].rgba[0] = (color >> 16) & 0xff;
-		q->p[i].rgba[1] = (color >> 8) & 0xff;
-		q->p[i].rgba[2] = (color) & 0xff;
-		q->p[i].rgba[3] = (color >> 24) & 0xff;
-	}
-	if (++RS->object >= MAX_COMMBINE) {
+	if (renderbuffer_add(&RS->vb, vb, color)) {
 		rs_commit();
 	}
 }

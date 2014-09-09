@@ -44,6 +44,7 @@ struct sprite {
 	} data;
 };
 
+struct sprite_trans * sprite_trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_trans *t, struct matrix *tmp_matrix);
 void sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt, const struct sprite_trans *arg);
 void sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg);
 
@@ -68,7 +69,9 @@ int sprite_setframe(struct sprite *, int frame, bool force_child);
 void sprite_mount(struct sprite *, int index, struct sprite *);
 
 void sprite_aabb(struct sprite *s, struct srt *srt, int aabb[4]);
-int sprite_pos(struct sprite *s, struct srt *srt, struct sprite *t, int pos[2]);
+int sprite_pos(struct sprite *s, struct srt *srt, struct sprite *t, int pos[2]);	// todo: maybe unused, use sprite_matrix instead
+// calc the sprite's world matrix
+void sprite_matrix(struct sprite *s, struct matrix *mat);
 
 bool sprite_child_visible(struct sprite *s, const char * childname);
 

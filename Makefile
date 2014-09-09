@@ -20,7 +20,9 @@ lib/dfont.c \
 lib/label.c \
 lib/particle.c \
 lib/lparticle.c \
-lib/scissor.c
+lib/scissor.c \
+lib/renderbuffer.c \
+lib/lrenderbuffer.c
 
 LUASRC := \
 lua/lapi.c \

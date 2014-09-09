@@ -315,8 +315,8 @@ color_add(uint32_t c1, uint32_t c2) {
 		clamp(b1+b2);
 }
 
-static struct sprite_trans *
-trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_trans *t, struct matrix *tmp_matrix) {
+struct sprite_trans * 
+sprite_trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_trans *t, struct matrix *tmp_matrix) {
 	if (b == NULL) {
 		return a;
 	}
@@ -458,7 +458,7 @@ static int
 child_pos(struct sprite *s, struct srt *srt, struct sprite_trans *ts, struct sprite *t, int pos[2]) {
 	struct sprite_trans temp;
 	struct matrix temp_matrix;
-	struct sprite_trans *st = trans_mul(&s->t, ts, &temp, &temp_matrix);
+	struct sprite_trans *st = sprite_trans_mul(&s->t, ts, &temp, &temp_matrix);
 	if (s == t) {
 		struct matrix tmp;
 		if (st->mat == NULL) {
@@ -501,7 +501,7 @@ child_pos(struct sprite *s, struct srt *srt, struct sprite_trans *ts, struct spr
 		}
 		struct sprite_trans temp2;
 		struct matrix temp_matrix2;
-		struct sprite_trans *ct = trans_mul(&pp->t, st, &temp2, &temp_matrix2);
+		struct sprite_trans *ct = sprite_trans_mul(&pp->t, st, &temp2, &temp_matrix2);
 		if (child_pos(child, srt, ct, t, pos) == 0) {
 			return 0;
 		}
@@ -536,7 +536,7 @@ static int
 draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 	struct sprite_trans temp;
 	struct matrix temp_matrix;
-	struct sprite_trans *t = trans_mul(&s->t, ts, &temp, &temp_matrix);
+	struct sprite_trans *t = sprite_trans_mul(&s->t, ts, &temp, &temp_matrix);
 	switch (s->type) {
 	case TYPE_PICTURE:
 		switch_program(t, PROGRAM_PICTURE);
@@ -589,7 +589,7 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 		}
 		struct sprite_trans temp2;
 		struct matrix temp_matrix2;
-		struct sprite_trans *ct = trans_mul(&pp->t, t, &temp2, &temp_matrix2);
+		struct sprite_trans *ct = sprite_trans_mul(&pp->t, t, &temp2, &temp_matrix2);
 		scissor += draw_child(child, srt, ct);
 	}
 	for (i=0;i<scissor;i++) {
@@ -637,6 +637,49 @@ sprite_draw_as_child(struct sprite *s, struct srt *srt, struct matrix *mat, uint
 int
 sprite_pos(struct sprite *s, struct srt *srt, struct sprite *t, int pos[2]) {
 	return child_pos(s, srt, NULL, t, pos);
+}
+
+void 
+sprite_matrix(struct sprite * self, struct matrix *mat) {
+	struct sprite * parent = self->parent;
+	if (parent) {
+		assert(parent->type == TYPE_ANIMATION);
+		sprite_matrix(parent, mat);
+		struct matrix tmp;
+		struct matrix * parent_mat = parent->t.mat;
+
+		struct matrix * child_mat = NULL;
+		struct pack_animation *ani = parent->s.ani;
+		int frame = real_frame(parent) + parent->start_frame;
+		struct pack_frame * pf = &ani->frame[frame];
+		int i;
+		for (i=0;i<pf->n;i++) {
+			struct pack_part *pp = &pf->part[i];
+			int index = pp->component_id;
+			struct sprite * child = parent->data.children[index];
+			if (child == self) {
+				child_mat = pp->t.mat;
+				break;
+			}
+		}
+
+		if (parent_mat == NULL && child_mat == NULL)
+			return;
+
+		if (parent_mat) {
+			matrix_mul(&tmp, parent_mat, mat);
+		} else {
+			tmp = *mat;
+		}
+
+		if (child_mat) {
+			matrix_mul(mat, child_mat, &tmp);
+		} else {
+			*mat = tmp;
+		}
+	} else {
+		matrix_identity(mat);
+	}
 }
 
 // aabb
@@ -757,11 +800,13 @@ void
 sprite_aabb(struct sprite *s, struct srt *srt, int aabb[4]) {
 	int i;
 	if (s->visible) {
+		struct matrix tmp;
+		sprite_matrix(s, &tmp);
 		aabb[0] = INT_MAX;
 		aabb[1] = INT_MAX;
 		aabb[2] = INT_MIN;
 		aabb[3] = INT_MIN;
-		child_aabb(s,srt,NULL,aabb);
+		child_aabb(s,srt,&tmp,aabb);
 		for (i=0;i<4;i++)
 			aabb[i] /= SCREEN_SCALE;
 	} else {

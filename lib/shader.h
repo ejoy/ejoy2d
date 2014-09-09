@@ -6,8 +6,9 @@
 
 #define PROGRAM_DEFAULT -1
 #define PROGRAM_PICTURE 0
-#define PROGRAM_TEXT 1
-#define PROGRAM_TEXT_EDGE 2
+#define PROGRAM_RENDERBUFFER 1
+#define PROGRAM_TEXT 2
+#define PROGRAM_TEXT_EDGE 3
 
 void shader_init();
 void shader_load(int prog, const char *fs, const char *vs);
@@ -29,4 +30,9 @@ int ejoy2d_shader(lua_State *L);
 
 void reset_drawcall_count();
 int drawcall_count();
+
+struct render_buffer;
+
+void shader_drawbuffer(struct render_buffer * rb, float x, float y, float s);
+
 #endif
