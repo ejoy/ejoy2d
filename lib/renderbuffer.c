@@ -11,6 +11,10 @@
 
 int
 renderbuffer_add(struct render_buffer *rb, const float vb[16], uint32_t color) {
+    if (rb->object >= MAX_COMMBINE) {
+        return 1;
+    }
+
 	struct quad *q = rb->vb + rb->object;
 	int i;
 	for (i=0;i<4;i++) {
@@ -73,7 +77,6 @@ drawquad(struct render_buffer *rb, struct pack_picture *picture, const struct sp
 			vb[j*4+3] = ty;
 		}
 		if (renderbuffer_add(rb, vb, arg->color)) {
-			rb->object = object;
 			return 1;
 		}
 	}
