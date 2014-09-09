@@ -68,7 +68,7 @@ const char * sprite_childname(struct sprite *, int index);
 int sprite_setframe(struct sprite *, int frame, bool force_child);
 void sprite_mount(struct sprite *, int index, struct sprite *);
 
-void sprite_aabb(struct sprite *s, struct srt *srt, int aabb[4]);
+void sprite_aabb(struct sprite *s, struct srt *srt, bool world_aabb, int aabb[4]);
 int sprite_pos(struct sprite *s, struct srt *srt, struct matrix *m, int pos[2]);	// todo: maybe unused, use sprite_matrix instead
 // calc the sprite's world matrix
 void sprite_matrix(struct sprite *s, struct matrix *mat);

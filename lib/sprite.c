@@ -751,11 +751,15 @@ child_aabb(struct sprite *s, struct srt *srt, struct matrix * mat, int aabb[4]) 
 }
 
 void
-sprite_aabb(struct sprite *s, struct srt *srt, int aabb[4]) {
+sprite_aabb(struct sprite *s, struct srt *srt, bool world_aabb, int aabb[4]) {
 	int i;
 	if (s->visible) {
 		struct matrix tmp;
-		sprite_matrix(s, &tmp);
+		if (world_aabb) {
+			sprite_matrix(s, &tmp);
+		} else {
+			matrix_identity(&tmp);
+		}
 		aabb[0] = INT_MAX;
 		aabb[1] = INT_MAX;
 		aabb[2] = INT_MIN;
