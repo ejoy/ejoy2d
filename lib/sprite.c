@@ -53,7 +53,7 @@ sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const s
 				float delta_ty = (ty - vb[0].ty) * (1.0f / 65535.0f);
 				shader_mask(delta_tx, delta_ty);
 		}
-		shader_draw(vb, arg->color);
+		shader_draw(vb, arg->color, arg->additive);
 	}
 }
 
@@ -95,7 +95,7 @@ sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struc
 			vb[j].tx = tx;
 			vb[j].ty = ty;
 		}
-		shader_drawpolygon(pn, vb, arg->color);
+		shader_drawpolygon(pn, vb, arg->color, arg->additive);
 	}
 }
 

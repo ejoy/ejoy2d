@@ -10,7 +10,7 @@
 #include <string.h>
 
 int
-renderbuffer_add(struct render_buffer *rb, const struct vertex_pack vb[4], uint32_t color) {
+renderbuffer_add(struct render_buffer *rb, const struct vertex_pack vb[4], uint32_t color, uint32_t additive) {
 	if (rb->object >= MAX_COMMBINE) {
 		return 1;
 	}
@@ -23,6 +23,10 @@ renderbuffer_add(struct render_buffer *rb, const struct vertex_pack vb[4], uint3
 		q->p[i].rgba[1] = (color >> 8) & 0xff;
 		q->p[i].rgba[2] = (color) & 0xff;
 		q->p[i].rgba[3] = (color >> 24) & 0xff;
+		q->p[i].add[0] = (additive >> 16) & 0xff;
+		q->p[i].add[1] = (additive >> 8) & 0xff;
+		q->p[i].add[2] = (additive) & 0xff;
+		q->p[i].add[3] = (additive >> 24) & 0xff;
 	}
 	if (++rb->object >= MAX_COMMBINE) {
 		return 1;
@@ -67,7 +71,7 @@ drawquad(struct render_buffer *rb, struct pack_picture *picture, const struct sp
 			vb[j].tx = q->texture_coord[j*2+0];
 			vb[j].ty = q->texture_coord[j*2+1];
 		}
-		if (renderbuffer_add(rb, vb, arg->color)) {
+		if (renderbuffer_add(rb, vb, arg->color, arg->additive)) {
 			return 1;
 		}
 	}
@@ -75,7 +79,7 @@ drawquad(struct render_buffer *rb, struct pack_picture *picture, const struct sp
 }
 
 static int
-polygon_quad(struct render_buffer *rb, const struct vertex_pack *vbp, uint32_t color, int max, int index) {
+polygon_quad(struct render_buffer *rb, const struct vertex_pack *vbp, uint32_t color, uint32_t additive, int max, int index) {
 	struct vertex_pack vb[4];
 	int i;
 	vb[0] = vbp[0]; // first point
@@ -84,15 +88,15 @@ polygon_quad(struct render_buffer *rb, const struct vertex_pack *vbp, uint32_t c
 		int n = (j <= max) ? j : max;
 		vb[i] = vbp[n];
 	}
-	return renderbuffer_add(rb, vb, color);
+	return renderbuffer_add(rb, vb, color, additive);
 }
 
 static int
-add_polygon(struct render_buffer *rb, int n, const struct vertex_pack *vb, uint32_t color) {
+add_polygon(struct render_buffer *rb, int n, const struct vertex_pack *vb, uint32_t color, uint32_t additive) {
 	int i = 0;
 	--n;
 	do {
-		if (polygon_quad(rb, vb, color, n, i)) {
+		if (polygon_quad(rb, vb, color, additive, n, i)) {
 			return 1;
 		}
 		i+=2;
@@ -131,7 +135,7 @@ drawpolygon(struct render_buffer *rb, struct pack_polygon *poly, const struct sp
 			vb[j].tx = p->texture_coord[j*2+0];
 			vb[j].ty = p->texture_coord[j*2+1];
 		}
-		if (add_polygon(rb, pn, vb, arg->color)) {
+		if (add_polygon(rb, pn, vb, arg->color, arg->additive)) {
 			rb->object = object;
 			return 1;
 		}

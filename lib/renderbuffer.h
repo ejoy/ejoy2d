@@ -15,6 +15,7 @@ struct vertex_pack {
 struct vertex {
 	struct vertex_pack vp;
 	uint8_t rgba[4];
+	uint8_t add[4];
 };
 
 struct quad {
@@ -32,7 +33,7 @@ void renderbuffer_init(struct render_buffer *rb);
 void renderbuffer_upload(struct render_buffer *rb);
 void renderbuffer_unload(struct render_buffer *rb);
 
-int renderbuffer_add(struct render_buffer *rb, const struct vertex_pack vb[4], uint32_t color);
+int renderbuffer_add(struct render_buffer *rb, const struct vertex_pack vb[4], uint32_t color, uint32_t additive);
 
 static inline void renderbuffer_clear(struct render_buffer *rb) {
 	rb->object = 0;

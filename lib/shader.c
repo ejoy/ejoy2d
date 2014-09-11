@@ -18,6 +18,7 @@
 #define ATTRIB_VERTEX 0
 #define ATTRIB_TEXTCOORD 1
 #define ATTRIB_COLOR 2
+#define ATTRIB_ADDITIVE 3
 
 #define BUFFER_OFFSET(f) ((void *)&(((struct vertex *)NULL)->f))
 
@@ -170,6 +171,7 @@ program_init(struct program * p, const char *FS, const char *VS) {
 	glBindAttribLocation(p->prog, ATTRIB_VERTEX, "position");
 	glBindAttribLocation(p->prog, ATTRIB_TEXTCOORD, "texcoord");
 	glBindAttribLocation(p->prog, ATTRIB_COLOR, "color");
+	glBindAttribLocation(p->prog, ATTRIB_ADDITIVE, "additive");
 
 	link(p);
 
@@ -244,6 +246,8 @@ renderbuffer_commit(struct render_buffer * rb) {
 	glVertexAttribPointer(ATTRIB_TEXTCOORD, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(struct vertex), BUFFER_OFFSET(vp.tx));
 	glEnableVertexAttribArray(ATTRIB_COLOR);
 	glVertexAttribPointer(ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(struct vertex), BUFFER_OFFSET(rgba));
+	glEnableVertexAttribArray(ATTRIB_ADDITIVE);
+	glVertexAttribPointer(ATTRIB_ADDITIVE, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(struct vertex), BUFFER_OFFSET(add));
 	glDrawElements(GL_TRIANGLES, 6 * rb->object, GL_UNSIGNED_SHORT, 0);
 }
 
@@ -320,14 +324,14 @@ shader_mask(float x, float y) {
 }
 
 void
-shader_draw(const struct vertex_pack vb[4], uint32_t color) {
-	if (renderbuffer_add(&RS->vb, vb, color)) {
+shader_draw(const struct vertex_pack vb[4], uint32_t color, uint32_t additive) {
+	if (renderbuffer_add(&RS->vb, vb, color, additive)) {
 		rs_commit();
 	}
 }
 
 static void
-draw_quad(const struct vertex_pack *vbp, uint32_t color, int max, int index) {
+draw_quad(const struct vertex_pack *vbp, uint32_t color, uint32_t additive, int max, int index) {
 	struct vertex_pack vb[4];
 	int i;
 	vb[0] = vbp[0];	// first point
@@ -336,15 +340,15 @@ draw_quad(const struct vertex_pack *vbp, uint32_t color, int max, int index) {
 		int n = (j <= max) ? j : max;
 		vb[i] = vbp[n];
 	}
-	shader_draw(vb, color);
+	shader_draw(vb, color, additive);
 }
 
 void
-shader_drawpolygon(int n, const struct vertex_pack *vb, uint32_t color) {
+shader_drawpolygon(int n, const struct vertex_pack *vb, uint32_t color, uint32_t additive) {
 	int i = 0;
 	--n;
 	do {
-		draw_quad(vb, color, n, i);
+		draw_quad(vb, color, additive, n, i);
 		i+=2;
 	} while (i<n-1);
 }

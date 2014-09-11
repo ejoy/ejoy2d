@@ -42,7 +42,6 @@ ldraw(lua_State *L) {
 		color = (uint32_t)lua_tounsigned(L,3);
 	}
 	uint32_t additive = (uint32_t)luaL_optunsigned(L,4,0);
-	shader_program(PROGRAM_PICTURE,additive);
 	shader_texture(texid);
 	int n = lua_rawlen(L, 2);
 	int point = n/4;
@@ -70,9 +69,9 @@ ldraw(lua_State *L) {
 		vb[i].ty = v;
 	}
 	if (point == 4) {
-		shader_draw(vb, color);
+		shader_draw(vb, color, additive);
 	} else {
-		shader_drawpolygon(point, vb, color);
+		shader_drawpolygon(point, vb, color, additive);
 	}
 	return 0;
 }

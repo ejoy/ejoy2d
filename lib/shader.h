@@ -19,8 +19,8 @@ void shader_blend(int m1,int m2);
 void shader_defaultblend();
 void shader_texture(int id);
 void shader_mask(float x, float y);
-void shader_draw(const struct vertex_pack vb[4],uint32_t color);
-void shader_drawpolygon(int n, const struct vertex_pack *vb, uint32_t color);
+void shader_draw(const struct vertex_pack vb[4],uint32_t color,uint32_t additive);
+void shader_drawpolygon(int n, const struct vertex_pack *vb, uint32_t color, uint32_t additive);
 void shader_program(int n, uint32_t arg);
 void shader_flush();
 
