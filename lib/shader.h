@@ -1,6 +1,8 @@
 #ifndef EJOY_2D_SHADER_H
 #define EJOY_2D_SHADER_H
 
+#include "renderbuffer.h"
+
 #include <stdint.h>
 #include <lua.h>
 
@@ -17,8 +19,8 @@ void shader_blend(int m1,int m2);
 void shader_defaultblend();
 void shader_texture(int id);
 void shader_mask(float x, float y);
-void shader_draw(const float vb[16],uint32_t color);
-void shader_drawpolygon(int n, const float *vb, uint32_t color);
+void shader_draw(const struct vertex_pack vb[4],uint32_t color);
+void shader_drawpolygon(int n, const struct vertex_pack *vb, uint32_t color);
 void shader_program(int n, uint32_t arg);
 void shader_flush();
 
@@ -30,8 +32,6 @@ int ejoy2d_shader(lua_State *L);
 
 void reset_drawcall_count();
 int drawcall_count();
-
-struct render_buffer;
 
 void shader_drawbuffer(struct render_buffer * rb, float x, float y, float s);
 

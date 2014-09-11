@@ -49,7 +49,7 @@ ldraw(lua_State *L) {
 	if (point * 4 != n) {
 		return luaL_error(L, "Invalid polygon");
 	}
-	ARRAY(float, vb, n);
+	ARRAY(struct vertex_pack, vb, point);
 	int i;
 	for (i=0;i<point;i++) {
 		lua_rawgeti(L, 2, i*2+1);
@@ -63,10 +63,10 @@ ldraw(lua_State *L) {
 		lua_pop(L,4);
 		screen_trans(&vx,&vy);
 		texture_coord(tex, &tx, &ty);
-		vb[i*4+0] = vx + 1.0f;
-		vb[i*4+1] = vy - 1.0f;
-		vb[i*4+2] = tx;
-		vb[i*4+3] = ty;
+		vb[i].vx = vx + 1.0f;
+		vb[i].vy = vy - 1.0f;
+		vb[i].tx = tx;
+		vb[i].ty = ty;
 	}
 	if (point == 4) {
 		shader_draw(vb, color);

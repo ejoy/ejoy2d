@@ -309,38 +309,38 @@ shader_program(int n, uint32_t arg) {
 void
 shader_mask(float x, float y) {
 	struct program *p = &RS->program[RS->current_program];
-  if (!p || p->mask == -1)
-    return;
-  if (p->arg_mask_x == x && p->arg_mask_y == y)
-    return;
-  p->arg_mask_x = x;
-  p->arg_mask_y = y;
+	if (!p || p->mask == -1)
+		return;
+	if (p->arg_mask_x == x && p->arg_mask_y == y)
+		return;
+	p->arg_mask_x = x;
+	p->arg_mask_y = y;
 //  rs_commit();
 	glUniform2f(p->mask, x, y);
 }
 
 void
-shader_draw(const float vb[16], uint32_t color) {
+shader_draw(const struct vertex_pack vb[4], uint32_t color) {
 	if (renderbuffer_add(&RS->vb, vb, color)) {
 		rs_commit();
 	}
 }
 
 static void
-draw_quad(const float *vbp, uint32_t color, int max, int index) {
-	float vb[16];
+draw_quad(const struct vertex_pack *vbp, uint32_t color, int max, int index) {
+	struct vertex_pack vb[4];
 	int i;
-	memcpy(vb, vbp, 4 * sizeof(float));	// first point
+	vb[0] = vbp[0];	// first point
 	for (i=1;i<4;i++) {
 		int j = i + index;
 		int n = (j <= max) ? j : max;
-		memcpy(vb + i * sizeof(float), vbp + n * sizeof(float), 4 * sizeof(float));
+		vb[i] = vbp[n];
 	}
 	shader_draw(vb, color);
 }
 
 void
-shader_drawpolygon(int n, const float *vb, uint32_t color) {
+shader_drawpolygon(int n, const struct vertex_pack *vb, uint32_t color) {
 	int i = 0;
 	--n;
 	do {

@@ -199,26 +199,26 @@ gen_char(int unicode, const char * utf8, int size, int outline) {
 
 
 static inline void
-set_point(float *v, int *m, int xx, int yy,int tx, int ty) {
-	v[0] = (xx * m[0] + yy * m[2]) / 1024 + m[4];
-	v[1] = (xx * m[1] + yy * m[3]) / 1024 + m[5];
-	screen_trans(&v[0],&v[1]);
+set_point(struct vertex_pack *v, int *m, int xx, int yy,int tx, int ty) {
+	v->vx = (xx * m[0] + yy * m[2]) / 1024 + m[4];
+	v->vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
+	screen_trans(&v->vx,&v->vy);
 
-	v[2] = (float)tx * (1.0f/TEX_WIDTH);
-	v[3] = (float)ty * (1.0f/TEX_HEIGHT);
+	v->tx = (float)tx * (1.0f/TEX_WIDTH);
+	v->ty = (float)ty * (1.0f/TEX_HEIGHT);
 }
 
 static void
 draw_rect(const struct dfont_rect *rect, int size, struct matrix *mat, uint32_t color) {
-	float vb[16];
+	struct vertex_pack vb[4];
 
 	int w = (rect->w -1) * size / FONT_SIZE ;
 	int h = (rect->h -1) * size / FONT_SIZE ;
 
-	set_point(vb+0, mat->m, 0,0, rect->x, rect->y);
-	set_point(vb+4, mat->m, w*SCREEN_SCALE,0, rect->x+rect->w-1, rect->y);
-	set_point(vb+8, mat->m, w*SCREEN_SCALE,h*SCREEN_SCALE, rect->x+rect->w-1, rect->y+rect->h-1);
-	set_point(vb+12, mat->m, 0,h*SCREEN_SCALE, rect->x, rect->y+rect->h-1);
+	set_point(&vb[0], mat->m, 0,0, rect->x, rect->y);
+	set_point(&vb[1], mat->m, w*SCREEN_SCALE,0, rect->x+rect->w-1, rect->y);
+	set_point(&vb[2], mat->m, w*SCREEN_SCALE,h*SCREEN_SCALE, rect->x+rect->w-1, rect->y+rect->h-1);
+	set_point(&vb[3], mat->m, 0,h*SCREEN_SCALE, rect->x, rect->y+rect->h-1);
 	shader_draw(vb, color);
 }
 

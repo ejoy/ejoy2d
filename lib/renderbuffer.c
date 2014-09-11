@@ -10,18 +10,15 @@
 #include <string.h>
 
 int
-renderbuffer_add(struct render_buffer *rb, const float vb[16], uint32_t color) {
-    if (rb->object >= MAX_COMMBINE) {
-        return 1;
-    }
+renderbuffer_add(struct render_buffer *rb, const struct vertex_pack vb[4], uint32_t color) {
+	if (rb->object >= MAX_COMMBINE) {
+		return 1;
+	}
 
 	struct quad *q = rb->vb + rb->object;
 	int i;
 	for (i=0;i<4;i++) {
-		q->p[i].vx = vb[i*4+0];
-		q->p[i].vy = vb[i*4+1];
-		q->p[i].tx = vb[i*4+2];
-		q->p[i].ty = vb[i*4+3];
+		q->p[i].vp = vb[i];
 		q->p[i].rgba[0] = (color >> 16) & 0xff;
 		q->p[i].rgba[1] = (color >> 8) & 0xff;
 		q->p[i].rgba[2] = (color) & 0xff;
@@ -47,7 +44,7 @@ update_tex(struct render_buffer *rb, int id) {
 static int
 drawquad(struct render_buffer *rb, struct pack_picture *picture, const struct sprite_trans *arg) {
 	struct matrix tmp;
-	float vb[16];
+	struct vertex_pack vb[4];
 	int i,j;
 	if (arg->mat == NULL) {
 		matrix_identity(&tmp);
@@ -71,10 +68,10 @@ drawquad(struct render_buffer *rb, struct pack_picture *picture, const struct sp
 			float ty = q->texture_coord[j*2+1];
 
 			texture_coord(q->texid, &tx, &ty);
-			vb[j*4+0] = vx;
-			vb[j*4+1] = vy;
-			vb[j*4+2] = tx;
-			vb[j*4+3] = ty;
+			vb[j].vx = vx;
+			vb[j].vy = vy;
+			vb[j].tx = tx;
+			vb[j].ty = ty;
 		}
 		if (renderbuffer_add(rb, vb, arg->color)) {
 			return 1;
@@ -84,20 +81,20 @@ drawquad(struct render_buffer *rb, struct pack_picture *picture, const struct sp
 }
 
 static int
-polygon_quad(struct render_buffer *rb, const float *vbp, uint32_t color, int max, int index) {
-	float vb[16];
+polygon_quad(struct render_buffer *rb, const struct vertex_pack *vbp, uint32_t color, int max, int index) {
+	struct vertex_pack vb[4];
 	int i;
-	memcpy(vb, vbp, 4 * sizeof(float));	// first point
+	vb[0] = vbp[0]; // first point
 	for (i=1;i<4;i++) {
 		int j = i + index;
 		int n = (j <= max) ? j : max;
-		memcpy(vb + i * sizeof(float), vbp + n * sizeof(float), 4 * sizeof(float));
+		vb[i] = vbp[n];
 	}
 	return renderbuffer_add(rb, vb, color);
 }
 
 static int
-add_polygon(struct render_buffer *rb, int n, const float *vb, uint32_t color) {
+add_polygon(struct render_buffer *rb, int n, const struct vertex_pack *vb, uint32_t color) {
 	int i = 0;
 	--n;
 	do {
@@ -129,7 +126,7 @@ drawpolygon(struct render_buffer *rb, struct pack_polygon *poly, const struct sp
 
 		int pn = p->n;
 
-		ARRAY(float, vb, 4 * pn);
+		ARRAY(struct vertex_pack, vb, pn);
 
 		for (j=0;j<pn;j++) {
 			int xx = p->screen_coord[j*2+0];
@@ -142,10 +139,10 @@ drawpolygon(struct render_buffer *rb, struct pack_polygon *poly, const struct sp
 			float ty = p->texture_coord[j*2+1];
 
 			texture_coord(p->texid, &tx, &ty);
-			vb[j*4+0] = vx;
-			vb[j*4+1] = vy;
-			vb[j*4+2] = tx;
-			vb[j*4+3] = ty;
+			vb[j].vx = vx;
+			vb[j].vy = vy;
+			vb[j].tx = tx;
+			vb[j].ty = ty;
 		}
 		if (add_polygon(rb, pn, vb, arg->color)) {
 			rb->object = object;
