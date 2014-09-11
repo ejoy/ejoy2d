@@ -9,33 +9,8 @@
 /* Begin PBXBuildFile section */
 		3F8A328719C16FCD00DD18FA /* lrenderbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F8A328219C16FCD00DD18FA /* lrenderbuffer.c */; };
 		3F8A328819C16FCD00DD18FA /* renderbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F8A328519C16FCD00DD18FA /* renderbuffer.c */; };
-		3F8A32B819C174F900DD18FA /* ex01.lua in Copy Files */ = {isa = PBXBuildFile; fileRef = 3F8A329619C1704700DD18FA /* ex01.lua */; };
-		3F8A32B919C174F900DD18FA /* ex02.lua in Copy Files */ = {isa = PBXBuildFile; fileRef = 3F8A329719C1704700DD18FA /* ex02.lua */; };
-		3F8A32BA19C174F900DD18FA /* ex03.lua in Copy Files */ = {isa = PBXBuildFile; fileRef = 3F8A329819C1704700DD18FA /* ex03.lua */; };
-		3F8A32BB19C174F900DD18FA /* ex04.lua in Copy Files */ = {isa = PBXBuildFile; fileRef = 3F8A329919C1704700DD18FA /* ex04.lua */; };
-		3F8A32BC19C174F900DD18FA /* ex05.lua in Copy Files */ = {isa = PBXBuildFile; fileRef = 3F8A329A19C1704700DD18FA /* ex05.lua */; };
-		3F8A32BD19C174F900DD18FA /* ex06.lua in Copy Files */ = {isa = PBXBuildFile; fileRef = 3F8A329B19C1704700DD18FA /* ex06.lua */; };
-		3F8A32BE19C174F900DD18FA /* ex07.lua in Copy Files */ = {isa = PBXBuildFile; fileRef = 3F8A329C19C1704700DD18FA /* ex07.lua */; };
-		3F8A32BF19C174F900DD18FA /* flappybird.lua in Copy Files */ = {isa = PBXBuildFile; fileRef = 3F8A329D19C1704700DD18FA /* flappybird.lua */; };
-		3F8A32C119C1752500DD18FA /* init.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A32A719C1749000DD18FA /* init.lua */; };
-		3F8A32C219C1752500DD18FA /* matrix.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A32A819C1749000DD18FA /* matrix.lua */; };
-		3F8A32C319C1752500DD18FA /* particle.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A32A919C1749000DD18FA /* particle.lua */; };
-		3F8A32C419C1752500DD18FA /* richtext.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A32AA19C1749000DD18FA /* richtext.lua */; };
-		3F8A32C519C1752500DD18FA /* shader.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A32AB19C1749000DD18FA /* shader.lua */; };
-		3F8A32C619C1752500DD18FA /* simplepackage.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A32AC19C1749000DD18FA /* simplepackage.lua */; };
-		3F8A32C719C1752500DD18FA /* sprite.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A32AD19C1749000DD18FA /* sprite.lua */; };
-		3F8A32C819C1752500DD18FA /* spritepack.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A32AE19C1749000DD18FA /* spritepack.lua */; };
-		3F8A32CA19C1754500DD18FA /* bird_config.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A328B19C1704700DD18FA /* bird_config.lua */; };
-		3F8A32CB19C1754500DD18FA /* birds.1.pgm in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A328C19C1704700DD18FA /* birds.1.pgm */; };
-		3F8A32CC19C1754500DD18FA /* birds.1.ppm in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A328D19C1704700DD18FA /* birds.1.ppm */; };
-		3F8A32CD19C1754500DD18FA /* birds.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A328E19C1704700DD18FA /* birds.lua */; };
-		3F8A32CE19C1754500DD18FA /* particle.1.pgm in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A328F19C1704700DD18FA /* particle.1.pgm */; };
-		3F8A32CF19C1754500DD18FA /* particle.1.ppm in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A329019C1704700DD18FA /* particle.1.ppm */; };
-		3F8A32D019C1754500DD18FA /* particle.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A329119C1704700DD18FA /* particle.lua */; };
-		3F8A32D119C1754500DD18FA /* particle_particle_config.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A329219C1704700DD18FA /* particle_particle_config.lua */; };
-		3F8A32D219C1754500DD18FA /* sample.1.pgm in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A329319C1704700DD18FA /* sample.1.pgm */; };
-		3F8A32D319C1754500DD18FA /* sample.1.ppm in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A329419C1704700DD18FA /* sample.1.ppm */; };
-		3F8A32D419C1754500DD18FA /* sample.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F8A329519C1704700DD18FA /* sample.lua */; };
+		3F9C3AD319C17B360081BC5F /* ejoy2d in Resources */ = {isa = PBXBuildFile; fileRef = 3F9C3AD119C17B210081BC5F /* ejoy2d */; };
+		3F9C3AD419C17B3B0081BC5F /* examples in Resources */ = {isa = PBXBuildFile; fileRef = 3F9C3AD019C17A470081BC5F /* examples */; };
 		F4E6FA2118D2B142005A8D23 /* window.c in Sources */ = {isa = PBXBuildFile; fileRef = F4E6FA1D18D2B142005A8D23 /* window.c */; };
 		F4E6FA2218D2B142005A8D23 /* winfont.c in Sources */ = {isa = PBXBuildFile; fileRef = F4E6FA1E18D2B142005A8D23 /* winfont.c */; };
 		F4E6FA2318D2B142005A8D23 /* winfw.c in Sources */ = {isa = PBXBuildFile; fileRef = F4E6FA1F18D2B142005A8D23 /* winfw.c */; };
@@ -90,97 +65,14 @@
 		F4EA75D918CF6CEA00C37D31 /* texture.c in Sources */ = {isa = PBXBuildFile; fileRef = F4EA75B718CF6CEA00C37D31 /* texture.c */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		3F8A32C019C1751A00DD18FA /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = ejoy2d;
-			dstSubfolderSpec = 16;
-			files = (
-				3F8A32C119C1752500DD18FA /* init.lua in CopyFiles */,
-				3F8A32C219C1752500DD18FA /* matrix.lua in CopyFiles */,
-				3F8A32C319C1752500DD18FA /* particle.lua in CopyFiles */,
-				3F8A32C419C1752500DD18FA /* richtext.lua in CopyFiles */,
-				3F8A32C519C1752500DD18FA /* shader.lua in CopyFiles */,
-				3F8A32C619C1752500DD18FA /* simplepackage.lua in CopyFiles */,
-				3F8A32C719C1752500DD18FA /* sprite.lua in CopyFiles */,
-				3F8A32C819C1752500DD18FA /* spritepack.lua in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F8A32C919C1753400DD18FA /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = examples/asset;
-			dstSubfolderSpec = 16;
-			files = (
-				3F8A32CA19C1754500DD18FA /* bird_config.lua in CopyFiles */,
-				3F8A32CB19C1754500DD18FA /* birds.1.pgm in CopyFiles */,
-				3F8A32CC19C1754500DD18FA /* birds.1.ppm in CopyFiles */,
-				3F8A32CD19C1754500DD18FA /* birds.lua in CopyFiles */,
-				3F8A32CE19C1754500DD18FA /* particle.1.pgm in CopyFiles */,
-				3F8A32CF19C1754500DD18FA /* particle.1.ppm in CopyFiles */,
-				3F8A32D019C1754500DD18FA /* particle.lua in CopyFiles */,
-				3F8A32D119C1754500DD18FA /* particle_particle_config.lua in CopyFiles */,
-				3F8A32D219C1754500DD18FA /* sample.1.pgm in CopyFiles */,
-				3F8A32D319C1754500DD18FA /* sample.1.ppm in CopyFiles */,
-				3F8A32D419C1754500DD18FA /* sample.lua in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		F44EF71418CF2816005EFAC1 /* Copy Files */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 12;
-			dstPath = examples;
-			dstSubfolderSpec = 16;
-			files = (
-				3F8A32B819C174F900DD18FA /* ex01.lua in Copy Files */,
-				3F8A32B919C174F900DD18FA /* ex02.lua in Copy Files */,
-				3F8A32BA19C174F900DD18FA /* ex03.lua in Copy Files */,
-				3F8A32BB19C174F900DD18FA /* ex04.lua in Copy Files */,
-				3F8A32BC19C174F900DD18FA /* ex05.lua in Copy Files */,
-				3F8A32BD19C174F900DD18FA /* ex06.lua in Copy Files */,
-				3F8A32BE19C174F900DD18FA /* ex07.lua in Copy Files */,
-				3F8A32BF19C174F900DD18FA /* flappybird.lua in Copy Files */,
-			);
-			name = "Copy Files";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		3F8A328219C16FCD00DD18FA /* lrenderbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lrenderbuffer.c; sourceTree = "<group>"; };
 		3F8A328319C16FCD00DD18FA /* lrenderbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lrenderbuffer.h; sourceTree = "<group>"; };
 		3F8A328419C16FCD00DD18FA /* platform_print.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = platform_print.h; sourceTree = "<group>"; };
 		3F8A328519C16FCD00DD18FA /* renderbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = renderbuffer.c; sourceTree = "<group>"; };
 		3F8A328619C16FCD00DD18FA /* renderbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = renderbuffer.h; sourceTree = "<group>"; };
-		3F8A328B19C1704700DD18FA /* bird_config.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bird_config.lua; sourceTree = "<group>"; };
-		3F8A328C19C1704700DD18FA /* birds.1.pgm */ = {isa = PBXFileReference; lastKnownFileType = file; path = birds.1.pgm; sourceTree = "<group>"; };
-		3F8A328D19C1704700DD18FA /* birds.1.ppm */ = {isa = PBXFileReference; lastKnownFileType = file; path = birds.1.ppm; sourceTree = "<group>"; };
-		3F8A328E19C1704700DD18FA /* birds.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = birds.lua; sourceTree = "<group>"; };
-		3F8A328F19C1704700DD18FA /* particle.1.pgm */ = {isa = PBXFileReference; lastKnownFileType = file; path = particle.1.pgm; sourceTree = "<group>"; };
-		3F8A329019C1704700DD18FA /* particle.1.ppm */ = {isa = PBXFileReference; lastKnownFileType = file; path = particle.1.ppm; sourceTree = "<group>"; };
-		3F8A329119C1704700DD18FA /* particle.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = particle.lua; sourceTree = "<group>"; };
-		3F8A329219C1704700DD18FA /* particle_particle_config.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = particle_particle_config.lua; sourceTree = "<group>"; };
-		3F8A329319C1704700DD18FA /* sample.1.pgm */ = {isa = PBXFileReference; lastKnownFileType = file; path = sample.1.pgm; sourceTree = "<group>"; };
-		3F8A329419C1704700DD18FA /* sample.1.ppm */ = {isa = PBXFileReference; lastKnownFileType = file; path = sample.1.ppm; sourceTree = "<group>"; };
-		3F8A329519C1704700DD18FA /* sample.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sample.lua; sourceTree = "<group>"; };
-		3F8A329619C1704700DD18FA /* ex01.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ex01.lua; sourceTree = "<group>"; };
-		3F8A329719C1704700DD18FA /* ex02.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ex02.lua; sourceTree = "<group>"; };
-		3F8A329819C1704700DD18FA /* ex03.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ex03.lua; sourceTree = "<group>"; };
-		3F8A329919C1704700DD18FA /* ex04.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ex04.lua; sourceTree = "<group>"; };
-		3F8A329A19C1704700DD18FA /* ex05.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ex05.lua; sourceTree = "<group>"; };
-		3F8A329B19C1704700DD18FA /* ex06.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ex06.lua; sourceTree = "<group>"; };
-		3F8A329C19C1704700DD18FA /* ex07.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ex07.lua; sourceTree = "<group>"; };
-		3F8A329D19C1704700DD18FA /* flappybird.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = flappybird.lua; sourceTree = "<group>"; };
-		3F8A32A719C1749000DD18FA /* init.lua */ = {isa = PBXFileReference; lastKnownFileType = text; name = init.lua; path = ../../ejoy2d/init.lua; sourceTree = "<group>"; };
-		3F8A32A819C1749000DD18FA /* matrix.lua */ = {isa = PBXFileReference; lastKnownFileType = text; name = matrix.lua; path = ../../ejoy2d/matrix.lua; sourceTree = "<group>"; };
-		3F8A32A919C1749000DD18FA /* particle.lua */ = {isa = PBXFileReference; lastKnownFileType = text; name = particle.lua; path = ../../ejoy2d/particle.lua; sourceTree = "<group>"; };
-		3F8A32AA19C1749000DD18FA /* richtext.lua */ = {isa = PBXFileReference; lastKnownFileType = text; name = richtext.lua; path = ../../ejoy2d/richtext.lua; sourceTree = "<group>"; };
-		3F8A32AB19C1749000DD18FA /* shader.lua */ = {isa = PBXFileReference; lastKnownFileType = text; name = shader.lua; path = ../../ejoy2d/shader.lua; sourceTree = "<group>"; };
-		3F8A32AC19C1749000DD18FA /* simplepackage.lua */ = {isa = PBXFileReference; lastKnownFileType = text; name = simplepackage.lua; path = ../../ejoy2d/simplepackage.lua; sourceTree = "<group>"; };
-		3F8A32AD19C1749000DD18FA /* sprite.lua */ = {isa = PBXFileReference; lastKnownFileType = text; name = sprite.lua; path = ../../ejoy2d/sprite.lua; sourceTree = "<group>"; };
-		3F8A32AE19C1749000DD18FA /* spritepack.lua */ = {isa = PBXFileReference; lastKnownFileType = text; name = spritepack.lua; path = ../../ejoy2d/spritepack.lua; sourceTree = "<group>"; };
+		3F9C3AD019C17A470081BC5F /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; name = examples; path = ../../examples; sourceTree = "<group>"; };
+		3F9C3AD119C17B210081BC5F /* ejoy2d */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ejoy2d; path = ../../ejoy2d; sourceTree = "<group>"; };
 		F44EF71618CF2816005EFAC1 /* example */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = example; sourceTree = BUILT_PRODUCTS_DIR; };
 		F4816EFA18CF3C9400A0199B /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		F4816EFD18CF3C9400A0199B /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -296,66 +188,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		3F8A328919C1704700DD18FA /* examples */ = {
-			isa = PBXGroup;
-			children = (
-				3F8A328A19C1704700DD18FA /* asset */,
-				3F8A329619C1704700DD18FA /* ex01.lua */,
-				3F8A329719C1704700DD18FA /* ex02.lua */,
-				3F8A329819C1704700DD18FA /* ex03.lua */,
-				3F8A329919C1704700DD18FA /* ex04.lua */,
-				3F8A329A19C1704700DD18FA /* ex05.lua */,
-				3F8A329B19C1704700DD18FA /* ex06.lua */,
-				3F8A329C19C1704700DD18FA /* ex07.lua */,
-				3F8A329D19C1704700DD18FA /* flappybird.lua */,
-			);
-			name = examples;
-			path = ../../examples;
-			sourceTree = "<group>";
-		};
-		3F8A328A19C1704700DD18FA /* asset */ = {
-			isa = PBXGroup;
-			children = (
-				3F8A328B19C1704700DD18FA /* bird_config.lua */,
-				3F8A328C19C1704700DD18FA /* birds.1.pgm */,
-				3F8A328D19C1704700DD18FA /* birds.1.ppm */,
-				3F8A328E19C1704700DD18FA /* birds.lua */,
-				3F8A328F19C1704700DD18FA /* particle.1.pgm */,
-				3F8A329019C1704700DD18FA /* particle.1.ppm */,
-				3F8A329119C1704700DD18FA /* particle.lua */,
-				3F8A329219C1704700DD18FA /* particle_particle_config.lua */,
-				3F8A329319C1704700DD18FA /* sample.1.pgm */,
-				3F8A329419C1704700DD18FA /* sample.1.ppm */,
-				3F8A329519C1704700DD18FA /* sample.lua */,
-			);
-			path = asset;
-			sourceTree = "<group>";
-		};
-		3F8A32B719C1749B00DD18FA /* ejoy2d */ = {
-			isa = PBXGroup;
-			children = (
-				3F8A32A719C1749000DD18FA /* init.lua */,
-				3F8A32A819C1749000DD18FA /* matrix.lua */,
-				3F8A32A919C1749000DD18FA /* particle.lua */,
-				3F8A32AA19C1749000DD18FA /* richtext.lua */,
-				3F8A32AB19C1749000DD18FA /* shader.lua */,
-				3F8A32AC19C1749000DD18FA /* simplepackage.lua */,
-				3F8A32AD19C1749000DD18FA /* sprite.lua */,
-				3F8A32AE19C1749000DD18FA /* spritepack.lua */,
-			);
-			name = ejoy2d;
-			sourceTree = "<group>";
-		};
 		F44EF70B18CF2805005EFAC1 = {
 			isa = PBXGroup;
 			children = (
-				3F8A32B719C1749B00DD18FA /* ejoy2d */,
+				3F9C3AD119C17B210081BC5F /* ejoy2d */,
 				F4E6FAB618D2D361005A8D23 /* lua */,
 				F4E6FA1C18D2B142005A8D23 /* example */,
 				F4EA759618CF6CEA00C37D31 /* lib */,
 				F4816EF918CF3C9400A0199B /* Frameworks */,
 				F44EF71718CF2816005EFAC1 /* Products */,
-				3F8A328919C1704700DD18FA /* examples */,
+				3F9C3AD019C17A470081BC5F /* examples */,
 			);
 			sourceTree = "<group>";
 		};
@@ -520,9 +362,7 @@
 			buildPhases = (
 				F44EF71218CF2816005EFAC1 /* Sources */,
 				F44EF71318CF2816005EFAC1 /* Frameworks */,
-				F44EF71418CF2816005EFAC1 /* Copy Files */,
-				3F8A32C019C1751A00DD18FA /* CopyFiles */,
-				3F8A32C919C1753400DD18FA /* CopyFiles */,
+				3F9C3AD219C17B320081BC5F /* Resources */,
 			);
 			buildRules = (
 			);
@@ -558,6 +398,18 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3F9C3AD219C17B320081BC5F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3F9C3AD419C17B3B0081BC5F /* examples in Resources */,
+				3F9C3AD319C17B360081BC5F /* ejoy2d in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		F44EF71218CF2816005EFAC1 /* Sources */ = {
