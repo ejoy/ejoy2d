@@ -14,15 +14,10 @@
 #include <stdio.h>
 #include <limits.h>
 
-static bool enable_visible_test = true;
-void enable_screen_visible_test(bool enable) {
-	enable_visible_test = enable;
-}
-
 void
 sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt,  const struct sprite_trans *arg) {
 	struct matrix tmp;
-	float vb[16];
+	struct vertex_pack vb[4];
 	int i,j;
 	if (arg->mat == NULL) {
 		matrix_identity(&tmp);
@@ -46,24 +41,19 @@ sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const s
 			float ty = q->texture_coord[j*2+1];
 
 			screen_trans(&vx,&vy);
-			texture_coord(q->texid, &tx, &ty);
-			vb[j*4+0] = vx;
-			vb[j*4+1] = vy;
-			vb[j*4+2] = tx;
-			vb[j*4+3] = ty;
+			vb[j].vx = vx;
+			vb[j].vy = vy;
+			vb[j].tx = tx;
+			vb[j].ty = ty;
 		}
-		if(!enable_visible_test || !screen_is_poly_invisible(vb,4,4))
-		{
-			if (mask != NULL) {
-					float tx = mask->rect[0].texture_coord[0];
-					float ty = mask->rect[0].texture_coord[1];
-					texture_coord(mask->rect[0].texid, &tx, &ty);
-					float delta_tx = tx - vb[2];
-					float delta_ty = ty - vb[3];
-					shader_mask(delta_tx, delta_ty);
-			}
-			shader_draw(vb, arg->color);
+		if (mask != NULL) {
+				float tx = mask->rect[0].texture_coord[0];
+				float ty = mask->rect[0].texture_coord[1];
+				float delta_tx = (tx - vb[0].tx) * (1.0f / 65535.0f);
+				float delta_ty = (ty - vb[0].ty) * (1.0f / 65535.0f);
+				shader_mask(delta_tx, delta_ty);
 		}
+		shader_draw(vb, arg->color);
 	}
 }
 
@@ -86,7 +76,7 @@ sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struc
 		shader_texture(glid);
 		int pn = p->n;
 
-		ARRAY(float, vb, 4 * pn);
+		ARRAY(struct vertex_pack, vb, pn);
 
 		for (j=0;j<pn;j++) {
 			int xx = p->screen_coord[j*2+0];
@@ -100,11 +90,10 @@ sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struc
 
 			screen_trans(&vx,&vy);
 
-			texture_coord(p->texid, &tx, &ty);
-			vb[j*4+0] = vx;
-			vb[j*4+1] = vy;
-			vb[j*4+2] = tx;
-			vb[j*4+3] = ty;
+			vb[j].vx = vx;
+			vb[j].vy = vy;
+			vb[j].tx = tx;
+			vb[j].ty = ty;
 		}
 		shader_drawpolygon(pn, vb, arg->color);
 	}

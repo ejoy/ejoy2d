@@ -2,6 +2,7 @@
 #define EJOY_2D_TEXTURE_H
 
 #include "opengl.h"
+#include <stdint.h>
 
 #define Texture2DPixelFormat_RGBA8888 1
 #define Texture2DPixelFormat_RGBA4444 2
@@ -14,7 +15,7 @@
 const char * texture_load(int id, int type, int width, int height, void *buffer);
 void texture_unload(int id);
 GLuint texture_glid(int id);
-void texture_coord(int id, float *x, float *y);
+void texture_coord(int id, float x, float y, uint16_t *u, uint16_t *v);
 void texture_clearall();
 void texture_exit();
 

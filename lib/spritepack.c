@@ -2,6 +2,7 @@
 #include "matrix.h"
 #include "shader.h"
 #include "array.h"
+#include "texture.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -108,8 +109,10 @@ import_picture(struct import_stream *is) {
 		struct pack_quad * q = &pp->rect[i];
 		int texid = import_byte(is);
 		q->texid = is->pack->tex[texid];
-		for (j=0;j<8;j++) {
-			q->texture_coord[j] = import_word(is);
+		for (j=0;j<8;j+=2) {
+			float x = (float)import_word(is);
+			float y = (float)import_word(is);
+			texture_coord(q->texid, x, y, &q->texture_coord[j], &q->texture_coord[j+1]);
 		}
 		for (j=0;j<8;j++) {
 			q->screen_coord[j] = import_int32(is);
@@ -128,10 +131,12 @@ import_polygon(struct import_stream *is) {
 		int texid = import_byte(is);
 		p->texid = is->pack->tex[texid];
 		p->n = import_byte(is);
-		p->texture_coord = (uint16_t *)ialloc(is->alloc, p->n * 2 * sizeof(uint16_t));
+		p->texture_coord = (uint16_t *)ialloc(is->alloc, p->n * 2 * sizeof(*p->texture_coord));
 		p->screen_coord = (int32_t *)ialloc(is->alloc, p->n * 2 * sizeof(uint32_t));
-		for (j=0;j<p->n*2;j++) {
-			p->texture_coord[j] = import_word(is);
+		for (j=0;j<p->n*2;j+=2) {
+			float x = (float)import_word(is);
+			float y = (float)import_word(is);
+			texture_coord(p->texid, x, y, &p->texture_coord[j], &p->texture_coord[j+1]);
 		}
 		for (j=0;j<p->n*2;j++) {
 			p->screen_coord[j] = import_int32(is);
