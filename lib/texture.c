@@ -10,7 +10,7 @@ struct texture {
 	float invw;
 	float invh;
 	GLuint id;
-	GLuint fb; /// rt ¶ÔÓ¦µÄframe buffer
+	GLuint fb; /// rt 's frame buffer
 };
 
 struct texture_pool {
