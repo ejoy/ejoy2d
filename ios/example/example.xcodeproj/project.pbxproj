@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AE7789AF19C161E300AFCC14 /* lrenderbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = AE7789AD19C161E300AFCC14 /* lrenderbuffer.c */; };
+		AE7789B019C161E300AFCC14 /* renderbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = AE7789AE19C161E300AFCC14 /* renderbuffer.c */; };
 		E675687F18756D8B00466F0C /* scissor.c in Sources */ = {isa = PBXBuildFile; fileRef = E675687D18756D8B00466F0C /* scissor.c */; };
 		E6C2315C187275D10029D57B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6C2315B187275D10029D57B /* Foundation.framework */; };
 		E6C2315E187275D10029D57B /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6C2315D187275D10029D57B /* CoreGraphics.framework */; };
@@ -88,6 +90,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		AE7789AD19C161E300AFCC14 /* lrenderbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = lrenderbuffer.c; path = ../../lib/lrenderbuffer.c; sourceTree = "<group>"; };
+		AE7789AE19C161E300AFCC14 /* renderbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = renderbuffer.c; path = ../../lib/renderbuffer.c; sourceTree = "<group>"; };
 		E675687D18756D8B00466F0C /* scissor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = scissor.c; path = ../../lib/scissor.c; sourceTree = "<group>"; };
 		E675687E18756D8B00466F0C /* scissor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = scissor.h; path = ../../lib/scissor.h; sourceTree = "<group>"; };
 		E6C23158187275D10029D57B /* example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = example.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -318,6 +322,8 @@
 		E6C264021872AD22008035E3 /* lib */ = {
 			isa = PBXGroup;
 			children = (
+				AE7789AD19C161E300AFCC14 /* lrenderbuffer.c */,
+				AE7789AE19C161E300AFCC14 /* renderbuffer.c */,
 				E675687D18756D8B00466F0C /* scissor.c */,
 				E675687E18756D8B00466F0C /* scissor.h */,
 				E6C264031872AD44008035E3 /* dfont.h */,
@@ -550,6 +556,7 @@
 				E6EF880A18D2CE0800F01E49 /* ldebug.c in Sources */,
 				E6EF880318D2CE0800F01E49 /* lauxlib.c in Sources */,
 				E6C263FB1872ACEC008035E3 /* ppm.c in Sources */,
+				AE7789B019C161E300AFCC14 /* renderbuffer.c in Sources */,
 				E6C263FC1872ACEC008035E3 /* screen.c in Sources */,
 				E6C263FD1872ACEC008035E3 /* shader.c in Sources */,
 				E6C263FE1872ACEC008035E3 /* sprite.c in Sources */,
@@ -566,6 +573,7 @@
 				E6C262E51872A91B008035E3 /* winfw.c in Sources */,
 				E6EF880918D2CE0800F01E49 /* ldblib.c in Sources */,
 				E6C23168187275D10029D57B /* main.m in Sources */,
+				AE7789AF19C161E300AFCC14 /* lrenderbuffer.c in Sources */,
 				E6C264141872B266008035E3 /* font.m in Sources */,
 				E6EF880818D2CE0800F01E49 /* lctype.c in Sources */,
 				E675687F18756D8B00466F0C /* scissor.c in Sources */,
