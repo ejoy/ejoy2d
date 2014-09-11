@@ -38,6 +38,7 @@ struct import_stream {
 	struct sprite_pack *pack;
 	const char * stream;
 	size_t size;
+	int maxtexture;
 	// for debug
 	int current_id;
 };
@@ -99,6 +100,14 @@ import_color(struct import_stream *is) {
 	return (b[0] | (uint32_t)b[1]<<8 | (uint32_t)b[2]<<16 | (uint32_t)b[3]<<24);
 }
 
+static int
+get_texid(struct import_stream *is, int texid) {
+	if (texid < 0 || texid >= is->maxtexture) {
+		return -1;
+	}
+	return is->pack->tex[texid];
+}
+
 static void
 import_picture(struct import_stream *is) {
 	int n = import_byte(is);
@@ -108,10 +117,11 @@ import_picture(struct import_stream *is) {
 	for (i=0;i<n;i++) {
 		struct pack_quad * q = &pp->rect[i];
 		int texid = import_byte(is);
-		q->texid = is->pack->tex[texid];
+		q->texid = get_texid(is, texid);
 		for (j=0;j<8;j+=2) {
 			float x = (float)import_word(is);
 			float y = (float)import_word(is);
+			// todo: check the return value
 			texture_coord(q->texid, x, y, &q->texture_coord[j], &q->texture_coord[j+1]);
 		}
 		for (j=0;j<8;j++) {
@@ -129,13 +139,14 @@ import_polygon(struct import_stream *is) {
 	for (i=0;i<n;i++) {
 		struct pack_poly * p = &pp->poly[i];
 		int texid = import_byte(is);
-		p->texid = is->pack->tex[texid];
+		p->texid = get_texid(is, texid);
 		p->n = import_byte(is);
 		p->texture_coord = (uint16_t *)ialloc(is->alloc, p->n * 2 * sizeof(*p->texture_coord));
 		p->screen_coord = (int32_t *)ialloc(is->alloc, p->n * 2 * sizeof(uint32_t));
 		for (j=0;j<p->n*2;j+=2) {
 			float x = (float)import_word(is);
 			float y = (float)import_word(is);
+			// todo: check the return value
 			texture_coord(p->texid, x, y, &p->texture_coord[j], &p->texture_coord[j+1]);
 		}
 		for (j=0;j<p->n*2;j++) {
@@ -313,7 +324,9 @@ limport(lua_State *L) {
 	int size = (int)luaL_checkinteger(L, 3);
 	int tex;
 	int tt = lua_type(L,1);
-	if (tt == LUA_TNUMBER) {
+	if (tt == LUA_TNIL) {
+		tex = 0;
+	} else if (tt == LUA_TNUMBER) {
 		tex = 1;
 	} else {
 		if (tt != LUA_TTABLE) {
@@ -343,13 +356,14 @@ limport(lua_State *L) {
 			pack->tex[i] = (int)luaL_checkinteger(L, -1);
 			lua_pop(L,1);
 		}
-	} else {
+	} else if (!lua_isnil(L,1)) {
 		pack->tex[0] = (int)lua_tointeger(L,1);
 	}
 
 	struct import_stream is;
 	is.alloc = &alloc;
 	is.pack = pack;
+	is.maxtexture = tex;
 	is.current_id = -1;
 	if (lua_isstring(L,4)) {
 		is.stream = lua_tolstring(L, 4, &is.size);
