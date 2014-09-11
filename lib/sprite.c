@@ -14,11 +14,6 @@
 #include <stdio.h>
 #include <limits.h>
 
-static bool enable_visible_test = true;
-void enable_screen_visible_test(bool enable) {
-	enable_visible_test = enable;
-}
-
 void
 sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt,  const struct sprite_trans *arg) {
 	struct matrix tmp;
@@ -46,7 +41,6 @@ sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const s
 			float ty = q->texture_coord[j*2+1];
 
 			screen_trans(&vx,&vy);
-			texture_coord(q->texid, &tx, &ty);
 			vb[j].vx = vx;
 			vb[j].vy = vy;
 			vb[j].tx = tx;
@@ -55,9 +49,10 @@ sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const s
 		if (mask != NULL) {
 				float tx = mask->rect[0].texture_coord[0];
 				float ty = mask->rect[0].texture_coord[1];
-				texture_coord(mask->rect[0].texid, &tx, &ty);
-				float delta_tx = tx - vb[0].tx;
-				float delta_ty = ty - vb[0].ty;
+				uint16_t u,v;
+				texture_coord(mask->rect[0].texid, tx, ty, &u, &v);
+				float delta_tx = (signed)(u - vb[0].tx) * (1.0f / 65535.0f);
+				float delta_ty = (signed)(v - vb[0].ty) * (1.0f / 65535.0f);
 				shader_mask(delta_tx, delta_ty);
 		}
 		shader_draw(vb, arg->color);
@@ -97,7 +92,6 @@ sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struc
 
 			screen_trans(&vx,&vy);
 
-			texture_coord(p->texid, &tx, &ty);
 			vb[j].vx = vx;
 			vb[j].vy = vy;
 			vb[j].tx = tx;

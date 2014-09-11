@@ -8,8 +8,8 @@
 struct vertex_pack {
 	float vx;
 	float vy;
-	float tx;
-	float ty;
+	uint16_t tx;
+	uint16_t ty;
 };
 
 struct vertex {

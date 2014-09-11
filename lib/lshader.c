@@ -60,13 +60,14 @@ ldraw(lua_State *L) {
 		float ty = lua_tonumber(L, -3);
 		float vx = lua_tonumber(L, -2);
 		float vy = lua_tonumber(L, -1);
+		uint16_t u,v;
 		lua_pop(L,4);
 		screen_trans(&vx,&vy);
-		texture_coord(tex, &tx, &ty);
+		texture_coord(tex, tx, ty, &u, &v);
 		vb[i].vx = vx + 1.0f;
 		vb[i].vy = vy - 1.0f;
-		vb[i].tx = tx;
-		vb[i].ty = ty;
+		vb[i].tx = u;
+		vb[i].ty = v;
 	}
 	if (point == 4) {
 		shader_draw(vb, color);

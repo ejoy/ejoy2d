@@ -204,8 +204,8 @@ set_point(struct vertex_pack *v, int *m, int xx, int yy,int tx, int ty) {
 	v->vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
 	screen_trans(&v->vx,&v->vy);
 
-	v->tx = (float)tx * (1.0f/TEX_WIDTH);
-	v->ty = (float)ty * (1.0f/TEX_HEIGHT);
+	v->tx = (uint16_t)(tx * (65535.0f/TEX_WIDTH));
+	v->ty = (uint16_t)(ty * (65535.0f/TEX_HEIGHT));
 }
 
 static void

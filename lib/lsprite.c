@@ -1136,9 +1136,8 @@ lrecursion_frame(lua_State *L) {
 
 static int
 lenable_visible_test(lua_State *L) {
-    bool enable = lua_toboolean(L, 1);
-    enable_screen_visible_test(enable);
-    return 0;
+	// todo: remove this api
+	return 0;
 }
 
 static int

@@ -62,16 +62,10 @@ drawquad(struct render_buffer *rb, struct pack_picture *picture, const struct sp
 		for (j=0;j<4;j++) {
 			int xx = q->screen_coord[j*2+0];
 			int yy = q->screen_coord[j*2+1];
-			float vx = (xx * m[0] + yy * m[2]) / 1024 + m[4];
-			float vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
-			float tx = q->texture_coord[j*2+0];
-			float ty = q->texture_coord[j*2+1];
-
-			texture_coord(q->texid, &tx, &ty);
-			vb[j].vx = vx;
-			vb[j].vy = vy;
-			vb[j].tx = tx;
-			vb[j].ty = ty;
+			vb[j].vx = (xx * m[0] + yy * m[2]) / 1024 + m[4];
+			vb[j].vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
+			vb[j].tx = q->texture_coord[j*2+0];
+			vb[j].ty = q->texture_coord[j*2+1];
 		}
 		if (renderbuffer_add(rb, vb, arg->color)) {
 			return 1;
@@ -132,17 +126,10 @@ drawpolygon(struct render_buffer *rb, struct pack_polygon *poly, const struct sp
 			int xx = p->screen_coord[j*2+0];
 			int yy = p->screen_coord[j*2+1];
 		
-			
-			float vx = (xx * m[0] + yy * m[2]) / 1024 + m[4];
-			float vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
-			float tx = p->texture_coord[j*2+0];
-			float ty = p->texture_coord[j*2+1];
-
-			texture_coord(p->texid, &tx, &ty);
-			vb[j].vx = vx;
-			vb[j].vy = vy;
-			vb[j].tx = tx;
-			vb[j].ty = ty;
+			vb[j].vx = (xx * m[0] + yy * m[2]) / 1024 + m[4];
+			vb[j].vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
+			vb[j].tx = p->texture_coord[j*2+0];
+			vb[j].ty = p->texture_coord[j*2+1];
 		}
 		if (add_polygon(rb, pn, vb, arg->color)) {
 			rb->object = object;
