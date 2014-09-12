@@ -45,15 +45,15 @@ void main() {
 local text_fs = [[
 varying vec2 v_texcoord;
 varying vec4 v_color;
+varying vec4 v_additive;
 
 uniform sampler2D texture0;
-uniform vec3 additive;
 
 void main() {
 	float c = texture2D(texture0, v_texcoord).w;
 	float alpha = clamp(c, 0.0, 0.5) * 2.0;
 
-	gl_FragColor.xyz = (v_color.xyz + additive) * alpha;
+	gl_FragColor.xyz = (v_color.xyz + v_additive.xyz) * alpha;
 	gl_FragColor.w = alpha;
 	gl_FragColor *= v_color.w;
 }
@@ -62,16 +62,16 @@ void main() {
 local text_edge_fs = [[
 varying vec2 v_texcoord;
 varying vec4 v_color;
+varying vec4 v_additive;
 
 uniform sampler2D texture0;
-uniform vec3 additive;
 
 void main() {
 	float c = texture2D(texture0, v_texcoord).w;
 	float alpha = clamp(c, 0.0, 0.5) * 2.0;
 	float color = (clamp(c, 0.5, 1.0) - 0.5) * 2.0;
 
-	gl_FragColor.xyz = (v_color.xyz + additive) * color;
+	gl_FragColor.xyz = (v_color.xyz + v_additive.xyz) * color;
 	gl_FragColor.w = alpha;
 	gl_FragColor *= v_color.w;
 }
@@ -80,8 +80,9 @@ void main() {
 local gray_fs = [[
 varying vec2 v_texcoord;
 varying vec4 v_color;
+varying vec4 v_additive;
+
 uniform sampler2D texture0;
-uniform vec3 additive;
 
 void main()
 {
@@ -90,7 +91,7 @@ void main()
 	c.xyz = tmp.xyz * v_color.xyz;
 	c.w = tmp.w;
 	c *= v_color.w;
-	c.xyz += additive.xyz * tmp.w;
+	c.xyz += v_additive.xyz * tmp.w;
 	float g = dot(c.rgb , vec3(0.299, 0.587, 0.114));
 	gl_FragColor = vec4(g,g,g,c.a);
 }
@@ -99,8 +100,9 @@ void main()
 local color_fs = [[
 varying vec2 v_texcoord;
 varying vec4 v_color;
+varying vec4 v_additive;
+
 uniform sampler2D texture0;
-uniform vec3 additive;
 
 void main()
 {
@@ -115,16 +117,16 @@ local blend_fs = [[
 varying vec2 v_texcoord;
 varying vec2 v_mask_texcoord;
 varying vec4 v_color;
+varying vec4 v_additive;
 
 uniform sampler2D texture0;
-uniform vec3 additive;
 
 void main() {
 	vec4 tmp = texture2D(texture0, v_texcoord);
 	gl_FragColor.xyz = tmp.xyz * v_color.xyz;
 	gl_FragColor.w = tmp.w;
 	gl_FragColor *= v_color.w;
-	gl_FragColor.xyz += additive.xyz * tmp.w;
+	gl_FragColor.xyz += v_additive.xyz * tmp.w;
 
 	vec4 m = texture2D(texture0, v_mask_texcoord);
 	gl_FragColor.xyz *= m.xyz;
@@ -137,10 +139,12 @@ local blend_vs = [[
 attribute vec4 position;
 attribute vec2 texcoord;
 attribute vec4 color;
+attribute vec4 additive;
 
 varying vec2 v_texcoord;
 varying vec2 v_mask_texcoord;
 varying vec4 v_color;
+varying vec4 v_additive;
 
 uniform vec2 mask;
 
@@ -149,6 +153,7 @@ void main() {
 	v_texcoord = texcoord;
 	v_mask_texcoord = texcoord + mask;
 	v_color = color;
+    v_additive = additive;
 }
 ]]
 
