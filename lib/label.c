@@ -209,7 +209,7 @@ set_point(struct vertex_pack *v, int *m, int xx, int yy,int tx, int ty) {
 }
 
 static void
-draw_rect(const struct dfont_rect *rect, int size, struct matrix *mat, uint32_t color) {
+draw_rect(const struct dfont_rect *rect, int size, struct matrix *mat, uint32_t color, uint32_t additive) {
 	struct vertex_pack vb[4];
 
 	int w = (rect->w -1) * size / FONT_SIZE ;
@@ -219,7 +219,7 @@ draw_rect(const struct dfont_rect *rect, int size, struct matrix *mat, uint32_t 
 	set_point(&vb[1], mat->m, w*SCREEN_SCALE,0, rect->x+rect->w-1, rect->y);
 	set_point(&vb[2], mat->m, w*SCREEN_SCALE,h*SCREEN_SCALE, rect->x+rect->w-1, rect->y+rect->h-1);
 	set_point(&vb[3], mat->m, 0,h*SCREEN_SCALE, rect->x, rect->y+rect->h-1);
-	shader_draw(vb, color);
+	shader_draw(vb, color, additive);
 }
 
 static int
@@ -307,7 +307,7 @@ draw_utf8(int unicode, int cx, int cy, int size, const struct srt *srt,
 		m=&mat1;
 	}
 	matrix_srt(m, srt);
-	draw_rect(rect,size,m,color);
+	draw_rect(rect,size,m,color,arg->additive);
 
 	return (rect->w-1) * size / FONT_SIZE ;
 }
