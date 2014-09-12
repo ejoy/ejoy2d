@@ -24,8 +24,6 @@
 
 struct program {
 	GLuint prog;
-	GLint additive;
-	uint32_t arg_additive;
 	
 	GLint mask;
 	GLint st;
@@ -135,21 +133,6 @@ link(struct program *p) {
 }
 
 static void
-set_color(GLint addi, uint32_t color) {
-	if (addi == -1)
-		return;
-	if (color == 0) {
-		glUniform3f(addi, 0,0,0);
-	} else {
-		float c[3];
-		c[0] = (float)((color >> 16) & 0xff) / 255.0f;
-		c[1] = (float)((color >> 8) & 0xff) / 255.0f;
-		c[2] = (float)(color & 0xff ) / 255.0f;
-		glUniform3f(addi, c[0],c[1],c[2]);
-	}
-}
-
-static void
 program_init(struct program * p, const char *FS, const char *VS) {
 	// Create shader program.
 	p->prog = glCreateProgram();
@@ -174,10 +157,6 @@ program_init(struct program * p, const char *FS, const char *VS) {
 	glBindAttribLocation(p->prog, ATTRIB_ADDITIVE, "additive");
 
 	link(p);
-
-	p->additive = glGetUniformLocation(p->prog, "additive");
-	p->arg_additive = 0;
-	set_color(p->additive, 0);
 	
 	p->mask = glGetUniformLocation(p->prog, "mask");
 	p->arg_mask_x = 0.0f;
@@ -301,12 +280,6 @@ shader_program(int n, uint32_t arg) {
 		rs_commit();
 		RS->current_program = n;
 		glUseProgram(RS->program[n].prog);
-	}
-	struct program *p = &RS->program[RS->current_program];
-	if (p->arg_additive != arg) {
-		rs_commit();
-		p->arg_additive = arg;
-		set_color(p->additive, arg);
 	}
 }
 
