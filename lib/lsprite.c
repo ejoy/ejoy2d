@@ -792,9 +792,10 @@ ldraw(lua_State *L) {
 static int
 laabb(lua_State *L) {
 	struct sprite *s = self(L);
-	bool world = lua_toboolean(L, 2);
 	struct srt srt;
-	fill_srt(L,&srt,3);
+	fill_srt(L,&srt,2);
+	bool world = lua_toboolean(L, 3);
+	
 	int aabb[4];
 	sprite_aabb(s, &srt, world, aabb);
 	int i;
