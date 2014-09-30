@@ -5,6 +5,7 @@
 #include "screen.h"
 #include "texture.h"
 #include "array.h"
+#include "spritepack.h"
 
 static int
 lload(lua_State *L) {
@@ -107,6 +108,18 @@ lclear(lua_State *L) {
 	return 0;
 }
 
+static int
+lshader_st(lua_State *L) {
+    int prog = luaL_checkinteger(L, 1);
+	float x = luaL_checknumber(L, 2);
+	float y = luaL_checknumber(L, 3);
+	float scale = luaL_optnumber(L, 4, 1.0);
+
+    screen_trans(&x, &y);
+    shader_st(prog, x * SCREEN_SCALE, y * SCREEN_SCALE, scale);
+    return 0;
+}
+
 int 
 ejoy2d_shader(lua_State *L) {
 	luaL_Reg l[] = {
@@ -116,6 +129,7 @@ ejoy2d_shader(lua_State *L) {
 		{"blend", lblend},
 		{"clear", lclear},
 		{"version", lversion},
+        {"shader_st", lshader_st },
 		{NULL,NULL},
 	};
 	luaL_newlib(L,l);

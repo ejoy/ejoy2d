@@ -13,7 +13,7 @@
 #include <string.h>
 #include <assert.h>
 
-#define MAX_PROGRAM 8
+#define MAX_PROGRAM 9
 
 #define ATTRIB_VERTEX 0
 #define ATTRIB_TEXTCOORD 1
@@ -294,6 +294,18 @@ shader_mask(float x, float y) {
 	p->arg_mask_y = y;
 //  rs_commit();
 	glUniform2f(p->mask, x, y);
+}
+
+void
+shader_st(int prog, float x, float y, float scale) {
+	rs_commit();
+    shader_program(prog, 0);
+    struct program *p = &RS->program[prog];
+
+    if (!p || p->st == -1)
+        return;
+
+    glUniform4f(p->st, scale, scale, x, y);
 }
 
 void

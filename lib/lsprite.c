@@ -599,6 +599,13 @@ lgetparent(lua_State *L) {
 	return 1;
 }
 
+static int
+lgetprogram(lua_State *L) {
+    struct sprite *s = self(L);
+    lua_pushinteger(L, s->t.program);
+    return 1;
+}
+
 static void
 lgetter(lua_State *L) {
 	luaL_Reg l[] = {
@@ -617,6 +624,7 @@ lgetter(lua_State *L) {
 		{"parent_name", lgetparentname },	// todo: maybe unused , use parent instead
 		{"has_parent", lhasparent },	// todo: maybe unused , use parent instead
 		{"parent", lgetparent },
+        {"program", lgetprogram },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
