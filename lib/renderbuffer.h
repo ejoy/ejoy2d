@@ -24,7 +24,6 @@ struct quad {
 };
 
 struct render_buffer {
-	struct render *R;
 	int object;
 	int texid;
 	RID vbid;

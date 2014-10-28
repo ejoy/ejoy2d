@@ -246,5 +246,4 @@ renderbuffer_init(struct render_buffer *rb) {
 	rb->object = 0;
 	rb->texid = 0;
 	rb->vbid = 0;
-	rb->R = R;
 }

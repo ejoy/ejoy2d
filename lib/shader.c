@@ -191,12 +191,6 @@ rs_commit() {
 void 
 shader_drawbuffer(struct render_buffer * rb, float tx, float ty, float scale) {
 	rs_commit();
-	if (rb->R != RS->R) {
-		// render is change , upload again
-		rb->R = RS->R;
-		rb->vbid = 0;
-		renderbuffer_upload(rb);
-	}
 
 	RID glid = texture_glid(rb->texid);
 	if (glid == 0)
