@@ -483,16 +483,23 @@ apply_vb(struct render *R) {
 	struct shader * s = array_ref(&R->shader, prog);
 	if (s) {
 		int i;
+		RID last_vb = 0;
+		int stride = 0;
 		for (i=0;i<s->n;i++) {
 			struct attrib_layout *al = &s->a[i];
 			int vbidx = al->vbslot;
 			RID vb = R->vbslot[vbidx];
-			struct buffer * buf = array_ref(&R->buffer, vb);
-			if (buf) {
+			if (last_vb != vb) {
+				struct buffer * buf = array_ref(&R->buffer, vb);
+				if (buf == NULL) {
+					continue;
+				}
 				glBindBuffer(GL_ARRAY_BUFFER, buf->glid);
-				glEnableVertexAttribArray(i);
-				glVertexAttribPointer(i, al->size, al->type, al->normalized, buf->stride, (void *)(al->offset));
+				last_vb = vb;
+				stride = buf->stride;
 			}
+			glEnableVertexAttribArray(i);
+			glVertexAttribPointer(i, al->size, al->type, al->normalized, stride, (void *)(al->offset));
 		}
 	}
 

@@ -227,9 +227,9 @@ renderbuffer_drawsprite(struct render_buffer *rb, struct sprite *s) {
 void
 renderbuffer_upload(struct render_buffer *rb) {
 	if (rb->vbid == 0) {
-		rb->vbid = render_buffer_create(R, VERTEXBUFFER, rb->vb, MAX_COMMBINE * 4, sizeof(struct vertex));
+		rb->vbid = render_buffer_create(R, VERTEXBUFFER, rb->vb, rb->object * 4, sizeof(struct vertex));
 	} else {
-		render_buffer_update(R, rb->vbid, rb->vb, rb->object);
+		render_buffer_update(R, rb->vbid, rb->vb, rb->object * 4);
 	}
 }
 

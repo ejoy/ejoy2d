@@ -115,6 +115,8 @@ static void
 program_init(struct program * p, const char *FS, const char *VS) {
 	struct render *R = RS->R;
 	p->prog = render_shader_create(R, VS, FS);
+	render_shader_bind(R, p->prog);
+
 	p->mask = render_shader_locuniform(R, "mask");
 	p->arg_mask[0] = 0.0f;
 	p->arg_mask[1] = 0.0f;
@@ -122,6 +124,7 @@ program_init(struct program * p, const char *FS, const char *VS) {
 		render_shader_setuniform(R, p->mask, UNIFORM_FLOAT2, p->arg_mask);
 	}
 	p->st = render_shader_locuniform(R, "st");
+	render_shader_bind(R, 0);
 }
 
 void 
