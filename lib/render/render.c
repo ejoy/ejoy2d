@@ -353,7 +353,7 @@ render_release(struct render *R, enum RENDER_OBJ what, RID id) {
 			close_target(tar, R);
 			array_free(&R->target, tar);
 		}
-        break;
+		break;
 	}
 	default:
 		assert(0);
@@ -676,41 +676,6 @@ render_texture_subupdate(struct render *R, RID id, const void *pixels, int x, in
 	}
 }
 
-/***
-int 
-render_texture_data(struct render *R, RID id, void *buffer, int size, int slice, int miplevel) {
-	struct texture * tex = array_ref(&R->texture, id);
-	if (tex == NULL)
-		return 0;
-	GLenum type;
-	int target;
-	bind_texture(R, tex, slice, &type, &target);
-
-	GLint format = 0;
-	GLenum itype = 0;
-	int compressed = texture_format(tex, &format, &itype);
-	int w = tex->width;
-	int h = tex->height;
-	int i;
-	for (i=0;i<miplevel;i++) {
-		// NOTICE: NPOT texture's mipmap may not correct.
-		w=(w+1)/2;
-		h=(h+1)/2;
-	}
-	int need = calc_texture_size(tex->format, w, h);
-	if (need > size) 
-		return need;
-	if (compressed)
-		glGetCompressedTexImage(target, miplevel, buffer );
-	else
-		glGetTexImage(target, miplevel, format, itype, buffer);
-
-	CHECK_GL_ERROR
-
-	return need;
-}
- ***/
-
 // blend mode
 void 
 render_setblend(struct render *R, enum BLEND_FORMAT src, enum BLEND_FORMAT dst) {
@@ -957,7 +922,7 @@ render_state_reset(struct render *R) {
 
 // draw
 void 
-render_draw(struct render *R, enum DRAW_MODE mode, int fromvtx, int nv, int fromidx, int ni) {
+render_draw(struct render *R, enum DRAW_MODE mode, int fromidx, int ni) {
 	static int draw_mode[] = {
 		GL_TRIANGLES,
 		GL_LINES,
@@ -975,10 +940,7 @@ render_draw(struct render *R, enum DRAW_MODE mode, int fromvtx, int nv, int from
 		} else {
 			offset *= sizeof(short);
 		}
-		type = GL_UNSIGNED_SHORT;
-        CHECK_GL_ERROR
-		//glDrawRangeElements(draw_mode[mode], fromvtx, fromvtx + nv, ni, type, (char *)0 + offset);
-        glDrawElements(GL_TRIANGLES, ni, GL_UNSIGNED_SHORT, NULL);
+		glDrawElements(draw_mode[mode], ni, type, (char *)0 + offset);
 		CHECK_GL_ERROR
 	}
 }

@@ -121,7 +121,6 @@ RID render_texture_create(struct render *R, int width, int height, enum TEXTURE_
 void render_texture_update(struct render *R, RID id, const void *pixels, int slice, int miplevel);
 // subupdate only support slice 0, miplevel 0
 void render_texture_subupdate(struct render *R, RID id, const void *pixels, int x, int y, int w, int h);
-//int render_texture_data(struct render *R, RID id, void *buffer, int size, int slice, int miplevel);
 
 RID render_target_create(struct render *R, int width, int height, enum TEXTURE_FORMAT format);
 // render_release TARGET would not release the texture attachment
@@ -144,6 +143,6 @@ void render_enablescissor(struct render *R, int enable);
 void render_state_reset(struct render *R);
 
 void render_clear(struct render *R, enum CLEAR_MASK mask, unsigned long argb);
-void render_draw(struct render *R, enum DRAW_MODE mode, int fromvtx, int nv, int fromidx, int ni);
+void render_draw(struct render *R, enum DRAW_MODE mode, int fromidx, int ni);
 
 #endif

@@ -169,7 +169,7 @@ drawcall_count() {
 static void 
 renderbuffer_commit(struct render_buffer * rb) {
 	struct render *R = RS->R;
-	render_draw(R, DRAW_TRIANGLE, 0, 4 * rb->object, 0, 6 * rb->object);
+	render_draw(R, DRAW_TRIANGLE, 0, 6 * rb->object);
 }
 
 static void
