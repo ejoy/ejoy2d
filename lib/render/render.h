@@ -121,7 +121,7 @@ RID render_texture_create(struct render *R, int width, int height, enum TEXTURE_
 void render_texture_update(struct render *R, RID id, const void *pixels, int slice, int miplevel);
 // subupdate only support slice 0, miplevel 0
 void render_texture_subupdate(struct render *R, RID id, const void *pixels, int x, int y, int w, int h);
-int render_texture_data(struct render *R, RID id, void *buffer, int size, int slice, int miplevel);
+//int render_texture_data(struct render *R, RID id, void *buffer, int size, int slice, int miplevel);
 
 RID render_target_create(struct render *R, int width, int height, enum TEXTURE_FORMAT format);
 // render_release TARGET would not release the texture attachment

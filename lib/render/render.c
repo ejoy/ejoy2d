@@ -105,7 +105,7 @@ check_opengl_error_debug(struct render *R, const char *filename, int line) {
 //		&& error != GL_STACK_OVERFLOW 
 //		&& error != GL_STACK_UNDERFLOW
 	) {
-		log_printf(&R->log, "GL_ERROR (%x) @ %s : %d\n", error, filename, line);
+		log_printf(&R->log, "GL_ERROR (0x%x) @ %s : %d\n", error, filename, line);
 		exit(1);
 	}
 }
@@ -353,6 +353,7 @@ render_release(struct render *R, enum RENDER_OBJ what, RID id) {
 			close_target(tar, R);
 			array_free(&R->target, tar);
 		}
+        break;
 	}
 	default:
 		assert(0);
@@ -675,6 +676,7 @@ render_texture_subupdate(struct render *R, RID id, const void *pixels, int x, in
 	}
 }
 
+/***
 int 
 render_texture_data(struct render *R, RID id, void *buffer, int size, int slice, int miplevel) {
 	struct texture * tex = array_ref(&R->texture, id);
@@ -707,6 +709,7 @@ render_texture_data(struct render *R, RID id, void *buffer, int size, int slice,
 
 	return need;
 }
+ ***/
 
 // blend mode
 void 
@@ -745,14 +748,17 @@ render_setcull(struct render *R, enum CULL_MODE c) {
 
 // render target
 static RID
-create_rt(struct render *R, RID tex) {
+create_rt(struct render *R, RID texid) {
 	struct target *tar = array_alloc(&R->target);
 	if (tar == NULL)
 		return 0;
-	tar->tex = tex;
+	tar->tex = texid;
+    struct texture * tex = array_ref(&R->texture, texid);
+    if (tex == NULL)
+        return 0;
 	glGenFramebuffers(1, &tar->glid);
 	glBindFramebuffer(GL_FRAMEBUFFER, tar->glid);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->glid, 0);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		close_target(tar, R);
 		return 0;
@@ -767,6 +773,7 @@ render_target_create(struct render *R, int width, int height, enum TEXTURE_FORMA
 	RID tex = render_texture_create(R, width, height, format, TEXTURE_2D, 0);
 	if (tex == 0)
 		return 0;
+    render_texture_update(R, tex, NULL, 0, 0);
 	RID rt = create_rt(R, tex);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	R->last.target = 0;
@@ -775,6 +782,7 @@ render_target_create(struct render *R, int width, int height, enum TEXTURE_FORMA
 	if (rt == 0) {
 		render_release(R, TEXTURE, tex);
 	}
+    CHECK_GL_ERROR
 	return rt;
 }
 
@@ -968,7 +976,9 @@ render_draw(struct render *R, enum DRAW_MODE mode, int fromvtx, int nv, int from
 			offset *= sizeof(short);
 		}
 		type = GL_UNSIGNED_SHORT;
-		glDrawRangeElements(draw_mode[mode], fromvtx, fromvtx + nv, ni, type, (char *)0 + offset);
+        CHECK_GL_ERROR
+		//glDrawRangeElements(draw_mode[mode], fromvtx, fromvtx + nv, ni, type, (char *)0 + offset);
+        glDrawElements(GL_TRIANGLES, ni, GL_UNSIGNED_SHORT, NULL);
 		CHECK_GL_ERROR
 	}
 }
