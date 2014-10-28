@@ -446,28 +446,6 @@ render_exit(struct render * R) {
 }
 
 void 
-render_clear(struct render *R, enum CLEAR_MASK mask, unsigned long c) {
-	GLbitfield m = 0;
-	if (mask & MASKC) {
-		m |= GL_COLOR_BUFFER_BIT;
-		float a = ((c >> 24) & 0xff ) / 255.0;
-		float r = ((c >> 16) & 0xff ) / 255.0;
-		float g = ((c >> 8) & 0xff ) / 255.0;
-		float b = ((c >> 0) & 0xff ) / 255.0;
-		glClearColor(r,g,b,a);
-	}
-	if (mask & MASKD) {
-		m |= GL_DEPTH_BUFFER_BIT;
-	}
-	if (mask & MASKS) {
-		m |= GL_STENCIL_BUFFER_BIT;
-	}
-	glClear(m);
-
-	CHECK_GL_ERROR
-}
-
-void 
 render_setviewport(struct render *R, int x, int y, int width, int height) {
 	glViewport(x, y, width, height);
 }
@@ -950,6 +928,29 @@ render_draw(struct render *R, enum DRAW_MODE mode, int fromidx, int ni) {
 		glDrawElements(draw_mode[mode], ni, type, (char *)0 + offset);
 		CHECK_GL_ERROR
 	}
+}
+
+void
+render_clear(struct render *R, enum CLEAR_MASK mask, unsigned long c) {
+	GLbitfield m = 0;
+	if (mask & MASKC) {
+		m |= GL_COLOR_BUFFER_BIT;
+		float a = ((c >> 24) & 0xff ) / 255.0;
+		float r = ((c >> 16) & 0xff ) / 255.0;
+		float g = ((c >> 8) & 0xff ) / 255.0;
+		float b = ((c >> 0) & 0xff ) / 255.0;
+		glClearColor(r,g,b,a);
+	}
+	if (mask & MASKD) {
+		m |= GL_DEPTH_BUFFER_BIT;
+	}
+	if (mask & MASKS) {
+		m |= GL_STENCIL_BUFFER_BIT;
+	}
+	render_state_commit(R);
+	glClear(m);
+
+	CHECK_GL_ERROR
 }
 
 // uniform
