@@ -348,7 +348,7 @@ switch_program(struct sprite_trans *t, int def) {
 	if (prog == PROGRAM_DEFAULT) {
 		prog = def;
 	}
-	shader_program(prog, t->additive);
+	shader_program(prog);
 }
 
 static void

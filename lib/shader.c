@@ -251,7 +251,7 @@ shader_drawbuffer(struct render_buffer * rb, float tx, float ty, float scale) {
 	if (glid == 0)
 		return;
 	shader_texture(glid);
-	shader_program(PROGRAM_RENDERBUFFER, 0);
+	shader_program(PROGRAM_RENDERBUFFER);
 	RS->drawcall++;
 	glBindBuffer(GL_ARRAY_BUFFER, rb->vbid);
 
@@ -275,7 +275,7 @@ shader_texture(int id) {
 }
 
 void
-shader_program(int n, uint32_t arg) {
+shader_program(int n) {
 	if (RS->current_program != n) {
 		rs_commit();
 		RS->current_program = n;
@@ -299,7 +299,7 @@ shader_mask(float x, float y) {
 void
 shader_st(int prog, float x, float y, float scale) {
 	rs_commit();
-    shader_program(prog, 0);
+    shader_program(prog);
     struct program *p = &RS->program[prog];
 
     if (!p || p->st == -1)
