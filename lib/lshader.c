@@ -6,6 +6,7 @@
 #include "texture.h"
 #include "array.h"
 #include "spritepack.h"
+#include "render.h"
 
 static int
 lload(lua_State *L) {
@@ -91,19 +92,14 @@ lblend(lua_State *L) {
 
 static int
 lversion(lua_State *L) {
-	lua_pushinteger(L, OPENGLES);
+	lua_pushinteger(L, shader_version());
 	return 1;
 }
 
 static int
 lclear(lua_State *L) {
 	uint32_t c = luaL_optunsigned(L, 1, 0xff000000);
-	float a = ((c >> 24) & 0xff ) / 255.0;
-	float r = ((c >> 16) & 0xff ) / 255.0;
-	float g = ((c >> 8) & 0xff ) / 255.0;
-	float b = ((c >> 0) & 0xff ) / 255.0;
-	glClearColor(r,g,b,a);
-	glClear(GL_COLOR_BUFFER_BIT);
+	shader_clear(c);
 
 	return 0;
 }

@@ -1,9 +1,14 @@
 .PHONY : mingw ej2d linux undefined
 
-CFLAGS = -g -Wall -Ilib -Ilua -D EJOY2D_OS=$(OS)
+CFLAGS = -g -Wall -Ilib -Ilib/render -Ilua -D EJOY2D_OS=$(OS)
 LDFLAGS :=
 
-SRC := \
+RENDER := \
+lib/render/render.c \
+lib/render/carray.c \
+lib/render/log.c
+
+EJOY2D := \
 lib/shader.c \
 lib/lshader.c \
 lib/ejoy2dgame.c \
@@ -23,6 +28,8 @@ lib/lparticle.c \
 lib/scissor.c \
 lib/renderbuffer.c \
 lib/lrenderbuffer.c
+
+SRC := $(EJOY2D) $(RENDER)
 
 LUASRC := \
 lua/lapi.c \

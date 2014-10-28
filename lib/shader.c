@@ -1,5 +1,4 @@
 #include "shader.h"
-#include "opengl.h"
 #include "fault.h"
 #include "array.h"
 #include "renderbuffer.h"
@@ -7,6 +6,10 @@
 #include "matrix.h"
 #include "spritepack.h"
 #include "screen.h"
+#include "label.h"
+
+#include "render.h"
+#include "blendmode.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,30 +18,25 @@
 
 #define MAX_PROGRAM 9
 
-#define ATTRIB_VERTEX 0
-#define ATTRIB_TEXTCOORD 1
-#define ATTRIB_COLOR 2
-#define ATTRIB_ADDITIVE 3
-
-#define BUFFER_OFFSET(f) ((void *)&(((struct vertex *)NULL)->f))
+#define BUFFER_OFFSET(f) ((int)&(((struct vertex *)NULL)->f))
 
 struct program {
-	GLuint prog;
-	
-	GLint mask;
-	GLint st;
-  float arg_mask_x;
-  float arg_mask_y;
+	RID prog;
+	int mask;
+	int st;
+	float arg_mask[2];
 };
 
 struct render_state {
+	struct render * R;
 	int current_program;
 	struct program program[MAX_PROGRAM];
-	int tex;
+	RID tex;
 	int blendchange;
 	int drawcall;
-	GLuint vertex_buffer;
-	GLuint index_buffer;
+	RID vertex_buffer;
+	RID index_buffer;
+	RID layout;
 	struct render_buffer vb;
 };
 
@@ -50,14 +48,28 @@ shader_init() {
 
 	struct render_state * rs = (struct render_state *) malloc(sizeof(*rs));
 	memset(rs, 0 , sizeof(*rs));
+
+	struct render_init_args RA;
+	// todo: config these args
+	RA.max_buffer = 128;
+	RA.max_layout = 4;
+	RA.max_target = 128;
+	RA.max_texture = 256;
+	RA.max_shader = MAX_PROGRAM;
+
+	int rsz = render_size(&RA);
+	rs->R = (struct render *)malloc(rsz);
+	rs->R = render_init(&RA, rs->R, rsz);
+	texture_initrender(rs->R);
+	screen_initrender(rs->R);
+	label_initrender(rs->R);
+	renderbuffer_initrender(rs->R);
+
 	rs->current_program = -1;
 	rs->blendchange = 0;
-	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	render_setblend(rs->R, BLEND_ONE, BLEND_ONE_MINUS_SRC_ALPHA);
 
-	glGenBuffers(1, &rs->index_buffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rs->index_buffer);
-
-	GLushort idxs[6 * MAX_COMMBINE];
+	uint16_t idxs[6 * MAX_COMMBINE];
 	int i;
 	for (i=0;i<MAX_COMMBINE;i++) {
 		idxs[i*6] = i*4;
@@ -68,108 +80,48 @@ shader_init() {
 		idxs[i*6+5] = i*4+3;
 	}
 	
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idxs), idxs, GL_STATIC_DRAW);
+	rs->index_buffer = render_buffer_create(rs->R, INDEXBUFFER, idxs, 6 * MAX_COMMBINE, sizeof(uint16_t));
+	rs->vertex_buffer = render_buffer_create(rs->R, VERTEXBUFFER, NULL,  4 * MAX_COMMBINE, sizeof(struct vertex));
 
-	glGenBuffers(1, &rs->vertex_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, rs->vertex_buffer);
-
-	glEnable(GL_BLEND);
+	struct vertex_attrib va[4] = {
+		{ "vertex", 0, 2, sizeof(float), BUFFER_OFFSET(vp.vx) },
+		{ "textcoord", 0, 2, sizeof(uint16_t), BUFFER_OFFSET(vp.tx) },
+		{ "color", 0, 4, sizeof(uint8_t), BUFFER_OFFSET(rgba) },
+		{ "additive", 0, 4, sizeof(uint8_t), BUFFER_OFFSET(add) },
+	};
+	rs->layout = render_register_vertexlayout(rs->R, sizeof(va)/sizeof(va[0]), va);
+	render_set(rs->R, VERTEXLAYOUT, rs->layout, 0);
+	render_set(rs->R, INDEXBUFFER, rs->index_buffer, 0);
+	render_set(rs->R, VERTEXBUFFER, rs->vertex_buffer, 0);
 
 	RS = rs;
 }
+
 void
-shader_reset()
-{
-	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_BLEND);
-
-	if (RS->current_program != -1)
-	{
-		glUseProgram(RS->program[RS->current_program].prog);
+shader_reset() {
+	struct render_state *rs = RS;
+	render_state_reset(rs->R);
+	render_setblend(rs->R, BLEND_ONE, BLEND_ONE_MINUS_SRC_ALPHA);
+	if (RS->current_program != -1) {
+		render_shader_bind(rs->R, RS->program[RS->current_program].prog);
 	}
-
-	glBindTexture(GL_TEXTURE_2D, RS->tex);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RS->index_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, RS->vertex_buffer);
-}
-
-static GLuint
-compile(const char * source, int type) {
-	GLint status;
-	
-	GLuint shader = glCreateShader(type);
-	glShaderSource(shader, 1, &source, NULL);
-	glCompileShader(shader);
-	
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-	
-	if (status == GL_FALSE) {
-		char buf[1024];
-		GLint len;
-		glGetShaderInfoLog(shader, 1024, &len, buf);
-
-		fault("compile failed:%s\n"
-			"source:\n %s\n",
-			buf, source);
-		glDeleteShader(shader);
-		return 0;
-	}
-	return shader;
-}
-
-static void
-link(struct program *p) {
-	GLint status;
-	glLinkProgram(p->prog);
-	
-	glGetProgramiv(p->prog, GL_LINK_STATUS, &status);
-	if (status == 0) {
-		char buf[1024];
-		GLint len;
-		glGetProgramInfoLog(p->prog, 1024, &len, buf);
-
-		fault("link failed:%s\n", buf);
-	}
+	render_set(rs->R, VERTEXLAYOUT, rs->layout, 0);
+	render_set(rs->R, TEXTURE, RS->tex, 0);
+	render_set(rs->R, INDEXBUFFER, RS->index_buffer,0);
+	render_set(rs->R, VERTEXBUFFER, RS->vertex_buffer,0);
 }
 
 static void
 program_init(struct program * p, const char *FS, const char *VS) {
-	// Create shader program.
-	p->prog = glCreateProgram();
-	
-	GLuint fs = compile(FS, GL_FRAGMENT_SHADER);
-	if (fs == 0) {
-		fault("Can't compile fragment shader");
-	} else {
-		glAttachShader(p->prog, fs);
-	}
-	
-	GLuint vs = compile(VS, GL_VERTEX_SHADER);
-	if (vs == 0) {
-		fault("Can't compile vertex shader");
-	} else {
-		glAttachShader(p->prog, vs);
-	}
-
-	glBindAttribLocation(p->prog, ATTRIB_VERTEX, "position");
-	glBindAttribLocation(p->prog, ATTRIB_TEXTCOORD, "texcoord");
-	glBindAttribLocation(p->prog, ATTRIB_COLOR, "color");
-	glBindAttribLocation(p->prog, ATTRIB_ADDITIVE, "additive");
-
-	link(p);
-	
-	p->mask = glGetUniformLocation(p->prog, "mask");
-	p->arg_mask_x = 0.0f;
-	p->arg_mask_y = 0.0f;
+	struct render *R = RS->R;
+	p->prog = render_shader_create(R, VS, FS);
+	p->mask = render_shader_locuniform(R, "mask");
+	p->arg_mask[0] = 0.0f;
+	p->arg_mask[1] = 0.0f;
 	if (p->mask != -1) {
-		glUniform2f(p->mask, 0.0f, 0.0f);
+		render_shader_setuniform(R, p->mask, UNIFORM_FLOAT2, p->arg_mask);
 	}
-	p->st = glGetUniformLocation(p->prog, "st");
-		
-	glDetachShader(p->prog, fs);
-	glDeleteShader(fs);
-	glDetachShader(p->prog, vs);
-	glDeleteShader(vs);
+	p->st = render_shader_locuniform(R, "st");
 }
 
 void 
@@ -186,17 +138,14 @@ shader_unload() {
 	if (RS == NULL) {
 		return;
 	}
-	int i;
+	struct render *R = RS->R;
+	texture_initrender(NULL);
+	screen_initrender(NULL);
+	label_initrender(NULL);
+	renderbuffer_initrender(NULL);
 
-	for (i=0;i<MAX_PROGRAM;i++) {
-		struct program * p = &RS->program[i];
-		if (p->prog) {
-			glDeleteProgram(p->prog);
-		}
-	}
-
-	glDeleteBuffers(1,&RS->vertex_buffer);
-	glDeleteBuffers(1,&RS->index_buffer);
+	render_exit(R);
+	free(R);
 	free(RS);
 	RS = NULL;
 }
@@ -219,15 +168,8 @@ drawcall_count() {
 
 static void 
 renderbuffer_commit(struct render_buffer * rb) {
-	glEnableVertexAttribArray(ATTRIB_VERTEX);
-	glVertexAttribPointer(ATTRIB_VERTEX, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), BUFFER_OFFSET(vp.vx));
-	glEnableVertexAttribArray(ATTRIB_TEXTCOORD);
-	glVertexAttribPointer(ATTRIB_TEXTCOORD, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(struct vertex), BUFFER_OFFSET(vp.tx));
-	glEnableVertexAttribArray(ATTRIB_COLOR);
-	glVertexAttribPointer(ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(struct vertex), BUFFER_OFFSET(rgba));
-	glEnableVertexAttribArray(ATTRIB_ADDITIVE);
-	glVertexAttribPointer(ATTRIB_ADDITIVE, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(struct vertex), BUFFER_OFFSET(add));
-	glDrawElements(GL_TRIANGLES, 6 * rb->object, GL_UNSIGNED_SHORT, 0);
+	struct render *R = RS->R;
+	render_draw(R, DRAW_TRIANGLE, 0, 4 * rb->object, 0, 6 * rb->object);
 }
 
 static void
@@ -236,9 +178,8 @@ rs_commit() {
 	if (rb->object == 0)
 		return;
 	RS->drawcall++;
-	glBindBuffer(GL_ARRAY_BUFFER, RS->vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(struct quad) * rb->object, rb->vb, GL_DYNAMIC_DRAW);
-
+	struct render *R = RS->R;
+	render_buffer_update(R, RS->vertex_buffer, rb->vb, 4 * rb->object);
 	renderbuffer_commit(rb);
 
 	rb->object = 0;
@@ -247,20 +188,28 @@ rs_commit() {
 void 
 shader_drawbuffer(struct render_buffer * rb, float tx, float ty, float scale) {
 	rs_commit();
-	int glid = texture_glid(rb->texid);
+	if (rb->R != RS->R) {
+		// render is change , upload again
+		rb->R = RS->R;
+		rb->vbid = 0;
+		renderbuffer_upload(rb);
+	}
+
+	RID glid = texture_glid(rb->texid);
 	if (glid == 0)
 		return;
 	shader_texture(glid);
-	shader_program(PROGRAM_RENDERBUFFER, 0);
+	shader_program(PROGRAM_RENDERBUFFER);
 	RS->drawcall++;
-	glBindBuffer(GL_ARRAY_BUFFER, rb->vbid);
+	render_set(RS->R, VERTEXBUFFER, rb->vbid, 0);
 
 	float sx = scale;
 	float sy = scale;
 	screen_trans(&sx, &sy);
 	screen_trans(&tx, &ty);
 	struct program *p = &RS->program[RS->current_program];
-	glUniform4f(p->st, sx, sy, tx, ty);
+	float v[4] = { sx, sy, tx, ty };
+	render_shader_setuniform(RS->R, p->st, UNIFORM_FLOAT4, v);
 
 	renderbuffer_commit(rb);
 }
@@ -269,17 +218,17 @@ void
 shader_texture(int id) {
 	if (RS->tex != id) {
 		rs_commit();
-		RS->tex = (GLuint)id;
-		glBindTexture(GL_TEXTURE_2D, id);
+		RS->tex = id;
+		render_set(RS->R, TEXTURE, id, 0);
 	}
 }
 
 void
-shader_program(int n, uint32_t arg) {
+shader_program(int n) {
 	if (RS->current_program != n) {
 		rs_commit();
 		RS->current_program = n;
-		glUseProgram(RS->program[n].prog);
+		render_shader_bind(RS->R, RS->program[RS->current_program].prog);
 	}
 }
 
@@ -288,24 +237,23 @@ shader_mask(float x, float y) {
 	struct program *p = &RS->program[RS->current_program];
 	if (!p || p->mask == -1)
 		return;
-	if (p->arg_mask_x == x && p->arg_mask_y == y)
+	if (p->arg_mask[0] == x && p->arg_mask[1] == y)
 		return;
-	p->arg_mask_x = x;
-	p->arg_mask_y = y;
-//  rs_commit();
-	glUniform2f(p->mask, x, y);
+	p->arg_mask[0] = x;
+	p->arg_mask[1] = y;
+	render_shader_setuniform(RS->R, p->mask, UNIFORM_FLOAT2, p->arg_mask);
 }
 
 void
 shader_st(int prog, float x, float y, float scale) {
 	rs_commit();
-    shader_program(prog, 0);
+    shader_program(prog);
     struct program *p = &RS->program[prog];
 
     if (!p || p->st == -1)
         return;
-
-    glUniform4f(p->st, scale, scale, x, y);
+	float v[4] = { scale, scale, x, y };
+	render_shader_setuniform(RS->R, p->mask, UNIFORM_FLOAT4, v);
 }
 
 void
@@ -348,15 +296,32 @@ shader_defaultblend() {
 	if (RS->blendchange) {
 		rs_commit();
 		RS->blendchange = 0;
-		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		render_setblend(RS->R, BLEND_ONE, BLEND_ONE_MINUS_SRC_ALPHA);
 	}
 }
 
 void
 shader_blend(int m1, int m2) {
-	if (m1 != GL_ONE || m2 != GL_ONE_MINUS_SRC_ALPHA) {
+	if (m1 != BLEND_GL_ONE || m2 != BLEND_GL_ONE_MINUS_SRC_ALPHA) {
 		rs_commit();
 		RS->blendchange = 1;
-		glBlendFunc(m1,m2);
+		enum BLEND_FORMAT src = blend_mode(m1);
+		enum BLEND_FORMAT dst = blend_mode(m2);
+		render_setblend(RS->R, src, dst);
 	}
+}
+
+void 
+shader_clear(unsigned long argb) {
+	render_clear(RS->R, MASKC, argb);
+}
+
+int 
+shader_version() {
+	return render_version(RS->R);
+}
+
+void 
+shader_scissortest(int enable) {
+	render_enablescissor(RS->R, enable);
 }

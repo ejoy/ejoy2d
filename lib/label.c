@@ -1,11 +1,12 @@
 #include "label.h"
 #include "dfont.h"
 #include "shader.h"
-#include "opengl.h"
 #include "matrix.h"
 #include "spritepack.h"
 #include "screen.h"
 #include "array.h"
+
+#include "render.h"
 
 #include <assert.h>
 #include <string.h>
@@ -14,35 +15,31 @@
 #define TEX_HEIGHT 1024
 #define TEX_WIDTH 1024
 #define FONT_SIZE 31
-#define TEX_FMT GL_ALPHA
+#define TEX_FMT TEXTURE_A8
 
-static GLuint Tex;
+static RID Tex;
 static struct dfont * Dfont = NULL;
 static int Outline = 1;
+static struct render *R = NULL;
+
+void 
+label_initrender(struct render *r) {
+	R = r;
+}
 
 void
 label_load() {
 	if (Dfont) return;
 
 	Dfont = dfont_create(TEX_WIDTH, TEX_HEIGHT);
-	glPixelStorei(GL_UNPACK_ALIGNMENT,1);
 
-	glGenTextures(1, &(Tex));
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, Tex);
-
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-
-	glTexImage2D(GL_TEXTURE_2D, 0, TEX_FMT, (GLsizei)TEX_WIDTH, (GLsizei)TEX_HEIGHT, 0, TEX_FMT, GL_UNSIGNED_BYTE, NULL);
+	Tex = render_texture_create(R, TEX_WIDTH, TEX_HEIGHT, TEX_FMT, TEXTURE_2D, 0);
+	render_texture_update(R, Tex, NULL, 0, 0);
 }
 
 void
 label_unload() {
-	glDeleteTextures(1,&Tex);
+	render_release(R, TEXTURE, Tex);
 	dfont_release(Dfont);
 	Dfont = NULL;
 }
@@ -191,8 +188,7 @@ gen_char(int unicode, const char * utf8, int size, int outline) {
 //	write_pgm(unicode, ctx.w, ctx.h, buffer);
 	font_release(&ctx);
 
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, rect->x, rect->y, rect->w, rect->h, TEX_FMT, GL_UNSIGNED_BYTE, buffer);
+	render_texture_subupdate(R, Tex, buffer, rect->x, rect->y, rect->w, rect->h);
 
 	return rect;
 }

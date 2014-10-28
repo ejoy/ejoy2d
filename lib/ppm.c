@@ -1,6 +1,7 @@
 #include "ppm.h"
 #include "texture.h"
 #include "array.h"
+#include "render.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -257,15 +258,15 @@ loadtexture(lua_State *L) {
 	int type = 0;
 	if (ppm.depth == 255) {
 		if (ppm.step == 4) {
-			type = Texture2DPixelFormat_RGBA8888;
+			type = TEXTURE_RGBA8;
 		} else if (ppm.step == 3) {
-			type = Texture2DPixelFormat_RGB888;
+			type = TEXTURE_RGB;
 		} else {
-			type = Texture2DPixelFormat_A8;
+			type = TEXTURE_A8;
 		}
 	} else {
 		if (ppm.step == 4) {
-			type = Texture2DPixelFormat_RGBA4444;
+			type = TEXTURE_RGBA8;
 			uint16_t * tmp = (uint16_t * )malloc(ppm.width * ppm.height * sizeof(uint16_t));
 			int i;
 			for (i=0;i<ppm.width * ppm.height;i++) {
@@ -278,7 +279,7 @@ loadtexture(lua_State *L) {
 			free(ppm.buffer);
 			ppm.buffer = (uint8_t*)tmp;
 		} else if (ppm.step == 3) {
-			type = Texture2DPixelFormat_RGB565;
+			type = TEXTURE_RGB565;
 			uint16_t * tmp = (uint16_t *)malloc(ppm.width * ppm.height * sizeof(uint16_t));
 			int i;
 			for (i=0;i<ppm.width * ppm.height;i++) {
@@ -305,7 +306,7 @@ loadtexture(lua_State *L) {
 			free(ppm.buffer);
 			ppm.buffer = (uint8_t*)tmp;
 		} else {
-			type = Texture2DPixelFormat_A8;
+			type = TEXTURE_RGBA8;
 			int i;
 			for (i=0;i<ppm.width * ppm.height;i++) {
 				uint8_t c =	ppm.buffer[i];

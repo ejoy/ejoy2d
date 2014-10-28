@@ -4,10 +4,16 @@
 #include "screen.h"
 #include "texture.h"
 #include "array.h"
-#include "opengl.h"
 
 #include <assert.h>
 #include <string.h>
+
+static struct render *R = NULL;
+
+void 
+renderbuffer_initrender(struct render *r) {
+	R = r;
+}
 
 int
 renderbuffer_add(struct render_buffer *rb, const struct vertex_pack vb[4], uint32_t color, uint32_t additive) {
@@ -221,21 +227,16 @@ renderbuffer_drawsprite(struct render_buffer *rb, struct sprite *s) {
 void
 renderbuffer_upload(struct render_buffer *rb) {
 	if (rb->vbid == 0) {
-		GLuint id = 0;
-		glGenBuffers(1, &id);
-		rb->vbid = (unsigned int)id;
+		rb->vbid = render_buffer_create(R, VERTEXBUFFER, rb->vb, MAX_COMMBINE * 4, sizeof(struct vertex));
+	} else {
+		render_buffer_update(R, rb->vbid, rb->vb, rb->object);
 	}
-
-	GLuint id = rb->vbid;
-	glBindBuffer(GL_ARRAY_BUFFER, id);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(struct quad) * rb->object, rb->vb, GL_STATIC_DRAW);
 }
 
 void 
 renderbuffer_unload(struct render_buffer *rb) {
 	if (rb->vbid) {
-		GLuint id = rb->vbid;
-		glDeleteBuffers(1,&id);
+		render_release(R, VERTEXBUFFER, rb->vbid);
 		rb->vbid = 0;
 	}
 }
@@ -245,4 +246,5 @@ renderbuffer_init(struct render_buffer *rb) {
 	rb->object = 0;
 	rb->texid = 0;
 	rb->vbid = 0;
+	rb->R = R;
 }

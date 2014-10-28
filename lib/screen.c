@@ -1,5 +1,5 @@
 #include "screen.h"
-#include "opengl.h"
+#include "render.h"
 #include "spritepack.h"
 
 struct screen {
@@ -11,6 +11,14 @@ struct screen {
 };
 
 static struct screen SCREEN;
+static struct render *R = NULL;
+
+void 
+screen_initrender(struct render *r) {
+	R = r;
+	// for ejoy2d compatibility, ejoy2d may call screen_init before screen_initrender
+	screen_init(SCREEN.width, SCREEN.height, SCREEN.scale);
+}
 
 void
 screen_init(float w, float h, float scale) {
@@ -19,7 +27,9 @@ screen_init(float w, float h, float scale) {
 	SCREEN.scale = (int)scale;
 	SCREEN.invw = 2.0f / SCREEN_SCALE / w;
 	SCREEN.invh = -2.0f / SCREEN_SCALE / h;
-	glViewport(0,0,w * scale,h * scale);
+	if (R) {
+		render_setviewport(R, 0, 0, w * scale, h * scale );
+	}
 }
 
 void
@@ -54,7 +64,7 @@ screen_scissor(int x, int y, int w, int h) {
 	w *= SCREEN.scale;
 	h *= SCREEN.scale;
 
-	glScissor(x,y,w,h);
+	render_setscissor(R,x,y,w,h);
 }
 
 bool screen_is_visible(float x,float y)

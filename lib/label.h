@@ -20,6 +20,8 @@ struct rich_text {
 	struct label_field *fields;
 };
 
+struct render;
+void label_initrender(struct render *R);
 void label_load();
 void label_unload();
 void label_flush();
