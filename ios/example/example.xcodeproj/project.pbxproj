@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E344A8B1A011ADA00FC33BD /* carray.c in Sources */ = {isa = PBXBuildFile; fileRef = 5E344A851A011ADA00FC33BD /* carray.c */; };
+		5E344A8C1A011ADA00FC33BD /* log.c in Sources */ = {isa = PBXBuildFile; fileRef = 5E344A871A011ADA00FC33BD /* log.c */; };
+		5E344A8D1A011ADA00FC33BD /* render.c in Sources */ = {isa = PBXBuildFile; fileRef = 5E344A891A011ADA00FC33BD /* render.c */; };
 		AE7789AF19C161E300AFCC14 /* lrenderbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = AE7789AD19C161E300AFCC14 /* lrenderbuffer.c */; };
 		AE7789B019C161E300AFCC14 /* renderbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = AE7789AE19C161E300AFCC14 /* renderbuffer.c */; };
 		E675687F18756D8B00466F0C /* scissor.c in Sources */ = {isa = PBXBuildFile; fileRef = E675687D18756D8B00466F0C /* scissor.c */; };
@@ -90,6 +93,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5E344A7C1A0119F800FC33BD /* array.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = array.h; path = ../../lib/array.h; sourceTree = "<group>"; };
+		5E344A7D1A0119F800FC33BD /* lrenderbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lrenderbuffer.h; path = ../../lib/lrenderbuffer.h; sourceTree = "<group>"; };
+		5E344A7E1A0119F800FC33BD /* platform_print.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = platform_print.h; path = ../../lib/platform_print.h; sourceTree = "<group>"; };
+		5E344A801A0119F800FC33BD /* renderbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = renderbuffer.h; path = ../../lib/renderbuffer.h; sourceTree = "<group>"; };
+		5E344A831A011ADA00FC33BD /* blendmode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = blendmode.h; sourceTree = "<group>"; };
+		5E344A841A011ADA00FC33BD /* block.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = block.h; sourceTree = "<group>"; };
+		5E344A851A011ADA00FC33BD /* carray.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = carray.c; sourceTree = "<group>"; };
+		5E344A861A011ADA00FC33BD /* carray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = carray.h; sourceTree = "<group>"; };
+		5E344A871A011ADA00FC33BD /* log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = log.c; sourceTree = "<group>"; };
+		5E344A881A011ADA00FC33BD /* log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
+		5E344A891A011ADA00FC33BD /* render.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = render.c; sourceTree = "<group>"; };
+		5E344A8A1A011ADA00FC33BD /* render.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = render.h; sourceTree = "<group>"; };
 		AE7789AD19C161E300AFCC14 /* lrenderbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = lrenderbuffer.c; path = ../../lib/lrenderbuffer.c; sourceTree = "<group>"; };
 		AE7789AE19C161E300AFCC14 /* renderbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = renderbuffer.c; path = ../../lib/renderbuffer.c; sourceTree = "<group>"; };
 		E675687D18756D8B00466F0C /* scissor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = scissor.c; path = ../../lib/scissor.c; sourceTree = "<group>"; };
@@ -147,7 +162,6 @@
 		E6C2640F1872AD44008035E3 /* sprite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sprite.h; path = ../../lib/sprite.h; sourceTree = "<group>"; };
 		E6C264101872AD44008035E3 /* spritepack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = spritepack.h; path = ../../lib/spritepack.h; sourceTree = "<group>"; };
 		E6C264111872AD44008035E3 /* texture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = texture.h; path = ../../lib/texture.h; sourceTree = "<group>"; };
-		E6C264121872B266008035E3 /* font.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = font.h; sourceTree = "<group>"; };
 		E6C264131872B266008035E3 /* font.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = font.m; sourceTree = "<group>"; };
 		E6C2642C1872CD4D008035E3 /* ejoy2d */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ejoy2d; path = ../../ejoy2d; sourceTree = "<group>"; };
 		E6C264311872E451008035E3 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; name = examples; path = ../../examples; sourceTree = "<group>"; };
@@ -236,6 +250,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5E344A821A011ADA00FC33BD /* render */ = {
+			isa = PBXGroup;
+			children = (
+				5E344A831A011ADA00FC33BD /* blendmode.h */,
+				5E344A841A011ADA00FC33BD /* block.h */,
+				5E344A851A011ADA00FC33BD /* carray.c */,
+				5E344A861A011ADA00FC33BD /* carray.h */,
+				5E344A871A011ADA00FC33BD /* log.c */,
+				5E344A881A011ADA00FC33BD /* log.h */,
+				5E344A891A011ADA00FC33BD /* render.c */,
+				5E344A8A1A011ADA00FC33BD /* render.h */,
+			);
+			name = render;
+			path = ../../lib/render;
+			sourceTree = "<group>";
+		};
 		E6C2314F187275D10029D57B = {
 			isa = PBXGroup;
 			children = (
@@ -276,7 +306,6 @@
 		E6C23161187275D10029D57B /* example */ = {
 			isa = PBXGroup;
 			children = (
-				E6C264121872B266008035E3 /* font.h */,
 				E6C264131872B266008035E3 /* font.m */,
 				E6C262E41872A91B008035E3 /* winfw.c */,
 				E6C2319018728E7C0029D57B /* winfw.h */,
@@ -322,6 +351,11 @@
 		E6C264021872AD22008035E3 /* lib */ = {
 			isa = PBXGroup;
 			children = (
+				5E344A821A011ADA00FC33BD /* render */,
+				5E344A7C1A0119F800FC33BD /* array.h */,
+				5E344A7D1A0119F800FC33BD /* lrenderbuffer.h */,
+				5E344A7E1A0119F800FC33BD /* platform_print.h */,
+				5E344A801A0119F800FC33BD /* renderbuffer.h */,
 				AE7789AD19C161E300AFCC14 /* lrenderbuffer.c */,
 				AE7789AE19C161E300AFCC14 /* renderbuffer.c */,
 				E675687D18756D8B00466F0C /* scissor.c */,
@@ -541,6 +575,7 @@
 				E6EF880418D2CE0800F01E49 /* lbaselib.c in Sources */,
 				E6EF881318D2CE0800F01E49 /* lmem.c in Sources */,
 				E6EF881418D2CE0800F01E49 /* loadlib.c in Sources */,
+				5E344A8D1A011ADA00FC33BD /* render.c in Sources */,
 				E6EF881E18D2CE0800F01E49 /* ltm.c in Sources */,
 				E6EF881618D2CE0800F01E49 /* lopcodes.c in Sources */,
 				E6EF881918D2CE0800F01E49 /* lstate.c in Sources */,
@@ -557,6 +592,7 @@
 				E6EF880318D2CE0800F01E49 /* lauxlib.c in Sources */,
 				E6C263FB1872ACEC008035E3 /* ppm.c in Sources */,
 				AE7789B019C161E300AFCC14 /* renderbuffer.c in Sources */,
+				5E344A8C1A011ADA00FC33BD /* log.c in Sources */,
 				E6C263FC1872ACEC008035E3 /* screen.c in Sources */,
 				E6C263FD1872ACEC008035E3 /* shader.c in Sources */,
 				E6C263FE1872ACEC008035E3 /* sprite.c in Sources */,
@@ -570,6 +606,7 @@
 				E6C2318E187288C50029D57B /* EJViewController.m in Sources */,
 				E6EF880E18D2CE0800F01E49 /* lgc.c in Sources */,
 				E6EF881118D2CE0800F01E49 /* llex.c in Sources */,
+				5E344A8B1A011ADA00FC33BD /* carray.c in Sources */,
 				E6C262E51872A91B008035E3 /* winfw.c in Sources */,
 				E6EF880918D2CE0800F01E49 /* ldblib.c in Sources */,
 				E6C23168187275D10029D57B /* main.m in Sources */,
@@ -697,9 +734,10 @@
 		E6C23185187275D20029D57B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "example/example-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -710,6 +748,7 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					../../lib,
+					../../lib/render,
 					../../lua,
 				);
 				INFOPLIST_FILE = "example/example-Info.plist";
@@ -722,9 +761,10 @@
 		E6C23186187275D20029D57B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "example/example-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "EJOY2D_OS=IOS";
@@ -732,6 +772,7 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					../../lib,
+					../../lib/render,
 					../../lua,
 				);
 				INFOPLIST_FILE = "example/example-Info.plist";
