@@ -641,6 +641,8 @@ render_texture_update(struct render *R, RID id, const void *pixels, int slice, i
 	} else {
 		glTexImage2D(target, miplevel, format, (GLsizei)tex->width, (GLsizei)tex->height, 0, format, itype, pixels);
 	}
+
+	CHECK_GL_ERROR
 }
 
 void 
@@ -661,10 +663,11 @@ render_texture_subupdate(struct render *R, RID id, const void *pixels, int x, in
 		glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, 
 			x, y, w, h,	format, 
 			calc_texture_size(tex->format, w, h), pixels);
-		return;
 	} else {
 		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h, format, itype, pixels);
 	}
+
+	CHECK_GL_ERROR
 }
 
 // blend mode
@@ -790,6 +793,25 @@ render_state_commit(struct render *R) {
 				}
 			}
 		}
+		CHECK_GL_ERROR
+	}
+
+	if (R->changeflag & CHANGE_TARGET) {
+		RID crt = R->current.target;
+		if (R->last.target != crt) {
+			GLuint rt = R->default_framebuffer;
+			if (crt != 0) {
+				struct target * tar = array_ref(&R->target, crt);
+				if (tar) {
+					rt = tar->glid;
+				} else {
+					crt = 0;
+				}
+			}
+			glBindFramebuffer(GL_FRAMEBUFFER, rt);
+			R->last.target = crt;
+			CHECK_GL_ERROR
+		}
 	}
 
 	if (R->changeflag & CHANGE_BLEND) {
@@ -861,23 +883,6 @@ render_state_commit(struct render *R) {
 				glCullFace(R->current.cull == CULL_FRONT ? GL_FRONT : GL_BACK);
 			}
 			R->last.cull = R->current.cull;
-		}
-	}
-
-	if (R->changeflag & CHANGE_TARGET) {
-		RID crt = R->current.target;
-		if (R->last.target != crt) {
-			GLuint rt = R->default_framebuffer;
-			if (crt != 0) {
-				struct target * tar = array_ref(&R->target, crt);
-				if (tar) {
-					rt = tar->glid;
-				} else {
-					crt = 0;
-				}
-			}
-			glBindFramebuffer(GL_FRAMEBUFFER, rt);
-			R->last.target = crt;
 		}
 	}
 

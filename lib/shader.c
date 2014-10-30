@@ -209,6 +209,8 @@ shader_drawbuffer(struct render_buffer * rb, float tx, float ty, float scale) {
 	render_shader_setuniform(RS->R, p->st, UNIFORM_FLOAT4, v);
 
 	renderbuffer_commit(rb);
+
+	render_set(RS->R, VERTEXBUFFER, RS->vertex_buffer, 0);
 }
 
 void
