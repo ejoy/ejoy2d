@@ -45,8 +45,8 @@ function ejoy2d.clear(color)
 	return shader.clear(color)
 end
 
-function ejoy2d.define_shader(name, args)
-	return shader.define(name, args)
+function ejoy2d.define_shader(args)
+	return shader.define(args)
 end
 
 return ejoy2d
