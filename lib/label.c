@@ -449,13 +449,13 @@ label_get_color(struct pack_label * l, const struct sprite_trans *arg) {
 
 void
 label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg) {
-	shader_texture(Tex);
+	shader_texture(Tex, 0);
 	uint32_t color = label_get_color(l, arg);
-  const char *str = rich->text;
+	const char *str = rich->text;
 
 	char utf8[7];
 	int i;
-    int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0;
+	int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0;
 	for (i=0; str && str[i];) {
 		int unicode;
 		uint8_t c = (uint8_t)str[i];

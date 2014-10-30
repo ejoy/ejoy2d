@@ -215,6 +215,7 @@ end
 shader.draw = s.draw
 shader.blend = s.blend
 shader.clear = s.clear
+shader.texture = s.shader_texture
 
 function shader.id(name)
 	local id = assert(shader_name[name] , "Invalid shader name " .. name)

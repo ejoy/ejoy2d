@@ -31,7 +31,7 @@ sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const s
 		int glid = texture_glid(q->texid);
 		if (glid == 0)
 			continue;
-		shader_texture(glid);
+		shader_texture(glid, 0);
 		for (j=0;j<4;j++) {
 			int xx = q->screen_coord[j*2+0];
 			int yy = q->screen_coord[j*2+1];
@@ -73,7 +73,7 @@ sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struc
 		int glid = texture_glid(p->texid);
 		if (glid == 0)
 			continue;
-		shader_texture(glid);
+		shader_texture(glid, 0);
 		int pn = p->n;
 
 		ARRAY(struct vertex_pack, vb, pn);

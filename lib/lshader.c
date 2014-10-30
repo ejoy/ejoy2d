@@ -46,7 +46,7 @@ ldraw(lua_State *L) {
 	}
 	uint32_t additive = (uint32_t)luaL_optunsigned(L,4,0);
 	shader_program(PROGRAM_PICTURE);
-	shader_texture(texid);
+	shader_texture(texid, 0);
 	int n = lua_rawlen(L, 2);
 	int point = n/4;
 	if (point * 4 != n) {
@@ -182,6 +182,18 @@ luniform_set(lua_State *L) {
 	return 0;
 }
 
+static int
+lshader_texture(lua_State *L) {
+	int channel = luaL_checkinteger(L, 1);
+	RID id = 0;
+	if (!lua_isnoneornil(L, 2)) {
+		int texid = luaL_checkinteger(L, 2);
+		id = texture_glid(texid);
+	}
+	shader_texture(id, channel);
+	return 0;
+}
+
 int 
 ejoy2d_shader(lua_State *L) {
 	luaL_Reg l[] = {
@@ -194,6 +206,7 @@ ejoy2d_shader(lua_State *L) {
         {"shader_st", lshader_st },
 		{"uniform_bind", luniform_bind },
 		{"uniform_set", luniform_set },
+		{"shader_texture", lshader_texture },
 		{NULL,NULL},
 	};
 	luaL_newlib(L,l);

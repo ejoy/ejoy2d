@@ -202,7 +202,7 @@ shader_drawbuffer(struct render_buffer * rb, float tx, float ty, float scale) {
 	RID glid = texture_glid(rb->texid);
 	if (glid == 0)
 		return;
-	shader_texture(glid);
+	shader_texture(glid, 0);
 	shader_program(PROGRAM_RENDERBUFFER);
 	RS->drawcall++;
 	render_set(RS->R, VERTEXBUFFER, rb->vbid, 0);
@@ -221,11 +221,15 @@ shader_drawbuffer(struct render_buffer * rb, float tx, float ty, float scale) {
 }
 
 void
-shader_texture(int id) {
-	if (RS->tex != id) {
-		rs_commit();
-		RS->tex = id;
-		render_set(RS->R, TEXTURE, id, 0);
+shader_texture(int id, int channel) {
+	if (channel > 0) {
+		render_set(RS->R, TEXTURE, id, channel);
+	} else {
+		if (RS->tex != id) {
+			rs_commit();
+			RS->tex = id;
+			render_set(RS->R, TEXTURE, id, 0);
+		}
 	}
 }
 
