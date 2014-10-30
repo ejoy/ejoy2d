@@ -85,7 +85,7 @@ shader_init() {
 
 	struct vertex_attrib va[4] = {
 		{ "position", 0, 2, sizeof(float), BUFFER_OFFSET(vp.vx) },
-		{ "textcoord", 0, 2, sizeof(uint16_t), BUFFER_OFFSET(vp.tx) },
+		{ "texcoord", 0, 2, sizeof(uint16_t), BUFFER_OFFSET(vp.tx) },
 		{ "color", 0, 4, sizeof(uint8_t), BUFFER_OFFSET(rgba) },
 		{ "additive", 0, 4, sizeof(uint8_t), BUFFER_OFFSET(add) },
 	};
