@@ -299,7 +299,7 @@ render_shader_create(struct render *R, const char *vs, const char *fs) {
 static void
 close_shader(void *p, void *R) {
 	struct shader * shader = p;
-	glDeleteBuffers(1,&shader->glid);
+	glDeleteProgram(shader->glid);
 
 	CHECK_GL_ERROR
 }

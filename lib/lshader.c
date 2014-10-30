@@ -1,5 +1,6 @@
 #include <lua.h>
 #include <lauxlib.h>
+#include <string.h>
 
 #include "shader.h"
 #include "screen.h"
@@ -117,6 +118,70 @@ lshader_st(lua_State *L) {
     return 0;
 }
 
+static int
+luniform_bind(lua_State *L) {
+	int prog = luaL_checkinteger(L, 1);
+	luaL_checktype(L, 2, LUA_TTABLE);
+	int n = lua_rawlen(L, 2);
+	int i;
+	for (i=0;i<n;i++) {
+		lua_rawgeti(L, -1, i+1);
+		lua_getfield(L, -1, "name");
+		const char *name = luaL_checkstring(L, -1);
+		lua_getfield(L, -2, "type");
+		enum UNIFORM_FORMAT t = luaL_checkinteger(L, -1);
+		int loc = shader_adduniform(prog, name, t);
+		if (loc != i) {
+			return luaL_error(L, "Invalid uniform location %s %d", name, loc);
+		}
+		lua_pop(L, 3);
+	}
+	return 0;
+}
+
+static int
+luniform_set(lua_State *L) {
+	int prog = luaL_checkinteger(L, 1);
+	shader_program(prog);
+	int index = luaL_checkinteger(L, 2);
+	enum UNIFORM_FORMAT t = luaL_checkinteger(L, 3);
+	float v[16];	// 16 is matrix 4x4
+	int n = 0;
+	switch(t) {
+	case UNIFORM_FLOAT1:
+		n = 1;
+		break;
+	case UNIFORM_FLOAT2:
+		n = 2;
+		break;
+	case UNIFORM_FLOAT3:
+		n = 3;
+		break;
+	case UNIFORM_FLOAT4:
+		n = 4;
+		break;
+	case UNIFORM_FLOAT33:
+		n = 9;
+		break;
+	case UNIFORM_FLOAT44:
+		n = 16;
+		break;
+	default:
+		return luaL_error(L, "Invalid uniform format %d", t);
+		break;
+	}
+	int top = lua_gettop(L);
+	if (top != n + 3) {
+		return luaL_error(L, "Need float %d, only %d passed", n, top - 3);
+	}
+	int i;
+	for (i=0;i<n;i++) {
+		v[i] = luaL_checknumber(L, 4+i);
+	}
+	shader_setuniform(index, t, v);
+	return 0;
+}
+
 int 
 ejoy2d_shader(lua_State *L) {
 	luaL_Reg l[] = {
@@ -127,6 +192,8 @@ ejoy2d_shader(lua_State *L) {
 		{"clear", lclear},
 		{"version", lversion},
         {"shader_st", lshader_st },
+		{"uniform_bind", luniform_bind },
+		{"uniform_set", luniform_set },
 		{NULL,NULL},
 	};
 	luaL_newlib(L,l);

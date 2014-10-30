@@ -2,6 +2,7 @@
 #define EJOY_2D_SHADER_H
 
 #include "renderbuffer.h"
+#include "render.h"
 
 #include <stdint.h>
 #include <lua.h>
@@ -18,8 +19,6 @@ void shader_unload();
 void shader_blend(int m1,int m2);
 void shader_defaultblend();
 void shader_texture(int id);
-void shader_mask(float x, float y);
-void shader_st(int prog, float x, float y, float s);
 void shader_draw(const struct vertex_pack vb[4],uint32_t color,uint32_t additive);
 void shader_drawpolygon(int n, const struct vertex_pack *vb, uint32_t color, uint32_t additive);
 void shader_program(int n);
@@ -28,14 +27,18 @@ void shader_clear(unsigned long argb);
 int shader_version();
 void shader_scissortest(int enable);
 
-// 还原当前的环境，比如rt渲染之后
-void shader_reset();
-
 int ejoy2d_shader(lua_State *L);
 
+void shader_drawbuffer(struct render_buffer * rb, float x, float y, float s);
+
+int shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t);
+void shader_setuniform(int index, enum UNIFORM_FORMAT t, float *v);
+
+// these api may deprecated later
+void shader_reset();
+void shader_mask(float x, float y);
 void reset_drawcall_count();
 int drawcall_count();
-
-void shader_drawbuffer(struct render_buffer * rb, float x, float y, float s);
+void shader_st(int prog, float x, float y, float s);
 
 #endif

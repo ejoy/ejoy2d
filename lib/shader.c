@@ -16,15 +16,23 @@
 #include <string.h>
 #include <assert.h>
 
-#define MAX_PROGRAM 9
+#define MAX_PROGRAM 16
 
 #define BUFFER_OFFSET(f) ((int)&(((struct vertex *)NULL)->f))
+
+#define MAX_UNIFORM 16
+
+struct uniform {
+	int loc;
+	enum UNIFORM_FORMAT type;
+};
 
 struct program {
 	RID prog;
 	int mask;
 	int st;
-	float arg_mask[2];
+	int uniform_number;
+	struct uniform uniform[MAX_UNIFORM];
 };
 
 struct render_state {
@@ -118,11 +126,6 @@ program_init(struct program * p, const char *FS, const char *VS) {
 	render_shader_bind(R, p->prog);
 
 	p->mask = render_shader_locuniform(R, "mask");
-	p->arg_mask[0] = 0.0f;
-	p->arg_mask[1] = 0.0f;
-	if (p->mask != -1) {
-		render_shader_setuniform(R, p->mask, UNIFORM_FLOAT2, p->arg_mask);
-	}
 	p->st = render_shader_locuniform(R, "st");
 	render_shader_bind(R, 0);
 }
@@ -132,8 +135,12 @@ shader_load(int prog, const char *fs, const char *vs) {
 	struct render_state *rs = RS;
 	assert(prog >=0 && prog < MAX_PROGRAM);
 	struct program * p = &rs->program[prog];
-	assert(p->prog == 0);
+	if (p->prog) {
+		render_release(RS->R, SHADER, p->prog);
+		p->prog = 0;
+	}
 	program_init(p, fs, vs);
+	RS->current_program = -1;
 }
 
 void 
@@ -236,11 +243,8 @@ shader_mask(float x, float y) {
 	struct program *p = &RS->program[RS->current_program];
 	if (!p || p->mask == -1)
 		return;
-	if (p->arg_mask[0] == x && p->arg_mask[1] == y)
-		return;
-	p->arg_mask[0] = x;
-	p->arg_mask[1] = y;
-	render_shader_setuniform(RS->R, p->mask, UNIFORM_FLOAT2, p->arg_mask);
+	float v[2] = { x, y};
+	render_shader_setuniform(RS->R, p->mask, UNIFORM_FLOAT2, v);
 }
 
 void
@@ -323,4 +327,33 @@ shader_version() {
 void 
 shader_scissortest(int enable) {
 	render_enablescissor(RS->R, enable);
+}
+
+void 
+shader_setuniform(int index, enum UNIFORM_FORMAT t, float *v) {
+	rs_commit();
+	int prog = RS->current_program;
+	assert(prog >=0 && prog < MAX_PROGRAM);
+	struct program * p = &RS->program[prog];
+	assert(index >= 0 && index < p->uniform_number);
+	struct uniform *u = &p->uniform[index];
+	assert(t == u->type);
+	render_shader_setuniform(RS->R, u->loc, t, v);
+}
+
+int 
+shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t) {
+	// reset current_program
+	assert(prog >=0 && prog < MAX_PROGRAM);
+	shader_program(prog);
+	struct program * p = &RS->program[prog];
+	assert(p->uniform_number < MAX_UNIFORM);
+	int loc = render_shader_locuniform(RS->R, name);
+	if (loc < 0)
+		return -1;
+	int index = p->uniform_number++;
+	struct uniform * u = &p->uniform[index];
+	u->loc = loc;
+	u->type = t;
+	return index;
 }

@@ -221,4 +221,61 @@ function shader.id(name)
 	return id
 end
 
+-- user defined shader (or replace default shader)
+
+local MAX_PROGRAM = 16
+local USER_PROGRAM = 7
+
+local uniform_format = {
+	float = 1,
+	float2 = 2,
+	float3 = 3,
+	float4 = 4,
+	matrix33 = 5,
+	matrix44 = 6,
+}
+
+local uniform_set = s.uniform_set
+
+local function create_shader(id, uniform)
+	if uniform then
+		local s = {}
+		for index , u in ipairs(uniform) do
+			local loc = index-1
+			local format = u.type
+			s[u.name] = function(...)
+				uniform_set(id, loc, format, ...)
+			end
+		end
+		return s
+	end
+end
+
+function shader.define( arg )
+	local name = assert(arg.name)
+	local id = shader_name[name]
+	if id == nil then
+		assert(USER_PROGRAM < MAX_PROGRAM)
+		id = USER_PROGRAM
+		USER_PROGRAM = id + 1
+	end
+
+	local vs = PRECISION .. (arg.vs or sprite_vs)
+	local fs = PRECISION_HIGH .. (arg.fs or sprite_fs)
+
+	s.load(id, fs, vs)
+
+	local uniform = arg.uniform
+	if uniform then
+		for _,v in ipairs(uniform) do
+			v.type = assert(uniform_format[v.type])
+		end
+		s.uniform_bind(id, uniform)
+	end
+
+	local r = create_shader(id, uniform)
+	shader_name[name] = id
+	return r
+end
+
 return shader
