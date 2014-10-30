@@ -84,6 +84,7 @@ struct render {
 	RID attrib_layout;
 	RID vbslot[MAX_VB_SLOT];
 	RID program;
+	GLint default_framebuffer;
 	struct rstate current;
 	struct rstate last;
 	struct log log;
@@ -434,6 +435,11 @@ render_init(struct render_init_args *args, void * buffer, int sz) {
 	new_array(&B, &R->target, args->max_target, sizeof(struct target));
 	new_array(&B, &R->texture, args->max_texture, sizeof(struct texture));
 	new_array(&B, &R->shader, args->max_shader, sizeof(struct shader));
+
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &R->default_framebuffer);
+
+	CHECK_GL_ERROR
+
 	return R;
 }
 
@@ -703,9 +709,9 @@ create_rt(struct render *R, RID texid) {
 	if (tar == NULL)
 		return 0;
 	tar->tex = texid;
-    struct texture * tex = array_ref(&R->texture, texid);
-    if (tex == NULL)
-        return 0;
+	struct texture * tex = array_ref(&R->texture, texid);
+	if (tex == NULL)
+		return 0;
 	glGenFramebuffers(1, &tar->glid);
 	glBindFramebuffer(GL_FRAMEBUFFER, tar->glid);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->glid, 0);
@@ -723,16 +729,16 @@ render_target_create(struct render *R, int width, int height, enum TEXTURE_FORMA
 	RID tex = render_texture_create(R, width, height, format, TEXTURE_2D, 0);
 	if (tex == 0)
 		return 0;
-    render_texture_update(R, tex, NULL, 0, 0);
+	render_texture_update(R, tex, NULL, 0, 0);
 	RID rt = create_rt(R, tex);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, R->default_framebuffer);
 	R->last.target = 0;
 	R->changeflag |= CHANGE_TARGET;
 
 	if (rt == 0) {
 		render_release(R, TEXTURE, tex);
 	}
-    CHECK_GL_ERROR
+	CHECK_GL_ERROR
 	return rt;
 }
 
@@ -861,7 +867,7 @@ render_state_commit(struct render *R) {
 	if (R->changeflag & CHANGE_TARGET) {
 		RID crt = R->current.target;
 		if (R->last.target != crt) {
-			GLuint rt = 0;
+			GLuint rt = R->default_framebuffer;
 			if (crt != 0) {
 				struct target * tar = array_ref(&R->target, crt);
 				if (tar) {
@@ -900,7 +906,7 @@ render_state_reset(struct render *R) {
 	glDepthMask(GL_FALSE);
 	glDisable( GL_DEPTH_TEST );
 	glDisable( GL_CULL_FACE );
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, R->default_framebuffer);
 
 	CHECK_GL_ERROR
 }
