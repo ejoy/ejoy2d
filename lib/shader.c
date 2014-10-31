@@ -29,7 +29,6 @@ struct uniform {
 
 struct program {
 	RID prog;
-	int mask;
 	int st;
 	int uniform_number;
 	struct uniform uniform[MAX_UNIFORM];
@@ -125,7 +124,6 @@ program_init(struct program * p, const char *FS, const char *VS) {
 	p->prog = render_shader_create(R, VS, FS);
 	render_shader_bind(R, p->prog);
 
-	p->mask = render_shader_locuniform(R, "mask");
 	p->st = render_shader_locuniform(R, "st");
 	render_shader_bind(R, 0);
 }
@@ -243,15 +241,6 @@ shader_program(int n) {
 }
 
 void
-shader_mask(float x, float y) {
-	struct program *p = &RS->program[RS->current_program];
-	if (!p || p->mask == -1)
-		return;
-	float v[2] = { x, y};
-	render_shader_setuniform(RS->R, p->mask, UNIFORM_FLOAT2, v);
-}
-
-void
 shader_st(int prog, float x, float y, float scale) {
 	rs_commit();
     shader_program(prog);
@@ -260,7 +249,6 @@ shader_st(int prog, float x, float y, float scale) {
     if (!p || p->st == -1)
         return;
 	float v[4] = { scale, scale, x, y };
-	render_shader_setuniform(RS->R, p->mask, UNIFORM_FLOAT4, v);
 }
 
 void

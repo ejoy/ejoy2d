@@ -15,7 +15,7 @@
 #include <limits.h>
 
 void
-sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt,  const struct sprite_trans *arg) {
+sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const struct sprite_trans *arg) {
 	struct matrix tmp;
 	struct vertex_pack vb[4];
 	int i,j;
@@ -45,13 +45,6 @@ sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const s
 			vb[j].vy = vy;
 			vb[j].tx = tx;
 			vb[j].ty = ty;
-		}
-		if (mask != NULL) {
-				float tx = mask->rect[0].texture_coord[0];
-				float ty = mask->rect[0].texture_coord[1];
-				float delta_tx = (tx - vb[0].tx) * (1.0f / 65535.0f);
-				float delta_ty = (ty - vb[0].ty) * (1.0f / 65535.0f);
-				shader_mask(delta_tx, delta_ty);
 		}
 		shader_draw(vb, arg->color, arg->additive);
 	}
@@ -449,7 +442,7 @@ drawparticle(struct sprite *s, struct particle_system *ps, struct pack_picture *
 
 		s->t.mat = mat;
 		s->t.color = color;
-		sprite_drawquad(pic, NULL, NULL, &s->t);
+		sprite_drawquad(pic, NULL, &s->t);
 	}
 	shader_defaultblend();
 
@@ -465,7 +458,7 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 	switch (s->type) {
 	case TYPE_PICTURE:
 		switch_program(t, PROGRAM_PICTURE);
-		sprite_drawquad(s->s.pic, s->data.mask, srt, t);
+		sprite_drawquad(s->s.pic, srt, t);
 		return 0;
 	case TYPE_POLYGON:
 		switch_program(t, PROGRAM_PICTURE);

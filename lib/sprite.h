@@ -39,13 +39,12 @@ struct sprite {
 		struct sprite * children[1];
 		struct rich_text * rich_text;
 		int scissor;
-		struct pack_picture *mask;  //for picture only
 		struct anchor_data *anchor;
 	} data;
 };
 
 struct sprite_trans * sprite_trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_trans *t, struct matrix *tmp_matrix);
-void sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt, const struct sprite_trans *arg);
+void sprite_drawquad(struct pack_picture *picture, const struct srt *srt, const struct sprite_trans *arg);
 void sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg);
 
 // sprite_size must be call before sprite_init
