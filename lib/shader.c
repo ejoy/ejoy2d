@@ -22,6 +22,7 @@
 #define BUFFER_OFFSET(f) ((int)&(((struct vertex *)NULL)->f))
 
 #define MAX_UNIFORM 16
+#define MAX_TEXTURE_CHANNEL 8
 
 struct uniform {
 	int loc;
@@ -33,6 +34,7 @@ struct program {
 	RID prog;
 	int st;
 	struct material * material;
+	int texture_number;
 	int uniform_number;
 	struct uniform uniform[MAX_UNIFORM];
 };
@@ -41,7 +43,7 @@ struct render_state {
 	struct render * R;
 	int current_program;
 	struct program program[MAX_PROGRAM];
-	RID tex;
+	RID tex[MAX_TEXTURE_CHANNEL];
 	int blendchange;
 	int drawcall;
 	RID vertex_buffer;
@@ -116,7 +118,7 @@ shader_reset() {
 		render_shader_bind(rs->R, RS->program[RS->current_program].prog);
 	}
 	render_set(rs->R, VERTEXLAYOUT, rs->layout, 0);
-	render_set(rs->R, TEXTURE, RS->tex, 0);
+	render_set(rs->R, TEXTURE, RS->tex[0], 0);
 	render_set(rs->R, INDEXBUFFER, RS->index_buffer,0);
 	render_set(rs->R, VERTEXBUFFER, RS->vertex_buffer,0);
 }
@@ -132,7 +134,7 @@ program_init(struct program * p, const char *FS, const char *VS) {
 }
 
 void 
-shader_load(int prog, const char *fs, const char *vs) {
+shader_load(int prog, const char *fs, const char *vs, int texture) {
 	struct render_state *rs = RS;
 	assert(prog >=0 && prog < MAX_PROGRAM);
 	struct program * p = &rs->program[prog];
@@ -140,6 +142,7 @@ shader_load(int prog, const char *fs, const char *vs) {
 		render_release(RS->R, SHADER, p->prog);
 		p->prog = 0;
 	}
+	p->texture_number = texture;
 	program_init(p, fs, vs);
 	RS->current_program = -1;
 }
@@ -223,14 +226,11 @@ shader_drawbuffer(struct render_buffer * rb, float tx, float ty, float scale) {
 
 void
 shader_texture(int id, int channel) {
-	if (channel > 0) {
+	assert(channel < MAX_TEXTURE_CHANNEL);
+	if (RS->tex[channel] != id) {
+		rs_commit();
+		RS->tex[channel] = id;
 		render_set(RS->R, TEXTURE, id, channel);
-	} else {
-		if (RS->tex != id) {
-			rs_commit();
-			RS->tex = id;
-			render_set(RS->R, TEXTURE, id, 0);
-		}
 	}
 }
 
@@ -383,13 +383,14 @@ shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t) {
 
 struct material {
 	struct program *p;
+	int texture[MAX_TEXTURE_CHANNEL];
 	float uniform[1];
 };
 
 int 
 material_size(int prog) {
 	struct program *p = &RS->program[prog];
-	if (p->uniform_number == 0) {
+	if (p->uniform_number == 0 && p->texture_number == 0) {
 		return 0;
 	}
 	struct uniform * lu = &p->uniform[p->uniform_number-1];
@@ -405,6 +406,10 @@ material_init(void *self, int size, int prog) {
 	memset(self, 0, rsz);
 	struct material * m = self;
 	m->p = p;
+	int i;
+	for (i=0;i<MAX_TEXTURE_CHANNEL;i++) {
+		m->texture[i] = -1;
+	}
 
 	return m;
 }
@@ -434,4 +439,22 @@ void material_apply(int prog, struct material *m) {
 		struct uniform * u = &p->uniform[i];
 		render_shader_setuniform(RS->R, u->loc, u->type, m->uniform + u->offset);
 	}
+	for (i=0;i<p->texture_number;i++) {
+		int tex = m->texture[i];
+		if (tex >= 0) {
+			RID glid = texture_glid(tex);
+			if (glid) {
+				shader_texture(glid, i);
+			}
+		}
+	}
+}
+
+int
+material_settexture(struct material *m, int channel, int texture) {
+	if (channel >= MAX_TEXTURE_CHANNEL) {
+		return 1;
+	}
+	m->texture[channel] = texture;
+	return 0;
 }

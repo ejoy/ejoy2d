@@ -15,7 +15,8 @@ lload(lua_State *L) {
 	int prog = (int)luaL_checkinteger(L,1);
 	const char *fs = luaL_checkstring(L, 2);
 	const char *vs = luaL_checkstring(L, 3);
-	shader_load(prog, fs, vs);
+	int texture_number = luaL_optinteger(L, 4, 0);
+	shader_load(prog, fs, vs, texture_number);
 	return 0;
 }
 
@@ -165,7 +166,18 @@ lmaterial_setuniform(lua_State *L) {
 		v[i] = luaL_checknumber(L, 3+i);
 	}
 	if (material_setuniform(m, index, n, v)) {
-		return luaL_error(L, "invalid agrument number %d", n);
+		return luaL_error(L, "invalid argument number %d", n);
+	}
+	return 0;
+}
+
+static int
+lmaterial_settexture(lua_State *L) {
+	struct material * m = lua_touserdata(L, 1);
+	int id = luaL_checkinteger(L, 2);
+	int channel = luaL_optinteger(L, 3, 0);
+	if (material_settexture(m, channel, id)) {
+		return luaL_error(L, "invalid argument texture channel %d", channel);
 	}
 	return 0;
 }
@@ -194,6 +206,7 @@ ejoy2d_shader(lua_State *L) {
 		{"uniform_bind", luniform_bind },
 		{"uniform_set", luniform_set },
 		{"material_setuniform", lmaterial_setuniform },
+		{"material_settexture", lmaterial_settexture },
 		{"shader_texture", lshader_texture },
 		{NULL,NULL},
 	};

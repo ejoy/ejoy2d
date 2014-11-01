@@ -14,7 +14,7 @@
 #define PROGRAM_TEXT_EDGE 3
 
 void shader_init();
-void shader_load(int prog, const char *fs, const char *vs);
+void shader_load(int prog, const char *fs, const char *vs, int texture);
 void shader_unload();
 void shader_blend(int m1,int m2);
 void shader_defaultblend();

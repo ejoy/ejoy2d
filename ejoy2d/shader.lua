@@ -255,8 +255,10 @@ local function create_shader(id, uniform)
 end
 
 local material_setuniform = s.material_setuniform
+local material_settexture = s.material_settexture
 
-local function material_meta(id, uniform)
+local function material_meta(id, arg)
+	local uniform = arg.uniform
 	local meta
 	if uniform then
 		local index_table = {}
@@ -265,6 +267,11 @@ local function material_meta(id, uniform)
 			local loc = index-1
 			index_table[u.name] = function(self, ...)
 				material_setuniform(self.__obj, loc, ...)
+			end
+		end
+		if arg.texture then
+			index_table.texture = function(self, ...)
+				material_settexture(self.__obj, ...)
 			end
 		end
 	end
@@ -283,7 +290,7 @@ function shader.define( arg )
 	local vs = PRECISION .. (arg.vs or sprite_vs)
 	local fs = PRECISION_HIGH .. (arg.fs or sprite_fs)
 
-	s.load(id, fs, vs)
+	s.load(id, fs, vs, arg.texture)
 
 	local uniform = arg.uniform
 	if uniform then
@@ -296,7 +303,7 @@ function shader.define( arg )
 	local r = create_shader(id, uniform)
 	shader_name[name] = id
 
-	material_meta(id, uniform)
+	material_meta(id, arg)
 	return r
 end
 
