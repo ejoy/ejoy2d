@@ -32,7 +32,6 @@ struct uniform {
 
 struct program {
 	RID prog;
-	int st;
 	struct material * material;
 	int texture_number;
 	int uniform_number;
@@ -134,7 +133,6 @@ program_init(struct program * p, const char *FS, const char *VS, int texture, co
 	args.texture_uniform = texture_uniform_name;
 	p->prog = render_shader_create(R, &args);
 	render_shader_bind(R, p->prog);
-	p->st = render_shader_locuniform(R, "st");
 	render_shader_bind(R, 0);
 }
 
@@ -220,9 +218,10 @@ shader_drawbuffer(struct render_buffer * rb, float tx, float ty, float scale) {
 	float sy = scale;
 	screen_trans(&sx, &sy);
 	screen_trans(&tx, &ty);
-	struct program *p = &RS->program[RS->current_program];
 	float v[4] = { sx, sy, tx, ty };
-	render_shader_setuniform(RS->R, p->st, UNIFORM_FLOAT4, v);
+
+	// we should call shader_adduniform to add "st" uniform first
+	shader_setuniform(0, UNIFORM_FLOAT4, v);
 
 	renderbuffer_commit(rb);
 

@@ -212,6 +212,7 @@ function shader.init()
 	s.load(shader_name.COLOR, PRECISION .. color_fs, PRECISION .. sprite_vs)
 	s.load(shader_name.BLEND, PRECISION .. blend_fs, PRECISION .. blend_vs)
 	s.load(shader_name.RENDERBUFFER, PRECISION .. renderbuffer_fs, PRECISION_HIGH .. renderbuffer_vs)
+	s.uniform_bind(shader_name.RENDERBUFFER, { { name = "st", type = 4} })	-- st must the first uniform (the type is float4/4)
 end
 
 shader.draw = s.draw
