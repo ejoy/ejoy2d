@@ -23,6 +23,13 @@ struct vertex_attrib {
 	int offset;
 };
 
+struct shader_init_args {
+	const char * vs;
+	const char * fs;
+	int texture;
+	const char **texture_uniform;
+};
+
 enum RENDER_OBJ {
 	INVALID = 0,
 	VERTEXLAYOUT = 1,
@@ -126,11 +133,10 @@ RID render_target_create(struct render *R, int width, int height, enum TEXTURE_F
 // render_release TARGET would not release the texture attachment
 RID render_target_texture(struct render *R, RID rt);
 
-RID render_shader_create(struct render *R, const char *vs, const char *fs);
+RID render_shader_create(struct render *R, struct shader_init_args *args);
 void render_shader_bind(struct render *R, RID id);
 int render_shader_locuniform(struct render *R, const char * name);
 void render_shader_setuniform(struct render *R, int loc, enum UNIFORM_FORMAT format, const float *v);
-void render_shader_setuniformi(struct render *R, int loc, int v);
 
 void render_setviewport(struct render *R, int x, int y, int width, int height );
 void render_setscissor(struct render *R, int x, int y, int width, int height );

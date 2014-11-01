@@ -124,17 +124,22 @@ shader_reset() {
 }
 
 static void
-program_init(struct program * p, const char *FS, const char *VS) {
+program_init(struct program * p, const char *FS, const char *VS, int texture, const char ** texture_uniform_name) {
 	struct render *R = RS->R;
 	memset(p, 0, sizeof(*p));
-	p->prog = render_shader_create(R, VS, FS);
+	struct shader_init_args args;
+	args.vs = VS;
+	args.fs = FS;
+	args.texture = texture;
+	args.texture_uniform = texture_uniform_name;
+	p->prog = render_shader_create(R, &args);
 	render_shader_bind(R, p->prog);
 	p->st = render_shader_locuniform(R, "st");
 	render_shader_bind(R, 0);
 }
 
 void 
-shader_load(int prog, const char *fs, const char *vs, int texture) {
+shader_load(int prog, const char *fs, const char *vs, int texture, const char ** texture_uniform_name) {
 	struct render_state *rs = RS;
 	assert(prog >=0 && prog < MAX_PROGRAM);
 	struct program * p = &rs->program[prog];
@@ -142,7 +147,7 @@ shader_load(int prog, const char *fs, const char *vs, int texture) {
 		render_release(RS->R, SHADER, p->prog);
 		p->prog = 0;
 	}
-	program_init(p, fs, vs);
+	program_init(p, fs, vs, texture, texture_uniform_name);
 	p->texture_number = texture;
 	RS->current_program = -1;
 }
@@ -377,18 +382,6 @@ shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t) {
 		u->offset = lu->offset + shader_uniformsize(lu->type);
 	}
 	return index;
-}
-
-int 
-shader_textureuniform(int prog, const char * name, int idx) {
-	assert(prog >=0 && prog < MAX_PROGRAM);
-	shader_program(prog);
-	int loc = render_shader_locuniform(RS->R, name);
-	if (loc >= 0) {
-		render_shader_setuniformi(RS->R, loc, idx);
-		return 0;
-	}
-	return 1;
 }
 
 // material system

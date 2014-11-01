@@ -65,6 +65,8 @@ struct shader {
 	GLuint glid;
 	int n;
 	struct attrib_layout a[MAX_ATTRIB];
+	int texture_n;
+	int texture_uniform[MAX_TEXTURE];
 };
 
 struct rstate {
@@ -279,16 +281,22 @@ compile_link(struct render *R, struct shader *s, const char * VS, const char *FS
 }
 
 RID 
-render_shader_create(struct render *R, const char *vs, const char *fs) {
+render_shader_create(struct render *R, struct shader_init_args *args) {
 	struct shader * s = array_alloc(&R->shader);
 	if (s == NULL) {
 		return 0;
 	}
 	s->glid = glCreateProgram();
-	if (!compile_link(R, s, vs, fs)) {
+	if (!compile_link(R, s, args->vs, args->fs)) {
 		glDeleteProgram(s->glid);
 		array_free(&R->shader, s);
 		return 0;
+	}
+
+	s->texture_n = args->texture;
+	int i;
+	for (i=0;i<s->texture_n;i++) {
+		s->texture_uniform[i] = glGetUniformLocation(s->glid, args->texture_uniform[i]);
 	}
 
 	CHECK_GL_ERROR
@@ -392,6 +400,17 @@ render_set(struct render *R, enum RENDER_OBJ what, RID id, int slot) {
 	}
 }
 
+static void
+apply_texture_uniform(struct shader *s) {
+	int i;
+	for (i=0;i<s->texture_n;i++) {
+		int loc = s->texture_uniform[i];
+		if (loc >= 0) {
+			glUniform1i(loc, i);
+		}
+	}
+}
+
 void
 render_shader_bind(struct render *R, RID id) {
 	R->program = id;
@@ -399,6 +418,7 @@ render_shader_bind(struct render *R, RID id) {
 	struct shader * s = array_ref(&R->shader, id);
 	if (s) {
 		glUseProgram(s->glid);
+		apply_texture_uniform(s);
 	} else {
 		glUseProgram(0);
 	}
@@ -1002,12 +1022,6 @@ render_shader_setuniform(struct render *R, int loc, enum UNIFORM_FORMAT format, 
 		assert(0);
 		return;
 	}
-	CHECK_GL_ERROR
-}
-
-void
-render_shader_setuniformi(struct render *R, int loc, int v) {
-	glUniform1i(loc, v);
 	CHECK_GL_ERROR
 }
 

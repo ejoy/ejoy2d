@@ -14,7 +14,7 @@
 #define PROGRAM_TEXT_EDGE 3
 
 void shader_init();
-void shader_load(int prog, const char *fs, const char *vs, int texture);
+void shader_load(int prog, const char *fs, const char *vs, int texture, const char ** texture_uniform_name);
 void shader_unload();
 void shader_blend(int m1,int m2);
 void shader_defaultblend();
@@ -31,7 +31,6 @@ int ejoy2d_shader(lua_State *L);
 
 void shader_drawbuffer(struct render_buffer * rb, float x, float y, float s);
 
-int shader_textureuniform(int prog, const char * name, int idx);
 int shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t);
 void shader_setuniform(int index, enum UNIFORM_FORMAT t, float *v);
 int shader_uniformsize(enum UNIFORM_FORMAT t);

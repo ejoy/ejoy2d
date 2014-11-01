@@ -14,10 +14,13 @@ pack.load {
 ej.define_shader {
 	name = "EXAMPLE",
 	fs = [[
+varying vec2 v_texcoord;
 uniform vec4 color;
+uniform sampler2D texture0;
 
 void main() {
-	gl_FragColor = color;
+	vec4 tmp = texture2D(texture0, v_texcoord);
+	gl_FragColor = color + tmp;
 }
 	]],
 	uniform = {
@@ -25,6 +28,9 @@ void main() {
 			name = "color",
 			type = "float4",
 		}
+	},
+	texture = {
+		"texture0",
 	}
 }
 

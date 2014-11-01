@@ -17,18 +17,16 @@ lload(lua_State *L) {
 	const char *vs = luaL_checkstring(L, 3);
 	if (lua_istable(L, 4)) {
 		int texture_number = lua_rawlen(L, 4);
-		shader_load(prog, fs, vs, texture_number);
+		ARRAY(const char *, name, texture_number);
+		luaL_checkstack(L, texture_number + 1, NULL);
 		int i;
 		for (i=0;i<texture_number;i++) {
-			lua_rawgeti(L, -1, i+1);
-			const char * name = luaL_checkstring(L, -1);
-			if (shader_textureuniform(prog, name, i)) {
-				return luaL_error(L, "Invalid texture %s (%d)", name, i);
-			}
-			lua_pop(L, 1);
+			lua_rawgeti(L, -1-i, i+1);
+			name[i] = luaL_checkstring(L, -1);
 		}
+		shader_load(prog, fs, vs, texture_number, name);
 	} else {
-		shader_load(prog, fs, vs, 0);
+		shader_load(prog, fs, vs, 0, NULL);
 	}
 	return 0;
 }
