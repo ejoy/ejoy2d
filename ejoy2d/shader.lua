@@ -202,6 +202,8 @@ local shader_name = {
 	BLEND = 6,
 }
 
+local shader_material = {}
+
 function shader.init()
 	s.load(shader_name.NORMAL, PRECISION .. sprite_fs, PRECISION .. sprite_vs)
 	s.load(shader_name.TEXT, PRECISION .. text_fs, PRECISION .. sprite_vs)
@@ -252,6 +254,23 @@ local function create_shader(id, uniform)
 	end
 end
 
+local material_setuniform = s.material_setuniform
+
+local function material_meta(id, uniform)
+	local meta
+	if uniform then
+		local index_table = {}
+		meta = { __index = index_table }
+		for index , u in ipairs(uniform) do
+			local loc = index-1
+			index_table[u.name] = function(self, ...)
+				material_setuniform(self.__obj, loc, ...)
+			end
+		end
+	end
+	shader_material[id] = meta
+end
+
 function shader.define( arg )
 	local name = assert(arg.name)
 	local id = shader_name[name]
@@ -276,7 +295,13 @@ function shader.define( arg )
 
 	local r = create_shader(id, uniform)
 	shader_name[name] = id
+
+	material_meta(id, uniform)
 	return r
+end
+
+function shader.material_meta(prog)
+	return shader_material[prog]
 end
 
 return shader

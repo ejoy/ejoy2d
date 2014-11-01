@@ -33,6 +33,7 @@ void shader_drawbuffer(struct render_buffer * rb, float x, float y, float s);
 
 int shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t);
 void shader_setuniform(int index, enum UNIFORM_FORMAT t, float *v);
+int shader_uniformsize(enum UNIFORM_FORMAT t);
 
 // these api may deprecated later
 void shader_reset();

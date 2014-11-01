@@ -1,4 +1,5 @@
 #include "shader.h"
+#include "material.h"
 #include "fault.h"
 #include "array.h"
 #include "renderbuffer.h"
@@ -24,12 +25,14 @@
 
 struct uniform {
 	int loc;
+	int offset;
 	enum UNIFORM_FORMAT type;
 };
 
 struct program {
 	RID prog;
 	int st;
+	struct material * material;
 	int uniform_number;
 	struct uniform uniform[MAX_UNIFORM];
 };
@@ -121,9 +124,9 @@ shader_reset() {
 static void
 program_init(struct program * p, const char *FS, const char *VS) {
 	struct render *R = RS->R;
+	memset(p, 0, sizeof(*p));
 	p->prog = render_shader_create(R, VS, FS);
 	render_shader_bind(R, p->prog);
-
 	p->st = render_shader_locuniform(R, "st");
 	render_shader_bind(R, 0);
 }
@@ -236,7 +239,9 @@ shader_program(int n) {
 	if (RS->current_program != n) {
 		rs_commit();
 		RS->current_program = n;
-		render_shader_bind(RS->R, RS->program[RS->current_program].prog);
+		struct program *p = &RS->program[RS->current_program];
+		render_shader_bind(RS->R, p->prog);
+		p->material = NULL;
 	}
 }
 
@@ -249,6 +254,7 @@ shader_st(int prog, float x, float y, float scale) {
     if (!p || p->st == -1)
         return;
 	float v[4] = { scale, scale, x, y };
+	render_shader_setuniform(RS->R, p->st, UNIFORM_FLOAT4, v);
 }
 
 void
@@ -334,6 +340,35 @@ shader_setuniform(int index, enum UNIFORM_FORMAT t, float *v) {
 }
 
 int 
+shader_uniformsize(enum UNIFORM_FORMAT t) {
+	int n = 0;
+	switch(t) {
+	case UNIFORM_INVALID:
+		n = 0;
+		break;
+	case UNIFORM_FLOAT1:
+		n = 1;
+		break;
+	case UNIFORM_FLOAT2:
+		n = 2;
+		break;
+	case UNIFORM_FLOAT3:
+		n = 3;
+		break;
+	case UNIFORM_FLOAT4:
+		n = 4;
+		break;
+	case UNIFORM_FLOAT33:
+		n = 9;
+		break;
+	case UNIFORM_FLOAT44:
+		n = 16;
+		break;
+	}
+	return n;
+}
+
+int 
 shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t) {
 	// reset current_program
 	assert(prog >=0 && prog < MAX_PROGRAM);
@@ -347,5 +382,68 @@ shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t) {
 	struct uniform * u = &p->uniform[index];
 	u->loc = loc;
 	u->type = t;
+	if (index == 0) {
+		u->offset = 0;
+	} else {
+		struct uniform * lu = &p->uniform[index-1];
+		u->offset = lu->offset + shader_uniformsize(lu->type);
+	}
 	return index;
+}
+
+// material system
+
+struct material {
+	struct program *p;
+	float uniform[1];
+};
+
+int 
+material_size(int prog) {
+	struct program *p = &RS->program[prog];
+	if (p->uniform_number == 0) {
+		return 0;
+	}
+	struct uniform * lu = &p->uniform[p->uniform_number-1];
+	int total = lu->offset + shader_uniformsize(lu->type);
+	return sizeof(struct material) + (total-1) * sizeof(float);
+}
+
+struct material * 
+material_init(void *self, int size, int prog) {
+	int rsz = material_size(prog);
+	struct program *p = &RS->program[prog];
+	assert(size >= rsz);
+	memset(self, 0, rsz);
+	struct material * m = self;
+	m->p = p;
+
+	return m;
+}
+
+int 
+material_setuniform(struct material *m, int index, int n, const float *v) {
+	struct program * p = m->p;
+	assert(index >= 0 && index < p->uniform_number);
+	struct uniform * u = &p->uniform[index];
+	if (shader_uniformsize(u->type) != n) {
+		return 1;
+	}
+	memcpy(m->uniform + u->offset, v, n * sizeof(float));
+	return 0;
+}
+
+void material_apply(int prog, struct material *m) {
+	struct program * p = m->p;
+	if (p != &RS->program[prog])
+		return;
+	if (p->material == m) {
+		return;
+	}
+	p->material = m;
+	int i;
+	for (i=0;i<p->uniform_number;i++) {
+		struct uniform * u = &p->uniform[i];
+		render_shader_setuniform(RS->R, u->loc, u->type, m->uniform + u->offset);
+	}
 }

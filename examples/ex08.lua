@@ -11,7 +11,7 @@ pack.load {
 
 
 -- define a shader
-local s = ej.define_shader {
+ej.define_shader {
 	name = "EXAMPLE",
 	fs = [[
 uniform vec4 color;
@@ -33,9 +33,14 @@ local obj = ej.sprite("sample","cannon")
 obj:ps(100,100)
 
 obj.program = "EXAMPLE"
+local material = obj.material
+material:color(1,0,0,1)
 
 local obj2 = ej.sprite("sample","cannon")
 obj2:ps(200,100)
+
+obj2.turret.program = "EXAMPLE"
+obj2.turret.material:color(0,1,0,1)
 
 local game = {}
 
@@ -44,7 +49,6 @@ end
 
 function game.drawframe()
 	ej.clear(0xff808080)	-- clear (0.5,0.5,0.5,1) gray
-	s.color(1,0,0,1) -- use shader EXAMPLE, and set uniform color to (1.0, 0, 0, 1.0)
 	obj:draw()
 	obj2:draw()
 end

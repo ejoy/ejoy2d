@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+struct material;
+
 struct anchor_data {
 	struct particle_system *ps;
 	struct pack_picture *pic;
@@ -35,6 +37,7 @@ struct sprite {
 	bool message;
 	bool multimount;
 	const char *name;	// name for parent
+	struct material *material;
 	union {
 		struct sprite * children[1];
 		struct rich_text * rich_text;
@@ -73,6 +76,7 @@ int sprite_pos(struct sprite *s, struct srt *srt, struct matrix *m, int pos[2]);
 void sprite_matrix(struct sprite *s, struct matrix *mat);
 
 bool sprite_child_visible(struct sprite *s, const char * childname);
+int sprite_material_size(struct sprite *s);
 
 int ejoy2d_sprite(lua_State *L);
 

@@ -3,6 +3,7 @@
 #include "label.h"
 #include "shader.h"
 #include "particle.h"
+#include "material.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -37,6 +38,7 @@ newlabel(lua_State *L, struct pack_label *label) {
 	s->total_frame = 0;
 	s->frame = 0;
 	s->data.rich_text = NULL;
+	s->material = NULL;
 	return s;
 }
 
@@ -175,6 +177,7 @@ newanchor(lua_State *L) {
 	s->data.anchor->ps = NULL;
 	s->data.anchor->pic = NULL;
 	s->s.mat = &s->data.anchor->mat;
+	s->material = NULL;
 	matrix_identity(s->s.mat);
 
 	return s;
@@ -242,6 +245,17 @@ self(lua_State *L) {
 		luaL_error(L, "Need sprite");
 	}
 	return s;
+}
+
+static void
+get_reftable(lua_State *L, int index) {
+	lua_getuservalue(L, index);
+	if (lua_isnil(L, -1)) {
+		lua_pop(L, 1);
+		lua_createtable(L, 0, 1);
+		lua_pushvalue(L, -1);
+		lua_setuservalue(L, index);
+	}
 }
 
 static int
@@ -373,6 +387,12 @@ lsetprogram(lua_State *L) {
 		s->t.program = PROGRAM_DEFAULT;
 	} else {
 		s->t.program = (int)luaL_checkinteger(L,2);
+	}
+	if (s->material) {
+		s->material = NULL;
+		get_reftable(L, 1);
+		lua_pushnil(L);
+		lua_setfield(L, -2, "material");
 	}
 	return 0;
 }
@@ -583,9 +603,20 @@ lgetparent(lua_State *L) {
 
 static int
 lgetprogram(lua_State *L) {
-    struct sprite *s = self(L);
-    lua_pushinteger(L, s->t.program);
-    return 1;
+	struct sprite *s = self(L);
+	lua_pushinteger(L, s->t.program);
+	return 1;
+}
+
+static int
+lgetmaterial(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->material) {
+		get_reftable(L,1);
+		lua_getfield(L, -1, "material");
+		return 1;
+	}
+	return 0;
 }
 
 static void
@@ -606,7 +637,8 @@ lgetter(lua_State *L) {
 		{"parent_name", lgetparentname },	// todo: maybe unused , use parent instead
 		{"has_parent", lhasparent },	// todo: maybe unused , use parent instead
 		{"parent", lgetparent },
-        {"program", lgetprogram },
+		{"program", lgetprogram },
+		{"material", lgetmaterial },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -629,17 +661,6 @@ lsetter(lua_State *L) {
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
-}
-
-static void
-get_reftable(lua_State *L, int index) {
-	lua_getuservalue(L, index);
-	if (lua_isnil(L, -1)) {
-		lua_pop(L, 1);
-		lua_createtable(L, 0, 1);
-		lua_pushvalue(L, -1);
-		lua_setuservalue(L, index);
-	}
 }
 
 static void
@@ -1240,10 +1261,32 @@ lnewproxy(lua_State *L) {
 	s->start_frame = 0;
 	s->total_frame = 0;
 	s->frame = 0;
+	s->material = NULL;
 	s->data.children[0] = NULL;
 	sprite_action(s, NULL);
 
 	return 1;
+}
+
+static int
+lnewmaterial(lua_State *L) {
+	struct sprite *s = self(L);
+	int sz = sprite_material_size(s);
+	if (sz == 0)
+		return luaL_error(L, "The program has not material");
+	get_reftable(L, 1);	
+
+	lua_createtable(L, 0, 1);
+	void * m = lua_newuserdata(L, sz); // sprite, uservalue, table, matertial
+	s->material = m;
+	material_init(m, sz, s->t.program);
+	lua_setfield(L, -2, "__obj");
+
+	lua_pushvalue(L, -1);	// sprite, uservalue, table, table
+	lua_setfield(L, -3, "material");
+	lua_pushinteger(L, s->t.program);
+
+	return 2;	// return table, program
 }
 
 int
@@ -1252,6 +1295,7 @@ ejoy2d_sprite(lua_State *L) {
 		{ "new", lnew },
 		{ "label", lnewlabel },
 		{ "proxy", lnewproxy },
+		{ "new_material", lnewmaterial },
 		{ "label_gen_outline", lgenoutline },
         { "enable_visible_test", lenable_visible_test },
 		{ NULL, NULL },

@@ -8,6 +8,7 @@
 #include "array.h"
 #include "spritepack.h"
 #include "render.h"
+#include "material.h"
 
 static int
 lload(lua_State *L) {
@@ -146,29 +147,9 @@ luniform_set(lua_State *L) {
 	int index = luaL_checkinteger(L, 2);
 	enum UNIFORM_FORMAT t = luaL_checkinteger(L, 3);
 	float v[16];	// 16 is matrix 4x4
-	int n = 0;
-	switch(t) {
-	case UNIFORM_FLOAT1:
-		n = 1;
-		break;
-	case UNIFORM_FLOAT2:
-		n = 2;
-		break;
-	case UNIFORM_FLOAT3:
-		n = 3;
-		break;
-	case UNIFORM_FLOAT4:
-		n = 4;
-		break;
-	case UNIFORM_FLOAT33:
-		n = 9;
-		break;
-	case UNIFORM_FLOAT44:
-		n = 16;
-		break;
-	default:
+	int n = shader_uniformsize(t);
+	if (n == 0) {
 		return luaL_error(L, "Invalid uniform format %d", t);
-		break;
 	}
 	int top = lua_gettop(L);
 	if (top != n + 3) {
@@ -179,6 +160,25 @@ luniform_set(lua_State *L) {
 		v[i] = luaL_checknumber(L, 4+i);
 	}
 	shader_setuniform(index, t, v);
+	return 0;
+}
+
+static int
+lmaterial_setuniform(lua_State *L) {
+	struct material * m = lua_touserdata(L, 1);
+	int index = luaL_checkinteger(L, 2);
+	float v[16];	// 16 is matrix 4x4
+	int top = lua_gettop(L);
+	if (top > sizeof(v)/sizeof(v[0])+2)
+		return luaL_error(L, "too many agrument");
+	int n = top-2;
+	int i;
+	for (i=0;i<n;i++) {
+		v[i] = luaL_checknumber(L, 3+i);
+	}
+	if (material_setuniform(m, index, n, v)) {
+		return luaL_error(L, "invalid agrument number %d", n);
+	}
 	return 0;
 }
 
@@ -206,6 +206,7 @@ ejoy2d_shader(lua_State *L) {
         {"shader_st", lshader_st },
 		{"uniform_bind", luniform_bind },
 		{"uniform_set", luniform_set },
+		{"material_setuniform", lmaterial_setuniform },
 		{"shader_texture", lshader_texture },
 		{NULL,NULL},
 	};
