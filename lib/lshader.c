@@ -22,7 +22,9 @@ lload(lua_State *L) {
 		for (i=0;i<texture_number;i++) {
 			lua_rawgeti(L, -1, i+1);
 			const char * name = luaL_checkstring(L, -1);
-			shader_textureuniform(prog, name, i);
+			if (shader_textureuniform(prog, name, i)) {
+				return luaL_error(L, "Invalid texture %s (%d)", name, i);
+			}
 			lua_pop(L, 1);
 		}
 	} else {

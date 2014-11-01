@@ -379,14 +379,16 @@ shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t) {
 	return index;
 }
 
-void 
+int 
 shader_textureuniform(int prog, const char * name, int idx) {
 	assert(prog >=0 && prog < MAX_PROGRAM);
 	shader_program(prog);
 	int loc = render_shader_locuniform(RS->R, name);
 	if (loc >= 0) {
 		render_shader_setuniformi(RS->R, loc, idx);
+		return 0;
 	}
+	return 1;
 }
 
 // material system
