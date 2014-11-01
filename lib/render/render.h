@@ -130,6 +130,7 @@ RID render_shader_create(struct render *R, const char *vs, const char *fs);
 void render_shader_bind(struct render *R, RID id);
 int render_shader_locuniform(struct render *R, const char * name);
 void render_shader_setuniform(struct render *R, int loc, enum UNIFORM_FORMAT format, const float *v);
+void render_shader_setuniformi(struct render *R, int loc, int v);
 
 void render_setviewport(struct render *R, int x, int y, int width, int height );
 void render_setscissor(struct render *R, int x, int y, int width, int height );

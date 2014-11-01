@@ -142,8 +142,8 @@ shader_load(int prog, const char *fs, const char *vs, int texture) {
 		render_release(RS->R, SHADER, p->prog);
 		p->prog = 0;
 	}
-	p->texture_number = texture;
 	program_init(p, fs, vs);
+	p->texture_number = texture;
 	RS->current_program = -1;
 }
 
@@ -379,6 +379,16 @@ shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t) {
 	return index;
 }
 
+void 
+shader_textureuniform(int prog, const char * name, int idx) {
+	assert(prog >=0 && prog < MAX_PROGRAM);
+	shader_program(prog);
+	int loc = render_shader_locuniform(RS->R, name);
+	if (loc >= 0) {
+		render_shader_setuniformi(RS->R, loc, idx);
+	}
+}
+
 // material system
 
 struct material {
@@ -426,7 +436,8 @@ material_setuniform(struct material *m, int index, int n, const float *v) {
 	return 0;
 }
 
-void material_apply(int prog, struct material *m) {
+void 
+material_apply(int prog, struct material *m) {
 	struct program * p = m->p;
 	if (p != &RS->program[prog])
 		return;

@@ -15,8 +15,19 @@ lload(lua_State *L) {
 	int prog = (int)luaL_checkinteger(L,1);
 	const char *fs = luaL_checkstring(L, 2);
 	const char *vs = luaL_checkstring(L, 3);
-	int texture_number = luaL_optinteger(L, 4, 0);
-	shader_load(prog, fs, vs, texture_number);
+	if (lua_istable(L, 4)) {
+		int texture_number = lua_rawlen(L, 4);
+		shader_load(prog, fs, vs, texture_number);
+		int i;
+		for (i=0;i<texture_number;i++) {
+			lua_rawgeti(L, -1, i+1);
+			const char * name = luaL_checkstring(L, -1);
+			shader_textureuniform(prog, name, i);
+			lua_pop(L, 1);
+		}
+	} else {
+		shader_load(prog, fs, vs, 0);
+	}
 	return 0;
 }
 
@@ -184,12 +195,12 @@ lmaterial_settexture(lua_State *L) {
 
 static int
 lshader_texture(lua_State *L) {
-	int channel = luaL_checkinteger(L, 1);
 	RID id = 0;
-	if (!lua_isnoneornil(L, 2)) {
-		int texid = luaL_checkinteger(L, 2);
+	if (!lua_isnoneornil(L, 1)) {
+		int texid = luaL_checkinteger(L, 1);
 		id = texture_glid(texid);
 	}
+	int channel = luaL_optinteger(L, 2, 0);
 	shader_texture(id, channel);
 	return 0;
 }

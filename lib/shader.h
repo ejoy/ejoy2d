@@ -31,6 +31,7 @@ int ejoy2d_shader(lua_State *L);
 
 void shader_drawbuffer(struct render_buffer * rb, float x, float y, float s);
 
+void shader_textureuniform(int prog, const char * name, int idx);
 int shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t);
 void shader_setuniform(int index, enum UNIFORM_FORMAT t, float *v);
 int shader_uniformsize(enum UNIFORM_FORMAT t);

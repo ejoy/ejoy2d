@@ -1005,6 +1005,12 @@ render_shader_setuniform(struct render *R, int loc, enum UNIFORM_FORMAT format, 
 	CHECK_GL_ERROR
 }
 
+void
+render_shader_setuniformi(struct render *R, int loc, int v) {
+	glUniform1i(loc, v);
+	CHECK_GL_ERROR
+}
+
 int 
 render_version(struct render *R) {
 	return OPENGLES;
