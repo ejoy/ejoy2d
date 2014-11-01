@@ -246,18 +246,6 @@ shader_program(int n) {
 }
 
 void
-shader_st(int prog, float x, float y, float scale) {
-	rs_commit();
-    shader_program(prog);
-    struct program *p = &RS->program[prog];
-
-    if (!p || p->st == -1)
-        return;
-	float v[4] = { scale, scale, x, y };
-	render_shader_setuniform(RS->R, p->st, UNIFORM_FLOAT4, v);
-}
-
-void
 shader_draw(const struct vertex_pack vb[4], uint32_t color, uint32_t additive) {
 	if (renderbuffer_add(&RS->vb, vb, color, additive)) {
 		rs_commit();

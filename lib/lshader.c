@@ -108,18 +108,6 @@ lclear(lua_State *L) {
 }
 
 static int
-lshader_st(lua_State *L) {
-    int prog = luaL_checkinteger(L, 1);
-	float x = luaL_checknumber(L, 2);
-	float y = luaL_checknumber(L, 3);
-	float scale = luaL_optnumber(L, 4, 1.0);
-
-    screen_trans(&x, &y);
-    shader_st(prog, x * SCREEN_SCALE, y * SCREEN_SCALE, scale);
-    return 0;
-}
-
-static int
 luniform_bind(lua_State *L) {
 	int prog = luaL_checkinteger(L, 1);
 	luaL_checktype(L, 2, LUA_TTABLE);
@@ -203,7 +191,6 @@ ejoy2d_shader(lua_State *L) {
 		{"blend", lblend},
 		{"clear", lclear},
 		{"version", lversion},
-        {"shader_st", lshader_st },
 		{"uniform_bind", luniform_bind },
 		{"uniform_set", luniform_set },
 		{"material_setuniform", lmaterial_setuniform },
