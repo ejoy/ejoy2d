@@ -5,7 +5,7 @@
 struct screen {
 	int width;
 	int height;
-	int scale;
+	float scale;
 	float invw;
 	float invh;
 };
@@ -16,7 +16,7 @@ void
 screen_init(float w, float h, float scale) {
 	SCREEN.width = (int)w;
 	SCREEN.height = (int)h;
-	SCREEN.scale = (int)scale;
+	SCREEN.scale = scale;
 	SCREEN.invw = 2.0f / SCREEN_SCALE / w;
 	SCREEN.invh = -2.0f / SCREEN_SCALE / h;
 	glViewport(0,0,w * scale,h * scale);
