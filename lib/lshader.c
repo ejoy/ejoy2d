@@ -58,7 +58,7 @@ ldraw(lua_State *L) {
 		color = (uint32_t)lua_tounsigned(L,3);
 	}
 	uint32_t additive = (uint32_t)luaL_optunsigned(L,4,0);
-	shader_program(PROGRAM_PICTURE);
+	shader_program(PROGRAM_PICTURE, NULL);
 	shader_texture(texid, 0);
 	int n = lua_rawlen(L, 2);
 	int point = n/4;
@@ -143,7 +143,6 @@ luniform_bind(lua_State *L) {
 static int
 luniform_set(lua_State *L) {
 	int prog = luaL_checkinteger(L, 1);
-	shader_program(prog);
 	int index = luaL_checkinteger(L, 2);
 	enum UNIFORM_FORMAT t = luaL_checkinteger(L, 3);
 	float v[16];	// 16 is matrix 4x4
@@ -159,7 +158,7 @@ luniform_set(lua_State *L) {
 	for (i=0;i<n;i++) {
 		v[i] = luaL_checknumber(L, 4+i);
 	}
-	shader_setuniform(index, t, v);
+	shader_setuniform(prog, index, t, v);
 	return 0;
 }
 

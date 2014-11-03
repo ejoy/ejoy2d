@@ -343,10 +343,7 @@ switch_program(struct sprite_trans *t, int def, struct material *m) {
 	if (prog == PROGRAM_DEFAULT) {
 		prog = def;
 	}
-	shader_program(prog);
-	if (m) {
-		material_apply(prog, m);
-	}
+	shader_program(prog, m);
 }
 
 static void

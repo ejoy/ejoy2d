@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #define MAX_PROGRAM 16
 
@@ -36,6 +37,9 @@ struct program {
 	int texture_number;
 	int uniform_number;
 	struct uniform uniform[MAX_UNIFORM];
+	bool reset_uniform;
+	bool uniform_change[MAX_UNIFORM];
+	float uniform_value[MAX_UNIFORM * 16];
 };
 
 struct render_state {
@@ -210,8 +214,6 @@ shader_drawbuffer(struct render_buffer * rb, float tx, float ty, float scale) {
 	if (glid == 0)
 		return;
 	shader_texture(glid, 0);
-	shader_program(PROGRAM_RENDERBUFFER);
-	RS->drawcall++;
 	render_set(RS->R, VERTEXBUFFER, rb->vbid, 0);
 
 	float sx = scale;
@@ -221,7 +223,10 @@ shader_drawbuffer(struct render_buffer * rb, float tx, float ty, float scale) {
 	float v[4] = { sx, sy, tx, ty };
 
 	// we should call shader_adduniform to add "st" uniform first
-	shader_setuniform(0, UNIFORM_FLOAT4, v);
+	shader_setuniform(PROGRAM_RENDERBUFFER, 0, UNIFORM_FLOAT4, v);
+
+	shader_program(PROGRAM_RENDERBUFFER, NULL);
+	RS->drawcall++;
 
 	renderbuffer_commit(rb);
 
@@ -238,14 +243,35 @@ shader_texture(int id, int channel) {
 	}
 }
 
+static void
+apply_uniform(struct program *p) {
+	struct render *R = RS->R;
+	int i;
+	for (i=0;i<p->uniform_number;i++) {
+		if (p->uniform_change[i]) {
+			struct uniform * u = &p->uniform[i];
+			render_shader_setuniform(R, u->loc, u->type, p->uniform_value + u->offset);
+		}
+	}
+	p->reset_uniform = false;
+}
+
 void
-shader_program(int n) {
-	if (RS->current_program != n) {
+shader_program(int n, struct material *m) {
+	struct program *p = &RS->program[n];
+	if (RS->current_program != n || p->reset_uniform || m) {
 		rs_commit();
+	}
+	if (RS->current_program != n) {
 		RS->current_program = n;
-		struct program *p = &RS->program[RS->current_program];
 		render_shader_bind(RS->R, p->prog);
 		p->material = NULL;
+		apply_uniform(p);
+	} else if (p->reset_uniform) {
+		apply_uniform(p);
+	}
+	if (m) {
+		material_apply(n, m);
 	}
 }
 
@@ -319,18 +345,6 @@ shader_scissortest(int enable) {
 	render_enablescissor(RS->R, enable);
 }
 
-void 
-shader_setuniform(int index, enum UNIFORM_FORMAT t, float *v) {
-	rs_commit();
-	int prog = RS->current_program;
-	assert(prog >=0 && prog < MAX_PROGRAM);
-	struct program * p = &RS->program[prog];
-	assert(index >= 0 && index < p->uniform_number);
-	struct uniform *u = &p->uniform[index];
-	assert(t == u->type);
-	render_shader_setuniform(RS->R, u->loc, t, v);
-}
-
 int 
 shader_uniformsize(enum UNIFORM_FORMAT t) {
 	int n = 0;
@@ -360,11 +374,24 @@ shader_uniformsize(enum UNIFORM_FORMAT t) {
 	return n;
 }
 
+void 
+shader_setuniform(int prog, int index, enum UNIFORM_FORMAT t, float *v) {
+	rs_commit();
+	struct program * p = &RS->program[prog];
+	assert(index >= 0 && index < p->uniform_number);
+	struct uniform *u = &p->uniform[index];
+	assert(t == u->type);
+	int n = shader_uniformsize(t);
+	memcpy(p->uniform_value + u->offset, v, n * sizeof(float));
+	p->reset_uniform = true;
+	p->uniform_change[index] = true;
+}
+
 int 
 shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t) {
 	// reset current_program
 	assert(prog >=0 && prog < MAX_PROGRAM);
-	shader_program(prog);
+	shader_program(prog, NULL);
 	struct program * p = &RS->program[prog];
 	assert(p->uniform_number < MAX_UNIFORM);
 	int loc = render_shader_locuniform(RS->R, name);
@@ -388,11 +415,14 @@ shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t) {
 struct material {
 	struct program *p;
 	int texture[MAX_TEXTURE_CHANNEL];
+	bool uniform_enable[MAX_UNIFORM];
 	float uniform[1];
 };
 
 int 
 material_size(int prog) {
+	if (prog < 0 || prog >= MAX_PROGRAM)
+		return 0;
 	struct program *p = &RS->program[prog];
 	if (p->uniform_number == 0 && p->texture_number == 0) {
 		return 0;
@@ -427,6 +457,7 @@ material_setuniform(struct material *m, int index, int n, const float *v) {
 		return 1;
 	}
 	memcpy(m->uniform + u->offset, v, n * sizeof(float));
+	m->uniform_enable[index] = true;
 	return 0;
 }
 
@@ -439,10 +470,13 @@ material_apply(int prog, struct material *m) {
 		return;
 	}
 	p->material = m;
+	p->reset_uniform = true;
 	int i;
 	for (i=0;i<p->uniform_number;i++) {
-		struct uniform * u = &p->uniform[i];
-		render_shader_setuniform(RS->R, u->loc, u->type, m->uniform + u->offset);
+		if (m->uniform_enable[i]) {
+			struct uniform * u = &p->uniform[i];
+			render_shader_setuniform(RS->R, u->loc, u->type, m->uniform + u->offset);
+		}
 	}
 	for (i=0;i<p->texture_number;i++) {
 		int tex = m->texture[i];

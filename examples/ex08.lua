@@ -11,7 +11,7 @@ pack.load {
 
 
 -- define a shader
-ej.define_shader {
+local s = ej.define_shader {
 	name = "EXAMPLE",
 	fs = [[
 varying vec2 v_texcoord;
@@ -34,19 +34,26 @@ void main() {
 	}
 }
 
+s.color(1,0,0,1)	-- set shader color
+
 
 local obj = ej.sprite("sample","cannon")
 obj:ps(100,100)
-
 obj.program = "EXAMPLE"
-local material = obj.material
-material:color(1,0,0,1)
+obj.turret.program = "EXAMPLE"
+obj.turret.material:color(0,0,1,1)
+
 
 local obj2 = ej.sprite("sample","cannon")
 obj2:ps(200,100)
 
 obj2.turret.program = "EXAMPLE"
-obj2.turret.material:color(0,1,0,1)
+obj2.turret.material:color(0,1,0,1)	-- uniform can be set in material
+
+
+local obj3 = ej.sprite("sample","cannon")
+obj3:ps(300,100)
+obj3.program = "EXAMPLE"
 
 local game = {}
 
@@ -57,6 +64,7 @@ function game.drawframe()
 	ej.clear(0xff808080)	-- clear (0.5,0.5,0.5,1) gray
 	obj:draw()
 	obj2:draw()
+	obj3:draw()
 end
 
 function game.touch(what, x, y)
