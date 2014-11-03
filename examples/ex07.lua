@@ -28,9 +28,12 @@ function game.update()
 	p=p+1
 end
 
+bird:ps(200,0)
+
 function game.drawframe()
 	ej.clear()
 	rb:draw(p,p)
+	bird:draw(screencoord)
 end
 
 function game.touch(what, x, y)

@@ -1,18 +1,33 @@
 #include <lua.h>
 #include <lauxlib.h>
+#include <string.h>
 
 #include "shader.h"
 #include "screen.h"
 #include "texture.h"
 #include "array.h"
 #include "spritepack.h"
+#include "render.h"
+#include "material.h"
 
 static int
 lload(lua_State *L) {
 	int prog = (int)luaL_checkinteger(L,1);
 	const char *fs = luaL_checkstring(L, 2);
 	const char *vs = luaL_checkstring(L, 3);
-	shader_load(prog, fs, vs);
+	if (lua_istable(L, 4)) {
+		int texture_number = lua_rawlen(L, 4);
+		ARRAY(const char *, name, texture_number);
+		luaL_checkstack(L, texture_number + 1, NULL);
+		int i;
+		for (i=0;i<texture_number;i++) {
+			lua_rawgeti(L, -1-i, i+1);
+			name[i] = luaL_checkstring(L, -1);
+		}
+		shader_load(prog, fs, vs, texture_number, name);
+	} else {
+		shader_load(prog, fs, vs, 0, NULL);
+	}
 	return 0;
 }
 
@@ -43,8 +58,8 @@ ldraw(lua_State *L) {
 		color = (uint32_t)lua_tounsigned(L,3);
 	}
 	uint32_t additive = (uint32_t)luaL_optunsigned(L,4,0);
-	shader_program(PROGRAM_PICTURE);
-	shader_texture(texid);
+	shader_program(PROGRAM_PICTURE, NULL);
+	shader_texture(texid, 0);
 	int n = lua_rawlen(L, 2);
 	int point = n/4;
 	if (point * 4 != n) {
@@ -92,33 +107,101 @@ lblend(lua_State *L) {
 
 static int
 lversion(lua_State *L) {
-	lua_pushinteger(L, OPENGLES);
+	lua_pushinteger(L, shader_version());
 	return 1;
 }
 
 static int
 lclear(lua_State *L) {
 	uint32_t c = luaL_optunsigned(L, 1, 0xff000000);
-	float a = ((c >> 24) & 0xff ) / 255.0;
-	float r = ((c >> 16) & 0xff ) / 255.0;
-	float g = ((c >> 8) & 0xff ) / 255.0;
-	float b = ((c >> 0) & 0xff ) / 255.0;
-	glClearColor(r,g,b,a);
-	glClear(GL_COLOR_BUFFER_BIT);
+	shader_clear(c);
 
 	return 0;
 }
 
 static int
-lshader_st(lua_State *L) {
-    int prog = luaL_checkinteger(L, 1);
-	float x = luaL_checknumber(L, 2);
-	float y = luaL_checknumber(L, 3);
-	float scale = luaL_optnumber(L, 4, 1.0);
+luniform_bind(lua_State *L) {
+	int prog = luaL_checkinteger(L, 1);
+	luaL_checktype(L, 2, LUA_TTABLE);
+	int n = lua_rawlen(L, 2);
+	int i;
+	for (i=0;i<n;i++) {
+		lua_rawgeti(L, -1, i+1);
+		lua_getfield(L, -1, "name");
+		const char *name = luaL_checkstring(L, -1);
+		lua_getfield(L, -2, "type");
+		enum UNIFORM_FORMAT t = luaL_checkinteger(L, -1);
+		int loc = shader_adduniform(prog, name, t);
+		if (loc != i) {
+			return luaL_error(L, "Invalid uniform location %s %d", name, loc);
+		}
+		lua_pop(L, 3);
+	}
+	return 0;
+}
 
-    screen_trans(&x, &y);
-    shader_st(prog, x * SCREEN_SCALE, y * SCREEN_SCALE, scale);
-    return 0;
+static int
+luniform_set(lua_State *L) {
+	int prog = luaL_checkinteger(L, 1);
+	int index = luaL_checkinteger(L, 2);
+	enum UNIFORM_FORMAT t = luaL_checkinteger(L, 3);
+	float v[16];	// 16 is matrix 4x4
+	int n = shader_uniformsize(t);
+	if (n == 0) {
+		return luaL_error(L, "Invalid uniform format %d", t);
+	}
+	int top = lua_gettop(L);
+	if (top != n + 3) {
+		return luaL_error(L, "Need float %d, only %d passed", n, top - 3);
+	}
+	int i;
+	for (i=0;i<n;i++) {
+		v[i] = luaL_checknumber(L, 4+i);
+	}
+	shader_setuniform(prog, index, t, v);
+	return 0;
+}
+
+static int
+lmaterial_setuniform(lua_State *L) {
+	struct material * m = lua_touserdata(L, 1);
+	int index = luaL_checkinteger(L, 2);
+	float v[16];	// 16 is matrix 4x4
+	int top = lua_gettop(L);
+	if (top > sizeof(v)/sizeof(v[0])+2)
+		return luaL_error(L, "too many agrument");
+	int n = top-2;
+	int i;
+	for (i=0;i<n;i++) {
+		v[i] = luaL_checknumber(L, 3+i);
+	}
+	if (material_setuniform(m, index, n, v)) {
+		return luaL_error(L, "invalid argument number %d", n);
+	}
+	return 0;
+}
+
+static int
+lmaterial_settexture(lua_State *L) {
+	struct material * m = lua_touserdata(L, 1);
+	int id = luaL_checkinteger(L, 2);
+	int channel = luaL_optinteger(L, 3, 0);
+	if (material_settexture(m, channel, id)) {
+		return luaL_error(L, "invalid argument texture channel %d", channel);
+	}
+	return 0;
+}
+
+static int
+lshader_texture(lua_State *L) {
+	RID id = 0;
+	if (!lua_isnoneornil(L, 1)) {
+		int texid = luaL_checkinteger(L, 1);
+		id = texture_glid(texid);
+	}
+	int channel = luaL_optinteger(L, 2, 0);
+	shader_texture(id, channel);
+	return 0;
 }
 
 int 
@@ -130,7 +213,11 @@ ejoy2d_shader(lua_State *L) {
 		{"blend", lblend},
 		{"clear", lclear},
 		{"version", lversion},
-        {"shader_st", lshader_st },
+		{"uniform_bind", luniform_bind },
+		{"uniform_set", luniform_set },
+		{"material_setuniform", lmaterial_setuniform },
+		{"material_settexture", lmaterial_settexture },
+		{"shader_texture", lshader_texture },
 		{NULL,NULL},
 	};
 	luaL_newlib(L,l);

@@ -4,6 +4,7 @@ local pack = require "ejoy2d.spritepack"
 local shader = require "ejoy2d.shader"
 local richtext = require "ejoy2d.richtext"
 
+local setmetatable = setmetatable
 local method = c.method
 local method_fetch = method.fetch
 local method_test = method.test
@@ -13,6 +14,22 @@ local test
 
 local get = c.get
 local set = c.set
+
+local get_material = get.material
+function get:material()
+	local m = get_material(self)
+	if m == nil then
+		local prog
+		m, prog = c.new_material(self)
+		if m == nil then
+			return
+		end
+		local meta = shader.material_meta(prog)
+		setmetatable(m, meta)
+	end
+
+	return m
+end
 
 local set_program = set.program
 function set:program(prog)

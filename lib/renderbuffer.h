@@ -2,6 +2,7 @@
 #define ejoy2d_renderbuffer_h
 
 #include <stdint.h>
+#include "render.h"
 
 #define MAX_COMMBINE 1024
 
@@ -25,10 +26,12 @@ struct quad {
 struct render_buffer {
 	int object;
 	int texid;
-	unsigned int vbid;
+	RID vbid;
 	struct quad vb[MAX_COMMBINE];
 };
 
+
+void renderbuffer_initrender(struct render *R);
 void renderbuffer_init(struct render_buffer *rb);
 void renderbuffer_upload(struct render_buffer *rb);
 void renderbuffer_unload(struct render_buffer *rb);

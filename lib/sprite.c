@@ -8,6 +8,7 @@
 #include "scissor.h"
 #include "array.h"
 #include "particle.h"
+#include "material.h"
 
 #include <string.h>
 #include <assert.h>
@@ -15,7 +16,7 @@
 #include <limits.h>
 
 void
-sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt,  const struct sprite_trans *arg) {
+sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const struct sprite_trans *arg) {
 	struct matrix tmp;
 	struct vertex_pack vb[4];
 	int i,j;
@@ -31,7 +32,7 @@ sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const s
 		int glid = texture_glid(q->texid);
 		if (glid == 0)
 			continue;
-		shader_texture(glid);
+		shader_texture(glid, 0);
 		for (j=0;j<4;j++) {
 			int xx = q->screen_coord[j*2+0];
 			int yy = q->screen_coord[j*2+1];
@@ -45,13 +46,6 @@ sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const s
 			vb[j].vy = vy;
 			vb[j].tx = tx;
 			vb[j].ty = ty;
-		}
-		if (mask != NULL) {
-				float tx = mask->rect[0].texture_coord[0];
-				float ty = mask->rect[0].texture_coord[1];
-				float delta_tx = (tx - vb[0].tx) * (1.0f / 65535.0f);
-				float delta_ty = (ty - vb[0].ty) * (1.0f / 65535.0f);
-				shader_mask(delta_tx, delta_ty);
 		}
 		shader_draw(vb, arg->color, arg->additive);
 	}
@@ -73,7 +67,7 @@ sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struc
 		int glid = texture_glid(p->texid);
 		if (glid == 0)
 			continue;
-		shader_texture(glid);
+		shader_texture(glid, 0);
 		int pn = p->n;
 
 		ARRAY(struct vertex_pack, vb, pn);
@@ -156,6 +150,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	s->name = NULL;
 	s->id = id;
 	s->type = pack->type[id];
+	s->material = NULL;
 	if (s->type == TYPE_ANIMATION) {
 		struct pack_animation * ani = (struct pack_animation *)pack->data[id];
 		s->s.ani = ani;
@@ -343,12 +338,12 @@ mat_mul(struct matrix *a, struct matrix *b, struct matrix *tmp) {
 }
 
 static void
-switch_program(struct sprite_trans *t, int def) {
+switch_program(struct sprite_trans *t, int def, struct material *m) {
 	int prog = t->program;
 	if (prog == PROGRAM_DEFAULT) {
 		prog = def;
 	}
-	shader_program(prog);
+	shader_program(prog, m);
 }
 
 static void
@@ -449,7 +444,7 @@ drawparticle(struct sprite *s, struct particle_system *ps, struct pack_picture *
 
 		s->t.mat = mat;
 		s->t.color = color;
-		sprite_drawquad(pic, NULL, NULL, &s->t);
+		sprite_drawquad(pic, NULL, &s->t);
 	}
 	shader_defaultblend();
 
@@ -458,29 +453,32 @@ drawparticle(struct sprite *s, struct particle_system *ps, struct pack_picture *
 }
 
 static int
-draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
+draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct material * material) {
 	struct sprite_trans temp;
 	struct matrix temp_matrix;
 	struct sprite_trans *t = sprite_trans_mul(&s->t, ts, &temp, &temp_matrix);
+	if (s->material) {
+		material = s->material;
+	} 
 	switch (s->type) {
 	case TYPE_PICTURE:
-		switch_program(t, PROGRAM_PICTURE);
-		sprite_drawquad(s->s.pic, s->data.mask, srt, t);
+		switch_program(t, PROGRAM_PICTURE, material);
+		sprite_drawquad(s->s.pic, srt, t);
 		return 0;
 	case TYPE_POLYGON:
-		switch_program(t, PROGRAM_PICTURE);
+		switch_program(t, PROGRAM_PICTURE, material);
 		sprite_drawpolygon(s->s.poly, srt, t);
 		return 0;
 	case TYPE_LABEL:
 		if (s->data.rich_text) {
 			t->program = PROGRAM_DEFAULT;	// label never set user defined program
-			switch_program(t, s->s.label->edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT);
+			switch_program(t, s->s.label->edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT, material);
 			label_draw(s->data.rich_text, s->s.label, srt, t);
 		}
 		return 0;
 	case TYPE_ANCHOR:
 		if (s->data.anchor->ps){
-			switch_program(t, PROGRAM_PICTURE);
+			switch_program(t, PROGRAM_PICTURE, material);
 			drawparticle(s, s->data.anchor->ps, s->data.anchor->pic, srt);
 		}
 		anchor_update(s, srt, t);
@@ -515,7 +513,7 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts) {
 		struct sprite_trans temp2;
 		struct matrix temp_matrix2;
 		struct sprite_trans *ct = sprite_trans_mul(&pp->t, t, &temp2, &temp_matrix2);
-		scissor += draw_child(child, srt, ct);
+		scissor += draw_child(child, srt, ct, material);
 	}
 	for (i=0;i<scissor;i++) {
 		scissor_pop();
@@ -543,7 +541,7 @@ sprite_child_visible(struct sprite *s, const char * childname) {
 void
 sprite_draw(struct sprite *s, struct srt *srt) {
 	if (s->visible) {
-		draw_child(s, srt, NULL);
+		draw_child(s, srt, NULL, NULL);
 	}
 }
 
@@ -555,7 +553,7 @@ sprite_draw_as_child(struct sprite *s, struct srt *srt, struct matrix *mat, uint
 		st.color = color;
 		st.additive = 0;
 		st.program = PROGRAM_DEFAULT;
-		draw_child(s, srt, &st);
+		draw_child(s, srt, &st, NULL);
 	}
 }
 
@@ -1009,3 +1007,9 @@ sprite_setframe(struct sprite *s, int frame, bool force_child) {
 	}
 	return total_frame;
 }
+
+int 
+sprite_material_size(struct sprite *s) {
+	return material_size(s->t.program);
+}
+

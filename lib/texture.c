@@ -2,15 +2,14 @@
 #include "shader.h"
 
 #define MAX_TEXTURE 128
-#define IS_POT(x) (((x) & ((x) -1)) == 0)
 
 struct texture {
 	int width;
 	int height;
 	float invw;
 	float invh;
-	GLuint id;
-	GLuint fb; /// rt 's frame buffer
+	RID id;
+	RID fb; /// rt 's frame buffer
 };
 
 struct texture_pool {
@@ -19,9 +18,56 @@ struct texture_pool {
 };
 
 static struct texture_pool POOL;
+static struct render *R = NULL;
+
+void 
+texture_initrender(struct render *r) {
+	R = r;
+}
+
+static inline uint32_t
+average4(uint32_t c[4]) {
+	int i;
+	uint32_t hi = 0;
+	uint32_t low = 0;
+	for (i=0;i<4;i++) {
+		uint32_t v = c[i];
+		low += v & 0x00ff00ff;
+		hi += (v & 0xff00ff00) >> 8;
+	}
+	hi = (hi/4) & 0x00ff00ff;
+	low = (low/4) & 0x00ff00ff;
+
+	return hi << 8 | low; 
+}
+
+static void 
+texture_reduce(enum TEXTURE_FORMAT type, int *width, int *height, void *buffer) {
+	int w = *width;
+	int h = *height;
+	if (w%2 == 1 || h%2 == 1)
+		return;
+	// only support RGBA8888 now
+	if (type != TEXTURE_RGBA8) {
+		return;
+	}
+	uint32_t *src = buffer;
+	uint32_t *dst = buffer;
+	int i,j;
+	for (i=0;i<h;i+=2) {
+		for (j=0;j<w;j+=2) {
+			uint32_t c[4] = { src[j], src[j+1], src[j+w], src[j+w+1] };
+			*dst = average4(c);
+			++dst;
+		}
+		src += w*2;
+	}
+	*width = w/2;
+	*height = h/2;
+}
 
 const char * 
-texture_load(int id, int pixel_format, int pixel_width, int pixel_height, void *data) {
+texture_load(int id, enum TEXTURE_FORMAT pixel_format, int pixel_width, int pixel_height, void *data, int reduce) {
 	if (id >= MAX_TEXTURE) {
 		return "Too many texture";
 	}
@@ -35,64 +81,23 @@ texture_load(int id, int pixel_format, int pixel_width, int pixel_height, void *
 	tex->invw = 1.0f / (float)pixel_width;
 	tex->invh = 1.0f / (float)pixel_height;
 	if (tex->id == 0) {
-		glGenTextures(1, &tex->id);
+		tex->id = render_texture_create(R, pixel_width, pixel_height, pixel_format, TEXTURE_2D, 0);
 	}
 	if (data == NULL) {
 		// empty texture
 		return NULL;
 	}
-	if ((pixel_format == Texture2DPixelFormat_RGBA8888) || 
-		( IS_POT(pixel_width) && IS_POT(pixel_height))) {
-		glPixelStorei(GL_UNPACK_ALIGNMENT,4);
-	} else {
-		glPixelStorei(GL_UNPACK_ALIGNMENT,1);
-	}
-	glActiveTexture(GL_TEXTURE0);
-	shader_texture(tex->id);
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
-	switch(pixel_format) {
-		case Texture2DPixelFormat_RGBA8888:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)pixel_width, (GLsizei)pixel_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-			break;
-		case Texture2DPixelFormat_RGB888:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, (GLsizei)pixel_width, (GLsizei)pixel_height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-			break;
-		case Texture2DPixelFormat_RGBA4444:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)pixel_width, (GLsizei)pixel_height, 0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, data);
-			break;
-		case Texture2DPixelFormat_RGB565:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, (GLsizei)pixel_width, (GLsizei)pixel_height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, data);
-			break;
-		case Texture2DPixelFormat_A8:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, (GLsizei)pixel_width, (GLsizei)pixel_height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, data);
-			break;
-#if GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG
-		case Texture2DPixelFormat_PVRTC4:
-			{
-				int size = pixel_width * pixel_height * 4 / 8;
-				uint8_t* p = data+4;
-				glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG,
-																			(GLsizei)pixel_width, (GLsizei)pixel_height, 0, size, p);
-			
-			}
-			break;
-#endif
-		default:
-			glDeleteTextures(1,&tex->id);
-			tex->id = 0;
-			return "Invalid pixel format";
+	if (reduce) {
+		texture_reduce(pixel_format, &pixel_width, &pixel_height, data);
 	}
+	render_texture_update(R, tex->id, pixel_width, pixel_height, data, 0, 0);
 
 	return NULL;
 }
 
 const char*
 texture_new_rt(int id, int w, int h){
-
 	if (id >= MAX_TEXTURE) {
 		return "Too many texture";
 	}
@@ -107,34 +112,9 @@ texture_new_rt(int id, int w, int h){
 	tex->invw = 1.0f / (float) w;
 	tex->invh = 1.0f / (float) h;
 	if (tex->id == 0) {
-		glGenTextures(1, &tex->id);
-		glGenFramebuffers(1, &tex->fb);
+		tex->fb = render_target_create(R, w, h, TEXTURE_RGBA8);
+		tex->id = render_target_texture(R, tex->fb);
 	}
-
-	
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, tex->id);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei) w, (GLsizei) h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-
-	glBindFramebuffer(GL_FRAMEBUFFER, tex->fb);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->id, 0);
-
-
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-	{
-		return "frame buffer is not complete";
-	}
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	return NULL;
 }
@@ -145,7 +125,7 @@ texture_active_rt(int id) {
 		return "Invalid rt id";
 	struct texture *tex = &POOL.tex[id];
 
-	glBindFramebuffer(GL_FRAMEBUFFER, tex->fb);
+	render_set(R, TARGET, tex->fb, 0);
 
 	return NULL;
 }
@@ -189,14 +169,14 @@ texture_unload(int id) {
 	struct texture *tex = &POOL.tex[id];
 	if (tex->id == 0)
 		return;
-	glDeleteTextures(1,&tex->id);
+	render_release(R, TEXTURE, tex->id);
 	if (tex->fb != 0)
-		glDeleteFramebuffers(1, &tex->fb);
+		render_release(R, TARGET, tex->fb);
 	tex->id = 0;
-    tex->fb = 0;
+	tex->fb = 0;
 }
 
-GLuint 
+RID
 texture_glid(int id) {
 	if (id < 0 || id >= POOL.count)
 		return 0;
@@ -258,7 +238,7 @@ texture_delete_framebuffer(int id) {
     
     struct texture *tex = &POOL.tex[id];
     if (tex->fb != 0) {
-        glDeleteFramebuffers(1, &tex->fb);
+		render_release(R, TARGET, tex->fb);
         tex->fb = 0;
     }
 }

@@ -1,5 +1,4 @@
 #include "scissor.h"
-#include "opengl.h"
 #include "screen.h"
 #include "shader.h"
 
@@ -44,7 +43,7 @@ scissor_push(int x, int y, int w, int h) {
 	assert(S.depth < SCISSOR_MAX);
 	shader_flush();
 	if (S.depth == 0) {
-		glEnable(GL_SCISSOR_TEST);
+		shader_scissortest(1);
 	}
   
 	if (S.depth >= 1) {
@@ -65,7 +64,7 @@ scissor_pop() {
 	shader_flush();
 	--S.depth;
 	if (S.depth == 0) {
-		glDisable(GL_SCISSOR_TEST);
+		shader_scissortest(0);
 		return;
 	}
 	struct box * s = &S.s[S.depth-1];
