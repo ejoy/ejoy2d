@@ -25,8 +25,49 @@ texture_initrender(struct render *r) {
 	R = r;
 }
 
+static inline uint32_t
+average4(uint32_t c[4]) {
+	int i;
+	uint32_t hi = 0;
+	uint32_t low = 0;
+	for (i=0;i<4;i++) {
+		uint32_t v = c[i];
+		low += v & 0x00ff00ff;
+		hi += (v & 0xff00ff00) >> 8;
+	}
+	hi = (hi/4) & 0x00ff00ff;
+	low = (low/4) & 0x00ff00ff;
+
+	return hi << 8 | low; 
+}
+
+static void 
+texture_reduce(enum TEXTURE_FORMAT type, int *width, int *height, void *buffer) {
+	int w = *width;
+	int h = *height;
+	if (w%2 == 1 || h%2 == 1)
+		return;
+	// only support RGBA8888 now
+	if (type != TEXTURE_RGBA8) {
+		return;
+	}
+	uint32_t *src = buffer;
+	uint32_t *dst = buffer;
+	int i,j;
+	for (i=0;i<h;i+=2) {
+		for (j=0;j<w;j+=2) {
+			uint32_t c[4] = { src[j], src[j+1], src[j+w], src[j+w+1] };
+			*dst = average4(c);
+			++dst;
+		}
+		src += w*2;
+	}
+	*width = w/2;
+	*height = h/2;
+}
+
 const char * 
-texture_load(int id, enum TEXTURE_FORMAT pixel_format, int pixel_width, int pixel_height, void *data) {
+texture_load(int id, enum TEXTURE_FORMAT pixel_format, int pixel_width, int pixel_height, void *data, int reduce) {
 	if (id >= MAX_TEXTURE) {
 		return "Too many texture";
 	}
@@ -47,7 +88,10 @@ texture_load(int id, enum TEXTURE_FORMAT pixel_format, int pixel_width, int pixe
 		return NULL;
 	}
 
-	render_texture_update(R, tex->id, data, 0, 0);
+	if (reduce) {
+		texture_reduce(pixel_format, &pixel_width, &pixel_height, data);
+	}
+	render_texture_update(R, tex->id, pixel_width, pixel_height, data, 0, 0);
 
 	return NULL;
 }

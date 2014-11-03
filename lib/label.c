@@ -34,7 +34,7 @@ label_load() {
 	Dfont = dfont_create(TEX_WIDTH, TEX_HEIGHT);
 
 	Tex = render_texture_create(R, TEX_WIDTH, TEX_HEIGHT, TEX_FMT, TEXTURE_2D, 0);
-	render_texture_update(R, Tex, NULL, 0, 0);
+	render_texture_update(R, Tex, TEX_WIDTH, TEX_HEIGHT ,NULL, 0, 0);
 }
 
 void

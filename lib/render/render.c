@@ -632,7 +632,7 @@ texture_format(struct texture * tex, GLint *pf, GLenum *pt) {
 }
 
 void
-render_texture_update(struct render *R, RID id, const void *pixels, int slice, int miplevel) {
+render_texture_update(struct render *R, RID id, int width, int height, const void *pixels, int slice, int miplevel) {
 	struct texture * tex = array_ref(&R->texture, id);
 	if (tex == NULL)
 		return;
@@ -657,9 +657,9 @@ render_texture_update(struct render *R, RID id, const void *pixels, int slice, i
 	if (compressed) {
 		glCompressedTexImage2D(target, miplevel, format,
 			(GLsizei)tex->width, (GLsizei)tex->height, 0, 
-			calc_texture_size(tex->format, tex->width, tex->height), pixels);
+			calc_texture_size(tex->format, width, height), pixels);
 	} else {
-		glTexImage2D(target, miplevel, format, (GLsizei)tex->width, (GLsizei)tex->height, 0, format, itype, pixels);
+		glTexImage2D(target, miplevel, format, (GLsizei)width, (GLsizei)height, 0, format, itype, pixels);
 	}
 
 	CHECK_GL_ERROR
@@ -752,7 +752,7 @@ render_target_create(struct render *R, int width, int height, enum TEXTURE_FORMA
 	RID tex = render_texture_create(R, width, height, format, TEXTURE_2D, 0);
 	if (tex == 0)
 		return 0;
-	render_texture_update(R, tex, NULL, 0, 0);
+	render_texture_update(R, tex, width, height, NULL, 0, 0);
 	RID rt = create_rt(R, tex);
 	glBindFramebuffer(GL_FRAMEBUFFER, R->default_framebuffer);
 	R->last.target = 0;
