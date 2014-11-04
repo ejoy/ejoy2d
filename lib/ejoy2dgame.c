@@ -146,10 +146,10 @@ ejoy2d_close_lua(struct game *G) {
 
 void
 ejoy2d_game_exit(struct game *G) {
+	ejoy2d_close_lua(G);
 	label_unload();
 	texture_exit();
 	shader_unload();
-	ejoy2d_close_lua(G);
 }
 
 lua_State *
