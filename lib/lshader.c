@@ -9,6 +9,7 @@
 #include "spritepack.h"
 #include "render.h"
 #include "material.h"
+#include "fault.h"
 
 static int
 lload(lua_State *L) {
@@ -133,7 +134,7 @@ luniform_bind(lua_State *L) {
 		enum UNIFORM_FORMAT t = luaL_checkinteger(L, -1);
 		int loc = shader_adduniform(prog, name, t);
 		if (loc != i) {
-			return luaL_error(L, "Invalid uniform location %s %d", name, loc);
+			fault("!Warning : Invalid uniform location %s", name);
 		}
 		lua_pop(L, 3);
 	}

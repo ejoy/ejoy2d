@@ -250,7 +250,8 @@ apply_uniform(struct program *p) {
 	for (i=0;i<p->uniform_number;i++) {
 		if (p->uniform_change[i]) {
 			struct uniform * u = &p->uniform[i];
-			render_shader_setuniform(R, u->loc, u->type, p->uniform_value + u->offset);
+			if (u->loc >=0) 
+				render_shader_setuniform(R, u->loc, u->type, p->uniform_value + u->offset);
 		}
 	}
 	p->reset_uniform = false;
@@ -395,8 +396,6 @@ shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t) {
 	struct program * p = &RS->program[prog];
 	assert(p->uniform_number < MAX_UNIFORM);
 	int loc = render_shader_locuniform(RS->R, name);
-	if (loc < 0)
-		return -1;
 	int index = p->uniform_number++;
 	struct uniform * u = &p->uniform[index];
 	u->loc = loc;
@@ -407,6 +406,8 @@ shader_adduniform(int prog, const char * name, enum UNIFORM_FORMAT t) {
 		struct uniform * lu = &p->uniform[index-1];
 		u->offset = lu->offset + shader_uniformsize(lu->type);
 	}
+	if (loc < 0)
+		return -1;
 	return index;
 }
 
@@ -475,7 +476,9 @@ material_apply(int prog, struct material *m) {
 	for (i=0;i<p->uniform_number;i++) {
 		if (m->uniform_enable[i]) {
 			struct uniform * u = &p->uniform[i];
-			render_shader_setuniform(RS->R, u->loc, u->type, m->uniform + u->offset);
+			if (u->loc >=0) {
+				render_shader_setuniform(RS->R, u->loc, u->type, m->uniform + u->offset);
+			}
 		}
 	}
 	for (i=0;i<p->texture_number;i++) {
