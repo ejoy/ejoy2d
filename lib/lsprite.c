@@ -1171,6 +1171,26 @@ lcalc_matrix(lua_State *L) {
 	return 1;
 }
 
+static int
+lget_pic_tex_coord(lua_State *L) {
+	struct sprite * s = self(L);
+	if (s->type != TYPE_PICTURE) {
+		return luaL_error(L, "Only picture can get tex coord");
+	}
+	int index = (int)luaL_checkinteger(L, 2);
+	struct pack_picture * pic = s->s.pic;
+	if (index < 0 || index >= pic->n) {
+		return luaL_error(L, "pic rect index out of range:[0,%d)", pic->n);
+	}
+	struct pack_quad quad = pic->rect[index];
+	int i;
+	for (i=0; i<4; i++) {
+		lua_pushnumber(L, quad.texture_coord[2*i] / 65535.0f);
+		lua_pushnumber(L, quad.texture_coord[2*i+1] / 65535.0f);
+	}
+	return 8;
+}
+
 static void
 lmethod(lua_State *L) {
 	luaL_Reg l[] = {
@@ -1201,6 +1221,7 @@ lmethod(lua_State *L) {
 		{ "world_pos", lgetwpos },
 		{ "anchor_particle", lset_anchor_particle },
 		{ "calc_matrix", lcalc_matrix },
+		{ "pic_tex_coord", lget_pic_tex_coord },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);
