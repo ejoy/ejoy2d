@@ -79,6 +79,15 @@ function sprite_meta.__newindex(spr, key, v)
 	method.mount(spr, key, v)
 end
 
+local get_parent = get.parent
+function get:parent()
+	local p = get_parent(self)
+	if p and not getmetatable(p) then
+		return debug.setmetatable(p, sprite_meta)
+	end
+	return p
+end
+
 -- local function
 function fetch(spr, child)
 	local cobj = method_fetch(spr, child)
