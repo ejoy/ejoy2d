@@ -1000,9 +1000,12 @@ lookup(lua_State *L, struct sprite * spr) {
 	for (i=0;sprite_component(root, i)>=0;i++) {
 		struct sprite * child = root->data.children[i];
 		if (child) {
-			lua_rawgeti(L, -1, i+1);
+			lua_rawgeti(L, -1, i+1);	// parent, reftable, child
 			if (child == spr) {
-				lua_replace(L,-2);
+				int child_index = lua_gettop(L);
+				int parent_index = child_index - 2;
+				ref_parent(L, child_index, parent_index);
+				lua_replace(L,-2);	// parent
 				return child;
 			} else {
 				lua_pop(L,1);
