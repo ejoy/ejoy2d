@@ -24,7 +24,7 @@
 
 //#define CHECK_GL_ERROR
 //#define CHECK_GL_ERROR assert(check_opengl_error());
-#define CHECK_GL_ERROR check_opengl_error_debug(R, __FILE__, __LINE__);
+#define CHECK_GL_ERROR check_opengl_error_debug((struct render *)R, __FILE__, __LINE__);
 
 struct buffer {
 	GLuint glid;
@@ -127,7 +127,7 @@ render_buffer_create(struct render *R, enum RENDER_OBJ what, const void *data, i
 	default:
 		return 0;
 	}
-	struct buffer * buf = array_alloc(&R->buffer);
+	struct buffer * buf = (struct buffer *)array_alloc(&R->buffer);
 	if (buf == NULL)
 		return 0;
 	glGenBuffers(1, &buf->glid);
@@ -148,7 +148,7 @@ render_buffer_create(struct render *R, enum RENDER_OBJ what, const void *data, i
 
 void 
 render_buffer_update(struct render *R, RID id, const void * data, int n) {
-	struct buffer * buf = array_ref(&R->buffer, id);
+	struct buffer * buf = (struct buffer *)array_ref(&R->buffer, id);
 	glBindBuffer(buf->gltype, buf->glid);
 	buf->n = n;
 	glBufferData(buf->gltype, n * buf->stride, data, GL_DYNAMIC_DRAW);
@@ -157,7 +157,7 @@ render_buffer_update(struct render *R, RID id, const void * data, int n) {
 
 static void
 close_buffer(void *p, void *R) {
-	struct buffer * buf = p;
+	struct buffer * buf = (struct buffer *)p;
 	glDeleteBuffers(1,&buf->glid);
 
 	CHECK_GL_ERROR
@@ -166,7 +166,7 @@ close_buffer(void *p, void *R) {
 RID 
 render_register_vertexlayout(struct render *R, int n, struct vertex_attrib * attrib) {
 	assert(n <= MAX_ATTRIB);
-	struct attrib * a = array_alloc(&R->attrib);
+	struct attrib * a = (struct attrib*)array_alloc(&R->attrib);
 	if (a == NULL)
 		return 0;
 
@@ -249,7 +249,7 @@ compile_link(struct render *R, struct shader *s, const char * VS, const char *FS
 	if (R->attrib_layout == 0)
 		return 0;
 
-	struct attrib * a = array_ref(&R->attrib, R->attrib_layout);
+	struct attrib * a = (struct attrib *)array_ref(&R->attrib, R->attrib_layout);
 	s->n = a->n;
 	int i;
 	for (i=0;i<a->n;i++) {
@@ -282,7 +282,7 @@ compile_link(struct render *R, struct shader *s, const char * VS, const char *FS
 
 RID 
 render_shader_create(struct render *R, struct shader_init_args *args) {
-	struct shader * s = array_alloc(&R->shader);
+	struct shader * s = (struct shader *)array_alloc(&R->shader);
 	if (s == NULL) {
 		return 0;
 	}
@@ -306,7 +306,7 @@ render_shader_create(struct render *R, struct shader_init_args *args) {
 
 static void
 close_shader(void *p, void *R) {
-	struct shader * shader = p;
+	struct shader * shader = (struct shader *)p;
 	glDeleteProgram(shader->glid);
 
 	CHECK_GL_ERROR
@@ -314,7 +314,7 @@ close_shader(void *p, void *R) {
 
 static void
 close_texture(void *p, void *R) {
-	struct texture * tex = p;
+	struct texture * tex = (struct texture *)p;
 	glDeleteTextures(1,&tex->glid);
 
 	CHECK_GL_ERROR
@@ -322,7 +322,7 @@ close_texture(void *p, void *R) {
 
 static void
 close_target(void *p, void *R) {
-	struct target * tar = p;
+	struct target * tar = (struct target *)p;
 	glDeleteFramebuffers(1, &tar->glid);
 
 	CHECK_GL_ERROR
@@ -333,7 +333,7 @@ render_release(struct render *R, enum RENDER_OBJ what, RID id) {
 	switch (what) {
 	case VERTEXBUFFER:
 	case INDEXBUFFER: {
-		struct buffer * buf = array_ref(&R->buffer, id);
+		struct buffer * buf = (struct buffer *)array_ref(&R->buffer, id);
 		if (buf) {
 			close_buffer(buf, R);
 			array_free(&R->buffer, buf);
@@ -341,7 +341,7 @@ render_release(struct render *R, enum RENDER_OBJ what, RID id) {
 		break;
 	}
 	case SHADER: {
-		struct shader * shader = array_ref(&R->shader, id);
+		struct shader * shader = (struct shader *)array_ref(&R->shader, id);
 		if (shader) {
 			close_shader(shader, R);
 			array_free(&R->shader, shader);
@@ -349,7 +349,7 @@ render_release(struct render *R, enum RENDER_OBJ what, RID id) {
 		break;
 	}
 	case TEXTURE : {
-		struct texture * tex = array_ref(&R->texture, id);
+		struct texture * tex = (struct texture *) array_ref(&R->texture, id);
 		if (tex) {
 			close_texture(tex, R);
 			array_free(&R->texture, tex);
@@ -357,7 +357,7 @@ render_release(struct render *R, enum RENDER_OBJ what, RID id) {
 		break;
 	}
 	case TARGET : {
-		struct target * tar = array_ref(&R->target, id);
+		struct target * tar = (struct target *)array_ref(&R->target, id);
 		if (tar) {
 			close_target(tar, R);
 			array_free(&R->target, tar);
@@ -415,7 +415,7 @@ void
 render_shader_bind(struct render *R, RID id) {
 	R->program = id;
 	R->changeflag |= CHANGE_VERTEXBUFFER;
-	struct shader * s = array_ref(&R->shader, id);
+	struct shader * s = (struct shader *)array_ref(&R->shader, id);
 	if (s) {
 		glUseProgram(s->glid);
 		apply_texture_uniform(s);
@@ -447,7 +447,7 @@ struct render *
 render_init(struct render_init_args *args, void * buffer, int sz) {
 	struct block B;
 	block_init(&B, buffer, sz);
-	struct render * R = block_slice(&B, sizeof(struct render));
+	struct render * R = (struct render *)block_slice(&B, sizeof(struct render));
 	memset(R, 0, sizeof(*R));
 	log_init(&R->log, stderr);
 	new_array(&B, &R->buffer, args->max_buffer, sizeof(struct buffer));
@@ -484,7 +484,7 @@ render_setscissor(struct render *R, int x, int y, int width, int height ) {
 static void
 apply_vb(struct render *R) {
 	RID prog = R->program;
-	struct shader * s = array_ref(&R->shader, prog);
+	struct shader * s = (struct shader *)array_ref(&R->shader, prog);
 	if (s) {
 		int i;
 		RID last_vb = 0;
@@ -494,7 +494,7 @@ apply_vb(struct render *R) {
 			int vbidx = al->vbslot;
 			RID vb = R->vbslot[vbidx];
 			if (last_vb != vb) {
-				struct buffer * buf = array_ref(&R->buffer, vb);
+				struct buffer * buf = (struct buffer *)array_ref(&R->buffer, vb);
 				if (buf == NULL) {
 					continue;
 				}
@@ -537,7 +537,7 @@ calc_texture_size(enum TEXTURE_FORMAT format, int width, int height) {
 
 RID 
 render_texture_create(struct render *R, int width, int height, enum TEXTURE_FORMAT format, enum TEXTURE_TYPE type, int mipmap) {
-	struct texture * tex = array_alloc(&R->texture);
+	struct texture * tex = (struct texture *)array_alloc(&R->texture);
 	if (tex == NULL)
 		return 0;
 	glGenTextures(1, &tex->glid);
@@ -633,7 +633,7 @@ texture_format(struct texture * tex, GLint *pf, GLenum *pt) {
 
 void
 render_texture_update(struct render *R, RID id, int width, int height, const void *pixels, int slice, int miplevel) {
-	struct texture * tex = array_ref(&R->texture, id);
+	struct texture * tex = (struct texture *)array_ref(&R->texture, id);
 	if (tex == NULL)
 		return;
 
@@ -667,7 +667,7 @@ render_texture_update(struct render *R, RID id, int width, int height, const voi
 
 void 
 render_texture_subupdate(struct render *R, RID id, const void *pixels, int x, int y, int w, int h) {
-	struct texture * tex = array_ref(&R->texture, id);
+	struct texture * tex = (struct texture *)array_ref(&R->texture, id);
 	if (tex == NULL)
 		return;
 
@@ -728,11 +728,11 @@ render_setcull(struct render *R, enum CULL_MODE c) {
 // render target
 static RID
 create_rt(struct render *R, RID texid) {
-	struct target *tar = array_alloc(&R->target);
+	struct target *tar = (struct target *)array_alloc(&R->target);
 	if (tar == NULL)
 		return 0;
 	tar->tex = texid;
-	struct texture * tex = array_ref(&R->texture, texid);
+	struct texture * tex = (struct texture *)array_ref(&R->texture, texid);
 	if (tex == NULL)
 		return 0;
 	glGenFramebuffers(1, &tar->glid);
@@ -767,7 +767,7 @@ render_target_create(struct render *R, int width, int height, enum TEXTURE_FORMA
 
 RID 
 render_target_texture(struct render *R, RID rt) {
-	struct target *tar = array_ref(&R->target, rt);
+	struct target *tar = (struct target *)array_ref(&R->target, rt);
 	if (tar) {
 		return tar->tex;
 	} else {
@@ -783,7 +783,7 @@ render_state_commit(struct render *R) {
 		RID ib = R->current.indexbuffer;
 		if (ib != R->last.indexbuffer) {
 			R->last.indexbuffer = ib;
-			struct buffer * b = array_ref(&R->buffer, ib);
+			struct buffer * b = (struct buffer *)array_ref(&R->buffer, ib);
 			if (b) {
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->glid);
 				CHECK_GL_ERROR
@@ -806,7 +806,7 @@ render_state_commit(struct render *R) {
 			RID lastid = R->last.texture[i];
 			if (id != lastid) {
 				R->last.texture[i] = id;
-				struct texture * tex = array_ref(&R->texture, id);
+				struct texture * tex = (struct texture *)array_ref(&R->texture, id);
 				if (tex) {
 					glActiveTexture(GL_TEXTURE0 + i);
 					glBindTexture(mode[tex->type], tex->glid);
@@ -821,7 +821,7 @@ render_state_commit(struct render *R) {
 		if (R->last.target != crt) {
 			GLuint rt = R->default_framebuffer;
 			if (crt != 0) {
-				struct target * tar = array_ref(&R->target, crt);
+				struct target * tar = (struct target *)array_ref(&R->target, crt);
 				if (tar) {
 					rt = tar->glid;
 				} else {
@@ -946,7 +946,7 @@ render_draw(struct render *R, enum DRAW_MODE mode, int fromidx, int ni) {
 	assert(mode < sizeof(draw_mode)/sizeof(int));
 	render_state_commit(R);
 	RID ib = R->current.indexbuffer;
-	struct buffer * buf = array_ref(&R->buffer, ib);
+	struct buffer * buf = (struct buffer *)array_ref(&R->buffer, ib);
 	if (buf) {
 		assert(fromidx + ni <= buf->n);
 		int offset = fromidx;
@@ -987,7 +987,7 @@ render_clear(struct render *R, enum CLEAR_MASK mask, unsigned long c) {
 // uniform
 int 
 render_shader_locuniform(struct render *R, const char * name) {
-	struct shader * s = array_ref(&R->shader, R->program);
+	struct shader * s = (struct shader *)array_ref(&R->shader, R->program);
 	if (s) {
 		int loc = glGetUniformLocation( s->glid, name);
 		CHECK_GL_ERROR

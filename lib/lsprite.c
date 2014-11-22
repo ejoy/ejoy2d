@@ -710,7 +710,7 @@ static void
 unlink_parent(lua_State *L, struct sprite * child, int idx) {
 	lua_getuservalue(L, idx);	// reftable
 	lua_rawgeti(L, -1, 0);	// reftable parent
-	struct sprite * parent = lua_touserdata(L, -1);
+	struct sprite * parent = (struct sprite *)lua_touserdata(L, -1);
 	if (parent == NULL) {
 		luaL_error(L, "No parent object");
 	}
@@ -741,7 +741,7 @@ lmount(lua_State *L) {
 	if (lua_isnil(L, -1)) {
 		lua_pop(L, 1);
 	} else {
-		struct sprite * c = lua_touserdata(L, -1);
+		struct sprite * c = (struct sprite *)lua_touserdata(L, -1);
 		if (c == child) {
 			// mount not change
 			return 0;
@@ -1151,7 +1151,7 @@ lenable_visible_test(lua_State *L) {
 static int
 lcalc_matrix(lua_State *L) {
 	struct sprite * s = self(L);
-	struct matrix * mat = lua_touserdata(L, 2);
+	struct matrix * mat = (struct matrix *)lua_touserdata(L, 2);
 	if (mat == NULL) {
 		return luaL_argerror(L, 2, "need a matrix");
 	}
@@ -1260,7 +1260,7 @@ lnewproxy(lua_State *L) {
 			0,	// _dummy
 		}},
 	};
-	struct sprite * s = lua_newuserdata(L, sizeof(struct sprite));
+	struct sprite * s = (struct sprite *)lua_newuserdata(L, sizeof(struct sprite));
 	lua_newtable(L);
 	lua_setuservalue(L, -2);
 
@@ -1296,7 +1296,7 @@ lnewmaterial(lua_State *L) {
 
 	lua_createtable(L, 0, 1);
 	void * m = lua_newuserdata(L, sz); // sprite, uservalue, table, matertial
-	s->material = m;
+	s->material = (material*)m;
 	material_init(m, sz, s->t.program);
 	lua_setfield(L, -2, "__obj");
 

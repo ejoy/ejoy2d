@@ -131,7 +131,7 @@ luniform_bind(lua_State *L) {
 		lua_getfield(L, -1, "name");
 		const char *name = luaL_checkstring(L, -1);
 		lua_getfield(L, -2, "type");
-		enum UNIFORM_FORMAT t = luaL_checkinteger(L, -1);
+		enum UNIFORM_FORMAT t = (UNIFORM_FORMAT)luaL_checkinteger(L, -1);
 		int loc = shader_adduniform(prog, name, t);
 		if (loc != i) {
 			fault("!Warning : Invalid uniform location %s", name);
@@ -145,7 +145,7 @@ static int
 luniform_set(lua_State *L) {
 	int prog = luaL_checkinteger(L, 1);
 	int index = luaL_checkinteger(L, 2);
-	enum UNIFORM_FORMAT t = luaL_checkinteger(L, 3);
+	enum UNIFORM_FORMAT t = (UNIFORM_FORMAT)luaL_checkinteger(L, 3);
 	float v[16];	// 16 is matrix 4x4
 	int n = shader_uniformsize(t);
 	if (n == 0) {
@@ -165,7 +165,7 @@ luniform_set(lua_State *L) {
 
 static int
 lmaterial_setuniform(lua_State *L) {
-	struct material * m = lua_touserdata(L, 1);
+	struct material * m = (struct material *)lua_touserdata(L, 1);
 	int index = luaL_checkinteger(L, 2);
 	float v[16];	// 16 is matrix 4x4
 	int top = lua_gettop(L);
@@ -184,7 +184,7 @@ lmaterial_setuniform(lua_State *L) {
 
 static int
 lmaterial_settexture(lua_State *L) {
-	struct material * m = lua_touserdata(L, 1);
+	struct material * m = (struct material *)lua_touserdata(L, 1);
 	int id = luaL_checkinteger(L, 2);
 	int channel = luaL_optinteger(L, 3, 0);
 	if (material_settexture(m, channel, id)) {
