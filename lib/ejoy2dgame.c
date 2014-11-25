@@ -269,6 +269,7 @@ ejoy2d_game_update(struct game *G, float time) {
 	} else {
 		G->real_time += time;
         G->update_count += 1;
+        G->cur_fps = 1/time;
 	}
 
 	while (G->logic_time < G->real_time) {

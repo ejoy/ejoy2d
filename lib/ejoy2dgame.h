@@ -8,7 +8,8 @@ struct game {
 	float real_time;
 	float logic_time;
     long update_count;
-    int last_draw_call
+    int last_draw_call;
+    int cur_fps;
 };
 
 
