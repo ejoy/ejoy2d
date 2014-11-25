@@ -116,6 +116,7 @@ ejoy2d_game() {
 	G->L = L;
 	G->real_time = 0;
 	G->logic_time = 0;
+    G->update_count = 0;
 	luaL_requiref(L, "ejoy2d.shader.c", ejoy2d_shader, 0);
 	luaL_requiref(L, "ejoy2d.framework", ejoy2d_framework, 0);
 	luaL_requiref(L, "ejoy2d.ppm", ejoy2d_ppm, 0);
@@ -264,9 +265,12 @@ void
 ejoy2d_game_update(struct game *G, float time) {
 	if (G->logic_time == 0) {
 		G->real_time = 1.0f/LOGIC_FRAME;
+        G->update_count = 0;
 	} else {
 		G->real_time += time;
+        G->update_count += 1;
 	}
+
 	while (G->logic_time < G->real_time) {
 		logic_frame(G->L);
 		G->logic_time += 1.0f/LOGIC_FRAME;
@@ -281,8 +285,7 @@ ejoy2d_game_drawframe(struct game *G) {
 	lua_settop(G->L, TOP_FUNCTION);
 	shader_flush();
 	label_flush();
-	//int cnt = drawcall_count();
-	//printf("-> %d\n", cnt);
+    G->last_draw_call = drawcall_count();
 }
 
 int

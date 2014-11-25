@@ -7,6 +7,8 @@ struct game {
 	lua_State *L;
 	float real_time;
 	float logic_time;
+    long update_count;
+    int last_draw_call
 };
 
 
@@ -30,7 +32,5 @@ void ejoy2d_game_resume(struct game* G);
 
 void
 ejoy2d_call_lua(lua_State *L, int n, int r);
-
-
 
 #endif
