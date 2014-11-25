@@ -15,6 +15,8 @@
 #include <stdio.h>
 #include <limits.h>
 
+static int global_lable_only = 0;
+
 void
 sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const struct sprite_trans *arg) {
 	struct matrix tmp;
@@ -459,18 +461,24 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct m
 	struct sprite_trans *t = sprite_trans_mul(&s->t, ts, &temp, &temp_matrix);
 	if (s->material) {
 		material = s->material;
-	} 
+	}
+    
+    //  global_lable_only    0-全画    1-只画sprite    2-只画label
 	switch (s->type) {
 	case TYPE_PICTURE:
-		switch_program(t, PROGRAM_PICTURE, material);
-		sprite_drawquad(s->s.pic, srt, t);
+		if (global_lable_only != 2) {
+			switch_program(t, PROGRAM_PICTURE, material);
+			sprite_drawquad(s->s.pic, srt, t);
+		}
 		return 0;
 	case TYPE_POLYGON:
-		switch_program(t, PROGRAM_PICTURE, material);
-		sprite_drawpolygon(s->s.poly, srt, t);
+		if (global_lable_only != 2) {
+			switch_program(t, PROGRAM_PICTURE, material);
+			sprite_drawpolygon(s->s.poly, srt, t);
+		}
 		return 0;
 	case TYPE_LABEL:
-		if (s->data.rich_text) {
+		if (s->data.rich_text && global_lable_only != 1) {
 			t->program = PROGRAM_DEFAULT;	// label never set user defined program
 			switch_program(t, s->s.label->edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT, material);
 			label_draw(s->data.rich_text, s->s.label, srt, t);
@@ -1011,5 +1019,10 @@ sprite_setframe(struct sprite *s, int frame, bool force_child) {
 int 
 sprite_material_size(struct sprite *s) {
 	return material_size(s->t.program);
+}
+
+void
+sprite_label_only(int lable_only) {
+    global_lable_only = lable_only;
 }
 

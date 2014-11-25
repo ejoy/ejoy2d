@@ -1149,8 +1149,8 @@ lrecursion_frame(lua_State *L) {
 }
 
 static int
-lenable_visible_test(lua_State *L) {
-	// todo: remove this api
+ldraw_label_only(lua_State *L) {
+    sprite_label_only((int)luaL_checkinteger(L,1));
 	return 0;
 }
 
@@ -1321,7 +1321,7 @@ ejoy2d_sprite(lua_State *L) {
 		{ "proxy", lnewproxy },
 		{ "new_material", lnewmaterial },
 		{ "label_gen_outline", lgenoutline },
-        { "enable_visible_test", lenable_visible_test },
+        { "draw_label_only", ldraw_label_only },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
