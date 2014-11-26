@@ -1,6 +1,8 @@
 #ifndef ejoy3d_block_h
 #define ejoy3d_block_h
 
+#include <stdlib.h>
+
 struct block {
 	char * buffer;
 	int sz;
