@@ -1296,7 +1296,7 @@ lnewmaterial(lua_State *L) {
 
 	lua_createtable(L, 0, 1);
 	void * m = lua_newuserdata(L, sz); // sprite, uservalue, table, matertial
-	s->material = (material*)m;
+	s->material = (struct material*)m;
 	material_init(m, sz, s->t.program);
 	lua_setfield(L, -2, "__obj");
 

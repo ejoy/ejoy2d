@@ -319,7 +319,7 @@ loadtexture(lua_State *L) {
 		}
 	}
 
-	const char * err = texture_load(id, (TEXTURE_FORMAT)type, ppm.width, ppm.height, ppm.buffer, lua_toboolean(L, 3));
+	const char * err = texture_load(id, (enum TEXTURE_FORMAT)type, ppm.width, ppm.height, ppm.buffer, lua_toboolean(L, 3));
 	free(ppm.buffer);
 	if (err) {
 		return luaL_error(L, "%s", err);
