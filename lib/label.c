@@ -19,7 +19,6 @@
 
 static RID Tex;
 static struct dfont * Dfont = NULL;
-static int Outline = 1;
 static struct render *R = NULL;
 
 void 
@@ -49,11 +48,6 @@ label_flush() {
 	if (Dfont) {
 		dfont_flush(Dfont);
 	}
-}
-
-void
-label_gen_outline(int outline) {
-  Outline = outline;
 }
 
 static inline int
@@ -166,16 +160,21 @@ gen_char(int unicode, const char * utf8, int size, int edge) {
 	font_size(utf8, unicode, &ctx);
 	const struct dfont_rect * rect = dfont_insert(Dfont, unicode, FONT_SIZE, ctx.w+1, ctx.h+1, edge);
 	if (rect == NULL) {
-		font_release(&ctx);
-		return NULL;
+		dfont_flush(Dfont);
+		rect = dfont_insert(Dfont, unicode, FONT_SIZE, ctx.w+1, ctx.h+1, edge);
+		if (rect == NULL) {
+			font_release(&ctx);
+			return NULL;
+		}
 	}
 	ctx.w = rect->w ;
 	ctx.h = rect->h ;
 	int buffer_sz = ctx.w * ctx.h;
 
 	ARRAY(uint8_t, buffer, buffer_sz);
-  
-  if (Outline && edge) {
+	
+#ifdef FONT_EDGE_HASH
+  if (edge) {
     ARRAY(uint8_t, tmp, buffer_sz);
     memset(tmp,0,buffer_sz);
     font_glyph(utf8, unicode, tmp, &ctx);
@@ -184,7 +183,13 @@ gen_char(int unicode, const char * utf8, int size, int edge) {
     memset(buffer,0,buffer_sz);
     font_glyph(utf8, unicode, buffer, &ctx);
   }
-  
+#else
+	ARRAY(uint8_t, tmp, buffer_sz);
+	memset(tmp,0,buffer_sz);
+	font_glyph(utf8, unicode, tmp, &ctx);
+	gen_outline(ctx.w, ctx.h, tmp, buffer);
+#endif
+	
 //	write_pgm(unicode, ctx.w, ctx.h, buffer);
 	font_release(&ctx);
 

@@ -50,6 +50,7 @@ init_hash(struct dfont *df, int max) {
 	memset(df->hash, 0, sizeof(df->hash));
 }
 
+#ifdef FONT_EDGE_HASH
 static inline int
 hash(int c, int font, int edge) {
 	if (edge != 0) {
@@ -57,6 +58,12 @@ hash(int c, int font, int edge) {
 	}
 	return ((unsigned)(((c ^ (font * 97))<<1)|edge)) % HASH_SIZE;
 }
+#else
+static inline int
+hash(int c, int font, int edge) {
+	return ((unsigned)(c ^ (font * 97))) % HASH_SIZE;
+}
+#endif
 
 struct dfont *
 dfont_create(int width, int height) {

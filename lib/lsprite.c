@@ -126,12 +126,6 @@ fill_srt(lua_State *L, struct srt *srt, int idx) {
 	srt->rot = rot * (1024.0 / 360.0);
 }
 
-static int
-lgenoutline(lua_State *L) {
-  label_gen_outline(lua_toboolean(L, 1));
-  return 0;
-}
-
 static const char * srt_key[] = {
 	"x",
 	"y",
@@ -1320,7 +1314,6 @@ ejoy2d_sprite(lua_State *L) {
 		{ "label", lnewlabel },
 		{ "proxy", lnewproxy },
 		{ "new_material", lnewmaterial },
-		{ "label_gen_outline", lgenoutline },
         { "enable_visible_test", lenable_visible_test },
 		{ NULL, NULL },
 	};
