@@ -28,7 +28,6 @@ void label_flush();
 
 void label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg);
 void label_size(const char * str, struct pack_label * l, int* width, int* height);
-void label_gen_outline(int outline);
 uint32_t label_get_color(struct pack_label * l, const struct sprite_trans *arg);
 
 struct font_context {

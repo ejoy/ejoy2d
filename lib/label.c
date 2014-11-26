@@ -19,7 +19,6 @@
 
 static RID Tex;
 static struct dfont * Dfont = NULL;
-static int Outline = 1;
 static struct render *R = NULL;
 
 void 
@@ -49,11 +48,6 @@ label_flush() {
 	if (Dfont) {
 		dfont_flush(Dfont);
 	}
-}
-
-void
-label_gen_outline(int outline) {
-  Outline = outline;
 }
 
 static inline int
@@ -155,7 +149,7 @@ write_pgm(int unicode, int w, int h, const uint8_t * buffer) {
 */
 
 static const struct dfont_rect *
-gen_char(int unicode, const char * utf8, int size, int outline) {
+gen_char(int unicode, const char * utf8, int size, int edge) {
 	// todo : use large size when size is large
 	struct font_context ctx;
 	font_create(FONT_SIZE, &ctx);
@@ -164,18 +158,23 @@ gen_char(int unicode, const char * utf8, int size, int outline) {
 	}
 
 	font_size(utf8, unicode, &ctx);
-	const struct dfont_rect * rect = dfont_insert(Dfont, unicode, FONT_SIZE, ctx.w+1, ctx.h+1);
+	const struct dfont_rect * rect = dfont_insert(Dfont, unicode, FONT_SIZE, ctx.w+1, ctx.h+1, edge);
 	if (rect == NULL) {
-		font_release(&ctx);
-		return NULL;
+		dfont_flush(Dfont);
+		rect = dfont_insert(Dfont, unicode, FONT_SIZE, ctx.w+1, ctx.h+1, edge);
+		if (rect == NULL) {
+			font_release(&ctx);
+			return NULL;
+		}
 	}
 	ctx.w = rect->w ;
 	ctx.h = rect->h ;
 	int buffer_sz = ctx.w * ctx.h;
 
 	ARRAY(uint8_t, buffer, buffer_sz);
-  
-  if (outline) {
+	
+#ifdef FONT_EDGE_HASH
+  if (edge) {
     ARRAY(uint8_t, tmp, buffer_sz);
     memset(tmp,0,buffer_sz);
     font_glyph(utf8, unicode, tmp, &ctx);
@@ -184,7 +183,13 @@ gen_char(int unicode, const char * utf8, int size, int outline) {
     memset(buffer,0,buffer_sz);
     font_glyph(utf8, unicode, buffer, &ctx);
   }
-  
+#else
+	ARRAY(uint8_t, tmp, buffer_sz);
+	memset(tmp,0,buffer_sz);
+	font_glyph(utf8, unicode, tmp, &ctx);
+	gen_outline(ctx.w, ctx.h, tmp, buffer);
+#endif
+	
 //	write_pgm(unicode, ctx.w, ctx.h, buffer);
 	font_release(&ctx);
 
@@ -219,10 +224,10 @@ draw_rect(const struct dfont_rect *rect, int size, struct matrix *mat, uint32_t 
 }
 
 static int
-draw_size(int unicode, const char *utf8, int size, int gen_new) {
-	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE);
-	if (rect == NULL && gen_new) {
-		rect = gen_char(unicode,utf8,size,Outline);
+draw_size(int unicode, const char *utf8, int size, int edge) {
+	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE,edge);
+	if (rect == NULL) {
+		rect = gen_char(unicode,utf8,size,edge);
 	}
 	if (rect) {
 		return (rect->w -1) * size / FONT_SIZE;
@@ -231,10 +236,10 @@ draw_size(int unicode, const char *utf8, int size, int gen_new) {
 }
 
 static int
-draw_height(int unicode, const char *utf8, int size, int gen_new) {
-	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE);
-	if (rect == NULL && gen_new) {
-		rect = gen_char(unicode,utf8,size,Outline);
+draw_height(int unicode, const char *utf8, int size, int edge) {
+	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE,edge);
+	if (rect == NULL) {
+		rect = gen_char(unicode,utf8,size,edge);
 	}
 	if (rect) {
 		return rect->h * size / FONT_SIZE;
@@ -243,8 +248,8 @@ draw_height(int unicode, const char *utf8, int size, int gen_new) {
 }
 
 static struct font_context
-char_size(int unicode, const char *utf8, int size) {
-	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE);
+char_size(int unicode, const char *utf8, int size, int edge) {
+	const struct dfont_rect * rect = dfont_lookup(Dfont,unicode,FONT_SIZE,edge);
 	struct font_context ctx;
 	font_create(FONT_SIZE, &ctx);
 	if (ctx.font == NULL) {
@@ -287,8 +292,8 @@ color_mul(uint32_t c1, uint32_t c2) {
 
 static int
 draw_utf8(int unicode, int cx, int cy, int size, const struct srt *srt,
-	uint32_t color, const struct sprite_trans *arg) {
-	const struct dfont_rect * rect = dfont_lookup(Dfont, unicode, FONT_SIZE);
+	uint32_t color, const struct sprite_trans *arg, int edge) {
+	const struct dfont_rect * rect = dfont_lookup(Dfont, unicode, FONT_SIZE, edge);
 	if (rect == NULL) {
 		return 0;
 	}
@@ -378,7 +383,7 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
             if (field != NULL) {
               field_color = color_mul(field->color,  color | 0xffffff);
             }
-            cx+=draw_utf8(unicode, cx, cy, size, srt, field_color, arg) + l->space_w;
+            cx+=draw_utf8(unicode, cx, cy, size, srt, field_color, arg, l->edge) + l->space_w;
         }
     }
     *pre_char_cnt += char_cnt;
@@ -411,7 +416,7 @@ label_size(const char *str, struct pack_label * l, int* width, int* height) {
 			unicode = copystr(utf8,str+i,6);
 			i+=6;
 		}
-		struct font_context ct = char_size(unicode, utf8, l->size);
+		struct font_context ct = char_size(unicode, utf8, l->size, l->edge);
 		w += ct.w + l->space_w;
 		if (h==0) {
 			h = ct.h + l->space_h;
@@ -478,9 +483,9 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 			unicode = copystr(utf8,str+i,6);
 			i+=6;
 		}
-		w += draw_size(unicode, utf8, l->size, 1) + l->space_w;
+		w += draw_size(unicode, utf8, l->size, l->edge) + l->space_w;
         if (ch == 0) {
-            ch = draw_height(unicode, utf8, l->size, 1) + l->space_h;
+            ch = draw_height(unicode, utf8, l->size, l->edge) + l->space_h;
         }
         
         if((l->auto_scale == 0 && w > l->width) || unicode == '\n') {

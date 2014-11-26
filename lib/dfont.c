@@ -50,10 +50,20 @@ init_hash(struct dfont *df, int max) {
 	memset(df->hash, 0, sizeof(df->hash));
 }
 
+#ifdef FONT_EDGE_HASH
 static inline int
-hash(int c, int font) {
+hash(int c, int font, int edge) {
+	if (edge != 0) {
+		edge = 1;
+	}
+	return ((unsigned)(((c ^ (font * 97))<<1)|edge)) % HASH_SIZE;
+}
+#else
+static inline int
+hash(int c, int font, int edge) {
 	return ((unsigned)(c ^ (font * 97))) % HASH_SIZE;
 }
+#endif
 
 struct dfont *
 dfont_create(int width, int height) {
@@ -85,8 +95,8 @@ dfont_flush(struct dfont *df) {
 }
 
 const struct dfont_rect * 
-dfont_lookup(struct dfont *df, int c, int font) {
-	int h = hash(c, font);
+dfont_lookup(struct dfont *df, int c, int font, int edge) {
+	int h = hash(c, font, edge);
 	struct hash_rect *hr = df->hash[h];
 	while (hr) {
 		if (hr->c == c && hr->font == font) {
@@ -213,8 +223,8 @@ adjust_space(struct dfont *df, struct hash_rect *hr) {
 }
 
 static struct hash_rect *
-release_char(struct dfont *df, int c, int font) {
-	int h = hash(c, font);
+release_char(struct dfont *df, int c, int font, int edge) {
+	int h = hash(c, font, edge);
 	struct hash_rect *hr = df->hash[h];
 	if (hr->c == c && hr->font == font) {
 		df->hash[h] = hr->next_hash;
@@ -239,7 +249,7 @@ release_char(struct dfont *df, int c, int font) {
 }
 
 static struct hash_rect *
-release_space(struct dfont *df, int width, int height) {
+release_space(struct dfont *df, int width, int height, int edge) {
 	struct hash_rect *hr, *tmp;
 	list_for_each_entry_safe(hr, struct hash_rect, tmp, &df->time, time) {
 		if (hr->version == df->version)
@@ -247,7 +257,7 @@ release_space(struct dfont *df, int width, int height) {
 		if (hr->rect.h != height) {
 			continue;
 		}
-		struct hash_rect * ret = release_char(df, hr->c, hr->font);
+		struct hash_rect * ret = release_char(df, hr->c, hr->font, edge);
 		int w = hr->rect.w;
 		if (w >= width) {
 			ret->rect.w = width;
@@ -262,34 +272,34 @@ release_space(struct dfont *df, int width, int height) {
 }
 
 static struct dfont_rect *
-insert_char(struct dfont *df, int c, int font, struct hash_rect *hr) {
+insert_char(struct dfont *df, int c, int font, struct hash_rect *hr, int edge) {
 	hr->c = c;
 	hr->font = font;
 	hr->version = df->version;
 	list_add_tail(&hr->time, &df->time);
-	int h = hash(c, font);
+	int h = hash(c, font, edge);
 	hr->next_hash = df->hash[h];
 	df->hash[h] = hr;
 	return &hr->rect;
 }
 
 const struct dfont_rect * 
-dfont_insert(struct dfont *df, int c, int font, int width, int height) {
+dfont_insert(struct dfont *df, int c, int font, int width, int height, int edge) {
 	if (width > df->width)
 		return NULL;
-	assert(dfont_lookup(df,c,font) == NULL);
+	assert(dfont_lookup(df,c,font,edge) == NULL);
 	for (;;) {
 		struct font_line *line = find_line(df, width, height);
 		if (line == NULL)
 			break;
 		struct hash_rect * hr = find_space(df, line, width);
 		if (hr) {
-			return insert_char(df,c,font,hr);
+			return insert_char(df,c,font,hr,edge);
 		}
 	}
-	struct hash_rect * hr = release_space(df, width, height);
+	struct hash_rect * hr = release_space(df, width, height, edge);
 	if (hr) {
-		return insert_char(df,c,font,hr);
+		return insert_char(df,c,font,hr,edge);
 	}
 	return NULL;
 }
