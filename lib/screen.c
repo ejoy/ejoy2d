@@ -1,6 +1,7 @@
 #include "screen.h"
 #include "render.h"
 #include "spritepack.h"
+#include "renderbuffer.h"
 
 struct screen {
 	int width;
@@ -71,14 +72,15 @@ bool screen_is_visible(float x,float y)
 {
 	return x >= 0.0f && x <= 2.0f && y>=-2.0f && y<= 0.0f;
 }
-bool screen_is_poly_invisible(const float* points,int len,int stride)
+
+bool screen_is_poly_invisible(const struct vertex_pack* points, int len)
 {
 	int i =0;
 	// test left of x
 	bool invisible = true;
 	for(i =0; i < len && invisible;++i)
 	{
-		if(points[i*stride] >= 0.0f)
+		if(points[i].vx >= 0.0f)
 			invisible = false;
 	}
 	if(invisible)
@@ -88,7 +90,7 @@ bool screen_is_poly_invisible(const float* points,int len,int stride)
 	invisible = true;
 	for(i =0; i < len && invisible;++i)
 	{
-		if(points[i*stride] <= 2.0f)
+		if(points[i].vx <= 2.0f)
 			invisible = false;
 	}
 	if(invisible)
@@ -98,7 +100,7 @@ bool screen_is_poly_invisible(const float* points,int len,int stride)
 	invisible = true;
 	for(i =0; i < len && invisible;++i)
 	{
-		if(points[i*stride +1] >= -2.0f)
+		if(points[i].vy >= -2.0f)
 			invisible = false;
 	}
 	if(invisible)
@@ -108,7 +110,7 @@ bool screen_is_poly_invisible(const float* points,int len,int stride)
 	invisible = true;
 	for(i =0; i < len && invisible;++i)
 	{
-		if(points[i*stride +1] <= 0.0f)
+		if(points[i].vy <= 0.0f)
 			invisible = false;
 	}
 	return invisible;

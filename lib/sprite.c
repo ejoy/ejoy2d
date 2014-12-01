@@ -9,6 +9,7 @@
 #include "array.h"
 #include "particle.h"
 #include "material.h"
+#include "screen.h"
 
 #include <string.h>
 #include <assert.h>
@@ -16,6 +17,10 @@
 #include <limits.h>
 
 static int global_lable_only = 0;
+static bool enable_visible_test = false;
+void enable_screen_visible_test(bool enable) {
+    enable_visible_test = enable;
+}
 
 void
 sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const struct sprite_trans *arg) {
@@ -49,7 +54,9 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 			vb[j].tx = tx;
 			vb[j].ty = ty;
 		}
-		shader_draw(vb, arg->color, arg->additive);
+        
+        if (!enable_visible_test || !screen_is_poly_invisible(vb, 4))
+            shader_draw(vb, arg->color, arg->additive);
 	}
 }
 

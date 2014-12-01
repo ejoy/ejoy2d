@@ -1155,6 +1155,12 @@ ldraw_label_only(lua_State *L) {
 }
 
 static int
+lvisible_test(lua_State *L) {
+    enable_screen_visible_test(lua_toboolean(L, 1));
+    return 0;
+}
+
+static int
 lcalc_matrix(lua_State *L) {
 	struct sprite * s = self(L);
 	struct matrix * mat = lua_touserdata(L, 2);
@@ -1322,6 +1328,7 @@ ejoy2d_sprite(lua_State *L) {
 		{ "new_material", lnewmaterial },
 		{ "label_gen_outline", lgenoutline },
         { "draw_label_only", ldraw_label_only },
+        { "visible_test", lvisible_test },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);

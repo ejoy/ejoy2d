@@ -76,6 +76,7 @@ int sprite_pos(struct sprite *s, struct srt *srt, struct matrix *m, int pos[2]);
 void sprite_matrix(struct sprite *s, struct matrix *mat);
 
 void sprite_label_only(int lable_only);
+void enable_screen_visible_test(bool enable);
 bool sprite_child_visible(struct sprite *s, const char * childname);
 int sprite_material_size(struct sprite *s);
 
