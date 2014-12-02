@@ -490,17 +490,21 @@ lsettext(lua_State *L) {
 		}
 
 		lua_rawgeti(L, -1, 1);  //start
-		((struct label_field*)(fields+i))->start = luaL_checkinteger(L, -1);
+		((struct label_field*)(fields+i))->start = luaL_checkunsigned(L, -1);
 		lua_pop(L, 1);
 
     lua_rawgeti(L, -1, 2);  //end
-		((struct label_field*)(fields+i))->end = luaL_checkinteger(L, -1);
+		((struct label_field*)(fields+i))->end = luaL_checkunsigned(L, -1);
     lua_pop(L, 1);
 
-		lua_rawgeti(L, -1, 3);  //color
+		lua_rawgeti(L, -1, 3);  //type
+		((struct label_field*)(fields+i))->type = luaL_checkunsigned(L, -1);
+		lua_pop(L, 1);
+		
+		lua_rawgeti(L, -1, 4); //val
 		((struct label_field*)(fields+i))->color = luaL_checkunsigned(L, -1);
 		lua_pop(L, 1);
-
+		
 		//extend here
 
 		lua_pop(L, 1);
@@ -807,6 +811,40 @@ laabb(lua_State *L) {
 		lua_pushinteger(L, aabb[i]);
 	}
 	return 4;
+}
+
+static int
+lchar_size(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_LABEL) {
+		return luaL_error(L, "Ony label can get char_size");
+	}
+	lua_newtable(L);
+	lua_pushinteger(L, s->s.label->width);
+	lua_rawseti(L, -2, 1);
+	lua_pushinteger(L, s->s.label->height);
+	lua_rawseti(L, -2, 2);
+	
+	if (!s->data.rich_text || !s->data.rich_text->text) {
+		return 1;
+	}
+	const char* str = s->data.rich_text->text;
+	if (!str) {
+		return 1;
+	}
+	
+	int i;
+	int idx=2;
+	for (i=0; str[i];) {
+		int width=0, height=0;
+		int len = label_char_size(s->s.label, str+i, &width, &height);
+		lua_pushinteger(L, width);
+		lua_rawseti(L, -2, ++idx);
+		lua_pushinteger(L, height);
+		lua_rawseti(L, -2, ++idx);
+		i += len;
+	}
+	return 1;
 }
 
 static int
@@ -1213,6 +1251,7 @@ lmethod(lua_State *L) {
 		{ "test", ltest },
 		{ "aabb", laabb },
 		{ "text_size", ltext_size},
+		{ "char_size", lchar_size},
 		{ "child_visible", lchild_visible },
 		{ "children_name", lchildren_name },
 		{ "world_pos", lgetwpos },
