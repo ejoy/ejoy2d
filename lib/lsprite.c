@@ -800,6 +800,18 @@ ldraw(lua_State *L) {
 }
 
 static int
+ldraw_scene(lua_State *L) {
+    screen_draw_scene_begin();
+
+    struct sprite *s = self(L);
+    sprite_draw(s, NULL);
+
+    screen_draw_scene_end();
+
+    return 0;
+}
+
+static int
 laabb(lua_State *L) {
 	struct sprite *s = self(L);
 	struct srt srt;
@@ -1161,6 +1173,25 @@ lvisible_test(lua_State *L) {
 }
 
 static int
+lviewport_srt(lua_State *L) {
+    struct srt srt;
+
+    double s = luaL_optnumber(L, 1, 1);
+    double x = luaL_optnumber(L, 2, 0);
+    double y = luaL_optnumber(L, 3, 0);
+
+    srt.offx = x * SCREEN_SCALE;
+    srt.offy = y * SCREEN_SCALE;
+    srt.scalex = s * 1024;
+    srt.scaley = s * 1024;
+    srt.rot = 0;
+
+    set_viewport_srt(&srt);
+
+    return 0;
+}
+
+static int
 lcalc_matrix(lua_State *L) {
 	struct sprite * s = self(L);
 	struct matrix * mat = lua_touserdata(L, 2);
@@ -1219,6 +1250,7 @@ lmethod(lua_State *L) {
 		{ "ps", lps },
 		{ "sr", lsr },
 		{ "draw", ldraw },
+        { "draw_scene", ldraw_scene },
 		{ "recursion_frame", lrecursion_frame },
 		{ "multi_draw", lmulti_draw },
 		{ "matrix_multi_draw", lmatrix_multi_draw },
@@ -1329,6 +1361,7 @@ ejoy2d_sprite(lua_State *L) {
 		{ "label_gen_outline", lgenoutline },
         { "draw_label_only", ldraw_label_only },
         { "visible_test", lvisible_test },
+        { "viewport_srt", lviewport_srt },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);

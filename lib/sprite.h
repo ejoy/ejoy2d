@@ -81,5 +81,8 @@ bool sprite_child_visible(struct sprite *s, const char * childname);
 int sprite_material_size(struct sprite *s);
 
 int ejoy2d_sprite(lua_State *L);
+void screen_draw_scene_begin();
+void screen_draw_scene_end();
+void set_viewport_srt(struct srt *srt);
 
 #endif
