@@ -319,10 +319,22 @@ get_rich_field_color(const struct rich_text *rich, int idx) {
   for (i=0;i<rich->count;i++) {
     struct label_field *field = (struct label_field*)(rich->fields+i);
     if (idx >= field->start && idx <= field->end && field->type	== RL_COLOR) {
-      return field->color;
+      return (uint32_t)field->val;
     }
   }
   return 0;
+}
+
+static bool
+get_rich_filed_lf(const struct rich_text *rich, int idx) {
+	int i;
+	for (i=0; i<rich->count; i++) {
+		struct label_field *field = (struct label_field*)(rich->fields+i);
+		if (idx==field->start && idx==field->end && field->type==RL_LINEFEED) {
+			return true;
+		}
+	}
+	return false;
 }
 
 static int
@@ -392,11 +404,11 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
 }
 
 int
-label_char_size(struct pack_label* l, const char* chr, int* width, int* height) {
+label_char_size(struct pack_label* l, const char* chr, int* width, int* height, int* unicode) {
 	char utf8[7];
 	int len = unicode_len(chr[0]);
-	int unicode = copystr(utf8, chr, len);
-	struct font_context ct = char_size(unicode, utf8, l->size, l->edge);
+	*unicode = copystr(utf8, chr, len);
+	struct font_context ct = char_size(*unicode, utf8, l->size, l->edge);
 	*width = ct.w + l->space_w;
 	*height = ct.h + l->space_h;
 	return len;
@@ -456,7 +468,7 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 
 	char utf8[7];
 	int i;
-	int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0;
+	int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0, idx = 0;
 	for (i=0; str && str[i];) {
 		int unicode;
 		int len = unicode_len(str[i]);
@@ -466,13 +478,16 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 		if (ch == 0) {
 				ch = draw_height(unicode, utf8, l->size, l->edge) + l->space_h;
 		}
-        
-		if((l->auto_scale == 0 && w > l->width) || unicode == '\n') {
+		
+		uint32_t lf = get_rich_filed_lf(rich, idx);
+	//	if((l->auto_scale == 0 && w > l->width) || unicode == '\n' || lf) {
+		if (unicode == '\n' || lf) {
 				draw_line(rich, l, srt, arg, color, cy, w, pre, i, &char_cnt);
 				cy += ch;
 				pre = i;
 				w = 0; ch = 0;
 		}
+		idx++;
 	}
     
 	draw_line(rich, l, srt, arg, color, cy, w, pre, i, &char_cnt);
