@@ -439,7 +439,7 @@ material_init(void *self, int size, int prog) {
 	struct program *p = &RS->program[prog];
 	assert(size >= rsz);
 	memset(self, 0, rsz);
-	struct material * m = self;
+	struct material * m = (struct material *)self;
 	m->p = p;
 	int i;
 	for (i=0;i<MAX_TEXTURE_CHANNEL;i++) {

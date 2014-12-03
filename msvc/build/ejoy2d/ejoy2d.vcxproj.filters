@@ -18,6 +18,9 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="lib\src\render">
+      <UniqueIdentifier>{190d12fe-25b2-430a-8db5-9ee3abf54a20}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\mingw\window.c">
@@ -82,6 +85,21 @@
     </ClCompile>
     <ClCompile Include="..\..\src\ejoy2d\winmain.c">
       <Filter>mingw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\lrenderbuffer.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\renderbuffer.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\render\carray.c">
+      <Filter>lib\src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\render\log.c">
+      <Filter>lib\src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\render\render.c">
+      <Filter>lib\src\render</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -153,6 +171,33 @@
     </ClInclude>
     <ClInclude Include="..\..\..\lib\array.h">
       <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\lrenderbuffer.h">
+      <Filter>lib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\material.h">
+      <Filter>lib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\platform_print.h">
+      <Filter>lib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\renderbuffer.h">
+      <Filter>lib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\render\blendmode.h">
+      <Filter>lib\src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\render\block.h">
+      <Filter>lib\src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\render\carray.h">
+      <Filter>lib\src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\render\log.h">
+      <Filter>lib\src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\render\render.h">
+      <Filter>lib\src\render</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

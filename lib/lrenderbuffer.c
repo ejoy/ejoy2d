@@ -8,15 +8,15 @@
 
 static int
 ldelbuffer(lua_State *L) {
-	struct render_buffer *rb = lua_touserdata(L, 1);
+	struct render_buffer *rb = (struct render_buffer *)lua_touserdata(L, 1);
 	renderbuffer_unload(rb);
 	return 0;
 }
 
 static int
 laddsprite(lua_State *L) {
-	struct render_buffer *rb = luaL_checkudata(L, 1, "renderbuffer");
-	struct sprite * spr = lua_touserdata(L, 2);
+	struct render_buffer *rb = (struct render_buffer *)luaL_checkudata(L, 1, "renderbuffer");
+	struct sprite * spr = (struct sprite *)lua_touserdata(L, 2);
 	if (spr == NULL) {
 		return luaL_error(L, "Need sprite");
 	}
@@ -30,7 +30,7 @@ laddsprite(lua_State *L) {
 
 static int
 lupload(lua_State *L) {
-	struct render_buffer *rb = luaL_checkudata(L, 1, "renderbuffer");
+	struct render_buffer *rb = (struct render_buffer *)luaL_checkudata(L, 1, "renderbuffer");
 	renderbuffer_upload(rb);
 
 	return 0;
@@ -39,7 +39,7 @@ lupload(lua_State *L) {
 static int
 ldrawbuffer(lua_State *L) {
 	// todo: srt
-	struct render_buffer *rb = luaL_checkudata(L, 1, "renderbuffer");
+	struct render_buffer *rb = (struct render_buffer *)luaL_checkudata(L, 1, "renderbuffer");
 	float x = luaL_checknumber(L, 2);
 	float y = luaL_checknumber(L, 3);
 	float scale = luaL_optnumber(L, 4, 1.0);
@@ -49,7 +49,7 @@ ldrawbuffer(lua_State *L) {
 
 static int
 lnewbuffer(lua_State *L) {
-	struct render_buffer *rb = lua_newuserdata(L, sizeof(*rb));
+	struct render_buffer *rb = (struct render_buffer *)lua_newuserdata(L, sizeof(*rb));
 	renderbuffer_init(rb);
 	if (luaL_newmetatable(L, "renderbuffer")) {
 		luaL_Reg l[] = {

@@ -10,7 +10,7 @@ struct block {
 
 static inline void 
 block_init(struct block * B, void * buffer, int sz) {
-	B->buffer = buffer;
+	B->buffer = (char*)buffer;
 	B->sz = sz;
 }
 

@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <assert.h>
+#include "array.h"
 
 // align to qword
 #define ALIGN(n) (((n) + 7) & ~7)
@@ -20,7 +21,7 @@ array_size(int n, int sz) {
 void 
 array_init(struct array *p, void * buffer, int n, int nsz) {
 	int sz = ALIGN(nsz);
-	char * ptr = buffer;
+	char * ptr = (char *)buffer;
 	int i;
 	for (i=0;i<n-1;i++) {
 		struct array_node * node = (struct array_node *)(ptr + i*sz);
@@ -31,8 +32,8 @@ array_init(struct array *p, void * buffer, int n, int nsz) {
 	node->next = NULL;
 	p->n = n;
 	p->sz = sz;
-	p->buffer = buffer;
-	p->freelist = buffer;
+	p->buffer = (char*)buffer;
+	p->freelist = (struct array_node*)buffer;
 }
 
 void * 
@@ -48,7 +49,7 @@ array_alloc(struct array *p) {
 
 void 
 array_free(struct array *p, void *v) {
-	struct array_node * node = v;
+	struct array_node * node = (struct array_node *)v;
 	if (node) {
 		node->next = p->freelist;
 		p->freelist = node;
@@ -77,7 +78,7 @@ array_ref(struct array *p, int id) {
 
 void 
 array_exit(struct array *p, void (*close)(void *p, void *ud), void *ud) {
-	char flag[p->n];
+	ARRAY(char, flag, p->n);
 	memset(flag, 0, p->n);
 	struct array_node * n = p->freelist;
 	while (n) {
@@ -88,7 +89,7 @@ array_exit(struct array *p, void (*close)(void *p, void *ud), void *ud) {
 	int i;
 	for (i=0;i<p->n;i++) {
 		if (flag[i] == 0) {
-			struct array_node * n = array_ref(p, i+1);
+			struct array_node * n = (struct array_node *)array_ref(p, i + 1);
 			close(n, ud);
 		}
 	}

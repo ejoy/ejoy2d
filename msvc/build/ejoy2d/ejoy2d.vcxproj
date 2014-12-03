@@ -17,11 +17,16 @@
     <ClCompile Include="..\..\..\lib\label.c" />
     <ClCompile Include="..\..\..\lib\lmatrix.c" />
     <ClCompile Include="..\..\..\lib\lparticle.c" />
+    <ClCompile Include="..\..\..\lib\lrenderbuffer.c" />
     <ClCompile Include="..\..\..\lib\lshader.c" />
     <ClCompile Include="..\..\..\lib\lsprite.c" />
     <ClCompile Include="..\..\..\lib\matrix.c" />
     <ClCompile Include="..\..\..\lib\particle.c" />
     <ClCompile Include="..\..\..\lib\ppm.c" />
+    <ClCompile Include="..\..\..\lib\renderbuffer.c" />
+    <ClCompile Include="..\..\..\lib\render\carray.c" />
+    <ClCompile Include="..\..\..\lib\render\log.c" />
+    <ClCompile Include="..\..\..\lib\render\render.c" />
     <ClCompile Include="..\..\..\lib\scissor.c" />
     <ClCompile Include="..\..\..\lib\screen.c" />
     <ClCompile Include="..\..\..\lib\shader.c" />
@@ -41,10 +46,19 @@
     <ClInclude Include="..\..\..\lib\label.h" />
     <ClInclude Include="..\..\..\lib\list.h" />
     <ClInclude Include="..\..\..\lib\lmatrix.h" />
+    <ClInclude Include="..\..\..\lib\lrenderbuffer.h" />
+    <ClInclude Include="..\..\..\lib\material.h" />
     <ClInclude Include="..\..\..\lib\matrix.h" />
     <ClInclude Include="..\..\..\lib\opengl.h" />
     <ClInclude Include="..\..\..\lib\particle.h" />
+    <ClInclude Include="..\..\..\lib\platform_print.h" />
     <ClInclude Include="..\..\..\lib\ppm.h" />
+    <ClInclude Include="..\..\..\lib\renderbuffer.h" />
+    <ClInclude Include="..\..\..\lib\render\blendmode.h" />
+    <ClInclude Include="..\..\..\lib\render\block.h" />
+    <ClInclude Include="..\..\..\lib\render\carray.h" />
+    <ClInclude Include="..\..\..\lib\render\log.h" />
+    <ClInclude Include="..\..\..\lib\render\render.h" />
     <ClInclude Include="..\..\..\lib\scissor.h" />
     <ClInclude Include="..\..\..\lib\screen.h" />
     <ClInclude Include="..\..\..\lib\shader.h" />
@@ -75,13 +89,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v100</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v100</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -113,7 +127,7 @@
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;EJOY2D_LUA=$(EJOY2D_LUA);EJOY2D_OS=WINDOWS;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CompileAs>CompileAsCpp</CompileAs>
       <DisableSpecificWarnings>4996;4244;4018</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(EJOY2D_GLEW);$(EJOY2D)\include\;$(EJOY2D_ROOT)\lib\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(EJOY2D_GLEW);$(EJOY2D)\include\;$(EJOY2D_ROOT)\lib\;$(EJOY2D_ROOT)\lib\render;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
