@@ -508,11 +508,16 @@ lsettext(lua_State *L) {
     lua_pop(L, 1);
 
 		lua_rawgeti(L, -1, 3);  //type
-		((struct label_field*)(fields+i))->type = luaL_checkunsigned(L, -1);
+		uint32_t type = luaL_checkunsigned(L, -1);
+		((struct label_field*)(fields+i))->type = type;
 		lua_pop(L, 1);
 		
 		lua_rawgeti(L, -1, 4); //val
-		((struct label_field*)(fields+i))->val = luaL_checkinteger(L, -1);
+		if (type == RL_COLOR) {
+			((struct label_field*)(fields+i))->color = luaL_checkunsigned(L, -1);
+		} else {
+			((struct label_field*)(fields+i))->val = luaL_checkinteger(L, -1);
+		}
 		lua_pop(L, 1);
 		
 		//extend here

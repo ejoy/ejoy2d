@@ -245,13 +245,14 @@ function M:layout(label, txt, fields)
 
 		if line_width >= width then
 			--line width equalization
-			if not is_alnum(char_unicode(idx)) and
-					line_width - width > width - line_width + char_width(idx) and
-					idx - gap > 3 then
-				line_width = line_width - char_width(idx)
-				idx = idx - gap
-				ignore_next = 1
-			end
+			-- if not is_alnum(char_unicode(idx)) and
+			-- 		line_width - width > width - line_width + char_width(idx) and
+			-- 		idx - gap > 3 then
+			-- 	print("equalization:", line_width, char_width(idx))
+			-- 	line_width = line_width - char_width(idx)
+			-- 	idx = idx - gap
+			-- 	extra_len = char_width(idx)
+			-- end
 
 			max_width = line_width > max_width and line_width or max_width
 			max_height = max_height + line_max_height
@@ -293,7 +294,7 @@ function M:layout(label, txt, fields)
 					end
 				end
 
-				-- print("............delta:", line_width, line_width - width, char_width(idx))
+				-- print("............delta:", line_width, line_width - width, char_width(idx), ignore_next)
 			end
 			line_width = 0
 		end

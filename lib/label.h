@@ -17,7 +17,10 @@ struct label_field {
 		uint32_t start:12;
 		uint32_t end:12;
 	};
-	int val;
+	union {
+		uint32_t color;
+		int val;
+	};
 };
 
 struct rich_text {

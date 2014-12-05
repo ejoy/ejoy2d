@@ -319,7 +319,7 @@ get_rich_field_color(const struct rich_text *rich, int idx) {
   for (i=0;i<rich->count;i++) {
     struct label_field *field = (struct label_field*)(rich->fields+i);
     if (idx >= field->start && idx <= field->end && field->type	== RL_COLOR) {
-      return (uint32_t)field->val;
+      return field->color;
     }
   }
   return 0;
