@@ -291,7 +291,7 @@ color_mul(uint32_t c1, uint32_t c2) {
 }
 
 static int
-draw_utf8(int unicode, int cx, int cy, int size, const struct srt *srt,
+draw_utf8(int unicode, float cx, int cy, int size, const struct srt *srt,
 	uint32_t color, const struct sprite_trans *arg, int edge) {
 	const struct dfont_rect * rect = dfont_lookup(Dfont, unicode, FONT_SIZE, edge);
 	if (rect == NULL) {
@@ -326,11 +326,12 @@ get_rich_field_color(const struct rich_text *rich, int idx) {
 }
 
 static bool
-get_rich_filed_lf(const struct rich_text *rich, int idx) {
+get_rich_filed_lf(const struct rich_text *rich, int idx, float * offset) {
 	int i;
 	for (i=0; i<rich->count; i++) {
 		struct label_field *field = (struct label_field*)(rich->fields+i);
 		if (idx==field->start && idx==field->end && field->type==RL_LINEFEED) {
+			*offset = (float)(field->val / 1000.0);
 			return true;
 		}
 	}
@@ -357,9 +358,10 @@ unicode_len(const char chr) {
 
 static void
 draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg,
-          uint32_t color, int cy, int w, int start, int end, int *pre_char_cnt) {
+          uint32_t color, int cy, int w, int start, int end, int *pre_char_cnt, float space_scale) {
     const char *str = rich->text;
-    int cx, j;
+		float cx;
+    int j;
     int size = l->size;
     if (l->auto_scale != 0 && w > l->width)
     {
@@ -371,7 +373,7 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
 
     switch (l->align) {
         case LABEL_ALIGN_LEFT:
-            cx = 0;
+            cx = 0.0;
             break;
         case LABEL_ALIGN_RIGHT:
             cx = l->width - w;
@@ -397,7 +399,7 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
 						} else {
 							field_color = color_mul(field_color,  color | 0xffffff);
 						}
-            cx+=draw_utf8(unicode, cx, cy, size, srt, field_color, arg, l->edge) + l->space_w;
+            cx+=(draw_utf8(unicode, cx, cy, size, srt, field_color, arg, l->edge) + l->space_w)*space_scale;
         }
     }
     *pre_char_cnt += char_cnt;
@@ -479,10 +481,10 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 				ch = draw_height(unicode, utf8, l->size, l->edge) + l->space_h;
 		}
 		
-		uint32_t lf = get_rich_filed_lf(rich, idx);
-	//	if((l->auto_scale == 0 && w > l->width) || unicode == '\n' || lf) {
-		if (unicode == '\n' || lf) {
-				draw_line(rich, l, srt, arg, color, cy, w, pre, i, &char_cnt);
+		float space_scale=1.0;
+		uint32_t lf = get_rich_filed_lf(rich, idx, &space_scale);
+		if((l->auto_scale == 0 && lf) || unicode == '\n') {
+				draw_line(rich, l, srt, arg, color, cy, w, pre, i, &char_cnt, space_scale);
 				cy += ch;
 				pre = i;
 				w = 0; ch = 0;
@@ -490,6 +492,6 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 		idx++;
 	}
     
-	draw_line(rich, l, srt, arg, color, cy, w, pre, i, &char_cnt);
+	draw_line(rich, l, srt, arg, color, cy, w, pre, i, &char_cnt, 1.0);
 }
 
