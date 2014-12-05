@@ -11,6 +11,7 @@ function string.plain_format(str)
 end
 
 local function is_ASCII_DBC_punct(unicode)
+	if not unicode then return false end
 	-- ! to /
 	if unicode >= 33 and unicode <= 47 then return true end
 	-- : to @
@@ -20,8 +21,6 @@ local function is_ASCII_DBC_punct(unicode)
 	-- { to ~
 	if unicode >= 123 and unicode <= 126 then return true end
 
-	-- if unicode >= 33 and unicode <= 126 then return true end
-
 	return false
 end
 
@@ -30,6 +29,7 @@ local function is_ASCII_SBC_punct(unicode)
 end
 
 local function is_JP_punct(unicode)
+	if not unicode then return false end
 	if unicode >= 65377 and unicode <= 65381 then return true end
 	if unicode == 0x3002 or unicode == 0x3001 or unicode == 0x300C or
 		unicode == 0x300D or unicode == 0x30FB then
@@ -45,9 +45,24 @@ local function is_punct(unicode)
 	if is_JP_punct(unicode) then return true end
 	return false
 end
+
+local function is_ascii(unicode)
+	if not unicode then return false end
+	if unicode >= 33 and unicode <= 126 then return true end
+	local shift = unicode-65248
+	if shift >= 33 and shift <= 126 then return true end
+	return false
+end
+
+local function is_alnum(unicode)
+	if not unicode then return false end
+	return is_ascii(unicode) and not is_punct(unicode)
+end
 ----------------ends of helpers-----------------
 
 local M = {}
+
+local gap = 4
 
 local CTL_CODE_POP=0
 local CTL_CODE_COLOR=1
@@ -150,54 +165,137 @@ function M:_post_format(label, txt, fields)
 	return {txt, fields, w, h}
 end
 
+function M:_locate_alnum(sizes, anchor)
+	local start = anchor
+	local forward_len = sizes[start]
+	while sizes[start-gap+3] do
+		if start-gap < 3 or not is_alnum(sizes[start-gap+3]) then
+			break
+		end
+		start = start - gap
+		forward_len = forward_len + sizes[start]
+	end
+
+	local stop = anchor
+	local backward_len = 0
+	while sizes[stop+gap+3] do
+		if not is_alnum(sizes[stop+gap+3]) then
+			break
+		end
+		stop = stop + gap
+		backward_len = backward_len + sizes[stop]
+	end
+	return forward_len, start, stop, backward_len
+end
+
+local function add_linefeed(fields, pos, offset)
+	local field = {false, false, false, false}
+	field[1] = pos-1  --zero base index
+	field[2] = pos-1
+	field[3] = CTL_CODE_LINEFEED
+	field[4] = offset or 1000
+	-- field[4] = 1000
+	table.insert(fields, field)
+end
+
 local char_sizes = {}
+local function char_width(idx)
+	return char_sizes[idx]
+end
+local function char_height(idx)
+	return char_sizes[idx+1]
+end
+local function char_unicode_len(idx)
+	return char_sizes[idx+2]
+end
+local function char_unicode(idx)
+	return char_sizes[idx+3]
+end
+
 function M:layout(label, txt, fields)
+	-- print(txt)
 	--{label_width, label_height, char_width_1, char_width_1, unicode_len_1, unicode_1...}
 	local size_cnt = label:char_size(char_sizes, txt)
 
-	local sizes = char_sizes
-	local width = sizes[1]
+	local width = char_sizes[1]
 
 	local line_width = 0
 	local char_idx = 1
-	local gap = 4
-	local ignore_next = false
+	local ignore_next, extra_len = 0, 0
 	local max_width, max_height, line_max_height=0, 0, 0
 	for i=3, size_cnt, gap do
-		if not ignore_next then
-			line_width = line_width + sizes[i]
+		local idx = i
+		if ignore_next == 0 then
+			line_width = line_width + char_width(idx)
 		else
-			ignore_next = false
+			ignore_next = ignore_next-1
+		end
+		if extra_len > 0 then
+			line_width = line_width + extra_len
+			extra_len=0
 		end
 		--reset if \n
-		if sizes[i+3] == 10 then
-			max_height = max_height + sizes[i+1]
+		if char_unicode(idx) == 10 then
+			max_height = max_height + char_height(idx)
 			line_width = 0
 		end
-		line_max_height = sizes[i+1] > line_max_height and sizes[i+1] or line_max_height
-		char_idx = char_idx + sizes[i+2]
+
+		line_max_height = char_height(idx) > line_max_height and char_height(idx) or line_max_height
+		char_idx = char_idx + char_unicode_len(idx)
+
 		if line_width >= width then
+			--line width equalization
+			if not is_alnum(char_unicode(idx)) and
+					line_width - width > width - line_width + char_width(idx) and
+					idx - gap > 3 then
+				line_width = line_width - char_width(idx)
+				idx = idx - gap
+				ignore_next = 1
+			end
+
 			max_width = line_width > max_width and line_width or max_width
 			max_height = max_height + line_max_height
 			line_max_height = 0
 
-			local pos = (i+1) / gap
-			local next_unicode = sizes[i+gap+3]
-			if is_punct(sizes[i+gap+3]) then
+			local pos = (idx+1) / gap
+			local next_unicode = char_unicode(idx+gap)
+			--make sure punctation does not stand at line head
+			if is_punct(next_unicode) then
+				line_width = line_width + char_width(idx+gap)
 				pos = pos + 1
-				next_unicode = sizes[i+gap+gap+3]
-				ignore_next = true
+				next_unicode = char_unicode(idx+gap+gap)
+				ignore_next = ignore_next + 1
 			end
 
-			line_width = 0
 			if next_unicode and next_unicode ~= 10 then
-				local field = {false, false, false, false}
-				field[1] = pos-1  --zero base index
-				field[2] = pos-1
-				field[3] = CTL_CODE_LINEFEED
-				field[4] = 0
-				table.insert(fields, field)
+				if ignore_next > 0 or not is_alnum(char_unicode(idx)) then
+					add_linefeed(fields, pos)
+				else
+					local forward_len, start, stop, backward_len = self:_locate_alnum(char_sizes, idx)
+					if stop == idx+gap and not is_punct(char_unicode(stop+gap)) then
+						ignore_next = ignore_next+1
+						local scale = line_width * 1000 / (line_width + char_width(stop))
+						scale = scale >= 970 and scale or 1000
+						line_width = line_width + char_width(stop)
+						add_linefeed(fields, pos+1, scale)
+						-- print("shrink:", scale)
+					else
+						local scale = width * 1000 / (line_width - forward_len)
+						-- local scale = line_width * 1000 / (line_width - forward_len)
+						if scale <= 1250 then
+							extra_len = forward_len
+							line_width = line_width - extra_len
+							add_linefeed(fields, ((start+1) / gap)-1, scale)
+						else
+							add_linefeed(fields, pos)
+						end
+						-- print("extend:", scale)
+					end
+				end
+
+				-- print("............delta:", line_width, line_width - width, char_width(idx))
 			end
+			line_width = 0
 		end
 	end
 	if line_width < width and line_width > 0 then
