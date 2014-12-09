@@ -445,10 +445,12 @@ lsettext(lua_State *L) {
 		lua_setuservalue(L, 1);
 		return 0;
 	}
-  if (lua_isstring(L, 2)) {
+/*  if (lua_isstring(L, 2)) {
     s->data.rich_text = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
     s->data.rich_text->text = lua_tostring(L, 2);
     s->data.rich_text->count = 0;
+		s->data.rich_text->width = 0;
+		s->data.rich_text->height = 0;
 		s->data.rich_text->fields = NULL;
 
 		lua_createtable(L, 2, 0);
@@ -458,10 +460,10 @@ lsettext(lua_State *L) {
 		lua_rawseti(L, -2, 2);
 		lua_setuservalue(L, 1);
     return 0;
-  }
+  }*/
 
   s->data.rich_text = NULL;
-  if (!lua_istable(L, 2) || lua_rawlen(L, 2) != 2) {
+  if (!lua_istable(L, 2) || lua_rawlen(L, 2) != 4) {
     return luaL_error(L, "rich text must has a table with two items");
   }
 
@@ -477,6 +479,14 @@ lsettext(lua_State *L) {
 
 	rich->text = txt;
   rich->count = cnt;
+	lua_rawgeti(L, 2, 3);
+	rich->width = luaL_checkinteger(L, -1);
+	lua_pop(L, 1);
+	
+	lua_rawgeti(L, 2, 4);
+	rich->height = luaL_checkinteger(L, -1);
+	lua_pop(L, 1);
+	
 	int size = cnt * sizeof(struct label_field);
 	rich->fields = (struct label_field*)lua_newuserdata(L, size);
 
@@ -490,17 +500,26 @@ lsettext(lua_State *L) {
 		}
 
 		lua_rawgeti(L, -1, 1);  //start
-		((struct label_field*)(fields+i))->start = luaL_checkinteger(L, -1);
+		((struct label_field*)(fields+i))->start = luaL_checkunsigned(L, -1);
 		lua_pop(L, 1);
 
     lua_rawgeti(L, -1, 2);  //end
-		((struct label_field*)(fields+i))->end = luaL_checkinteger(L, -1);
+		((struct label_field*)(fields+i))->end = luaL_checkunsigned(L, -1);
     lua_pop(L, 1);
 
-		lua_rawgeti(L, -1, 3);  //color
-		((struct label_field*)(fields+i))->color = luaL_checkunsigned(L, -1);
+		lua_rawgeti(L, -1, 3);  //type
+		uint32_t type = luaL_checkunsigned(L, -1);
+		((struct label_field*)(fields+i))->type = type;
 		lua_pop(L, 1);
-
+		
+		lua_rawgeti(L, -1, 4); //val
+		if (type == RL_COLOR) {
+			((struct label_field*)(fields+i))->color = luaL_checkunsigned(L, -1);
+		} else {
+			((struct label_field*)(fields+i))->val = luaL_checkinteger(L, -1);
+		}
+		lua_pop(L, 1);
+		
 		//extend here
 
 		lua_pop(L, 1);
@@ -810,17 +829,66 @@ laabb(lua_State *L) {
 }
 
 static int
+lchar_size(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_LABEL) {
+		return luaL_error(L, "Ony label can get char_size");
+	}
+	int idx=0;
+	luaL_checktype(L,2,LUA_TTABLE);
+	lua_pushinteger(L, s->s.label->width);
+	lua_rawseti(L, 2, ++idx);
+	lua_pushinteger(L, s->s.label->height);
+	lua_rawseti(L, 2, ++idx);
+	
+	const char* str = NULL;
+	if (!lua_isnil(L, 3)) {
+		str = lua_tostring(L, 3);
+	} else {
+		if (!s->data.rich_text || !s->data.rich_text->text) {
+			lua_pushinteger(L, idx);
+			return 1;
+		}
+		str = s->data.rich_text->text;
+	}
+	
+	if (!str) {
+		lua_pushinteger(L, idx);
+		return 1;
+	}
+	
+	int i;
+	for (i=0; str[i];) {
+		int width=0, height=0, unicode=0;
+		int len = label_char_size(s->s.label, str+i, &width, &height, &unicode);
+		lua_pushinteger(L, width);
+		lua_rawseti(L, 2, ++idx);
+		lua_pushinteger(L, height);
+		lua_rawseti(L, 2, ++idx);
+		lua_pushinteger(L, len);
+		lua_rawseti(L, 2, ++idx);
+		lua_pushinteger(L, unicode);
+		lua_rawseti(L, 2, ++idx);
+		i += len;
+	}
+	lua_pushinteger(L, idx);
+	return 1;
+}
+
+static int
 ltext_size(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->type != TYPE_LABEL) {
 		return luaL_error(L, "Ony label can get label_size");
 	}
 	int width = 0, height = 0;
-  if (s->data.rich_text != NULL)
-      label_size(s->data.rich_text->text, s->s.label, &width, &height);
+	if (s->data.rich_text != NULL) {
+		width = s->data.rich_text->width;
+		height = s->data.rich_text->height;
+	}
 	lua_pushinteger(L, width);
 	lua_pushinteger(L, height);
-    lua_pushinteger(L, s->s.label->size);
+	lua_pushinteger(L, s->s.label->size);
 	return 3;
 }
 
@@ -1213,6 +1281,7 @@ lmethod(lua_State *L) {
 		{ "test", ltest },
 		{ "aabb", laabb },
 		{ "text_size", ltext_size},
+		{ "char_size", lchar_size},
 		{ "child_visible", lchild_visible },
 		{ "children_name", lchildren_name },
 		{ "world_pos", lgetwpos },

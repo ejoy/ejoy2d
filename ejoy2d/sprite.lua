@@ -42,10 +42,12 @@ end
 
 local set_text = set.text
 function set:text(txt)
-	if type(txt) == "string" then
-		set_text(self, richtext:format(txt))
+	if not txt or txt == "" then
+		set_text(self, nil)
 	else
-		set_text(self, txt)
+		local t = type(txt)
+		assert(t=="string" or t=="number")
+		set_text(self, richtext:format(self, tostring(txt)))
 	end
 end
 

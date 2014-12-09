@@ -8,14 +8,25 @@
 #define LABEL_ALIGN_RIGHT 1
 #define LABEL_ALIGN_CENTER 2
 
+#define RL_COLOR 1
+#define RL_LINEFEED 2
+
 struct label_field {
-  int start;
-  int end;
-	uint32_t color;
+	struct {
+		uint32_t type:8;
+		uint32_t start:12;
+		uint32_t end:12;
+	};
+	union {
+		uint32_t color;
+		int val;
+	};
 };
 
 struct rich_text {
 	int count;
+	int width;
+	int height;
   const char *text;
 	struct label_field *fields;
 };
@@ -28,6 +39,7 @@ void label_flush();
 
 void label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg);
 void label_size(const char * str, struct pack_label * l, int* width, int* height);
+int label_char_size(struct pack_label* l, const char* chr, int* width, int* height, int* unicode);
 uint32_t label_get_color(struct pack_label * l, const struct sprite_trans *arg);
 
 struct font_context {

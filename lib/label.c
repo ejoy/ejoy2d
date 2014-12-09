@@ -291,7 +291,7 @@ color_mul(uint32_t c1, uint32_t c2) {
 }
 
 static int
-draw_utf8(int unicode, int cx, int cy, int size, const struct srt *srt,
+draw_utf8(int unicode, float cx, int cy, int size, const struct srt *srt,
 	uint32_t color, const struct sprite_trans *arg, int edge) {
 	const struct dfont_rect * rect = dfont_lookup(Dfont, unicode, FONT_SIZE, edge);
 	if (rect == NULL) {
@@ -313,23 +313,55 @@ draw_utf8(int unicode, int cx, int cy, int size, const struct srt *srt,
 	return (rect->w-1) * size / FONT_SIZE ;
 }
 
-static const struct label_field*
-get_rich_field(const struct rich_text *rich, int idx) {
+static uint32_t
+get_rich_field_color(const struct rich_text *rich, int idx) {
   int i;
   for (i=0;i<rich->count;i++) {
     struct label_field *field = (struct label_field*)(rich->fields+i);
-    if (idx >= field->start && idx <= field->end) {
-      return field;
+    if (idx >= field->start && idx <= field->end && field->type	== RL_COLOR) {
+      return field->color;
     }
   }
-  return NULL;
+  return 0;
+}
+
+static bool
+get_rich_filed_lf(const struct rich_text *rich, int idx, float * offset) {
+	int i;
+	for (i=0; i<rich->count; i++) {
+		struct label_field *field = (struct label_field*)(rich->fields+i);
+		if (idx==field->start && idx==field->end && field->type==RL_LINEFEED) {
+			*offset = (float)(field->val / 1000.0);
+			return true;
+		}
+	}
+	return false;
+}
+
+static int
+unicode_len(const char chr) {
+	uint8_t c = (uint8_t)chr;
+	if ((c&0x80) == 0) {
+		return 1;
+	} else if ((c&0xe0) == 0xc0) {
+		return 2;
+	} else if ((c&0xf0) == 0xe0) {
+		return 3;
+	} else if ((c&0xf8) == 0xf0) {
+		return 4;
+	} else if ((c&0xfc) == 0xf8) {
+		return 5;
+	} else {
+		return 6;
+	}
 }
 
 static void
 draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg,
-          uint32_t color, int cy, int w, int start, int end, int *pre_char_cnt) {
+          uint32_t color, int cy, int w, int start, int end, int *pre_char_cnt, float space_scale) {
     const char *str = rich->text;
-    int cx, j;
+		float cx;
+    int j;
     int size = l->size;
     if (l->auto_scale != 0 && w > l->width)
     {
@@ -341,7 +373,7 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
 
     switch (l->align) {
         case LABEL_ALIGN_LEFT:
-            cx = 0;
+            cx = 0.0;
             break;
         case LABEL_ALIGN_RIGHT:
             cx = l->width - w;
@@ -354,39 +386,34 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
     int char_cnt = 0;
     for (j=start; j<end;) {
         int unicode;
-        uint8_t c = (uint8_t)str[j];
-    
         char_cnt++;
-        if ((c&0x80) == 0) {
-            unicode = get_unicode(str+j,1);
-            j+=1;
-        } else if ((c&0xe0) == 0xc0) {
-            unicode = get_unicode(str+j,2);
-            j+=2;
-        } else if ((c&0xf0) == 0xe0) {
-            unicode = get_unicode(str+j,3);
-            j+=3;
-        } else if ((c&0xf8) == 0xf0) {
-            unicode = get_unicode(str+j,4);
-            j+=4;
-        } else if ((c&0xfc) == 0xf8) {
-            unicode = get_unicode(str+j,5);
-            j+=5;
-        } else {
-            unicode = get_unicode(str+j,6);
-            j+=6;
-        }
-      
+			
+				int len = unicode_len(str[j]);
+				unicode = get_unicode(str+j, len);
+				j+=len;
+			
         if(unicode != '\n') {
-            const struct label_field *field = get_rich_field(rich, *pre_char_cnt+char_cnt);
-            int field_color = color;
-            if (field != NULL) {
-              field_color = color_mul(field->color,  color | 0xffffff);
-            }
-            cx+=draw_utf8(unicode, cx, cy, size, srt, field_color, arg, l->edge) + l->space_w;
+            uint32_t field_color = get_rich_field_color(rich, *pre_char_cnt+char_cnt);
+						if (field_color == 0) {
+							field_color = color;
+						} else {
+							field_color = color_mul(field_color,  color | 0xffffff);
+						}
+            cx+=(draw_utf8(unicode, cx, cy, size, srt, field_color, arg, l->edge) + l->space_w)*space_scale;
         }
     }
     *pre_char_cnt += char_cnt;
+}
+
+int
+label_char_size(struct pack_label* l, const char* chr, int* width, int* height, int* unicode) {
+	char utf8[7];
+	int len = unicode_len(chr[0]);
+	*unicode = copystr(utf8, chr, len);
+	struct font_context ct = char_size(*unicode, utf8, l->size, l->edge);
+	*width = ct.w + l->space_w;
+	*height = ct.h + l->space_h;
+	return len;
 }
 
 void
@@ -396,26 +423,9 @@ label_size(const char *str, struct pack_label * l, int* width, int* height) {
 	int w=0, max_w=0, h=0, max_h=0;
 	for (i=0; str[i];) {
 		int unicode;
-		uint8_t c = (uint8_t)str[i];
-		if ((c&0x80) == 0) {
-			unicode = copystr(utf8,str+i,1);
-			i+=1;
-		} else if ((c&0xe0) == 0xc0) {
-			unicode = copystr(utf8,str+i,2);
-			i+=2;
-		} else if ((c&0xf0) == 0xe0) {
-			unicode = copystr(utf8,str+i,3);
-			i+=3;
-		} else if ((c&0xf8) == 0xf0) {
-			unicode = copystr(utf8,str+i,4);
-			i+=4;
-		} else if ((c&0xfc) == 0xf8) {
-			unicode = copystr(utf8,str+i,5);
-			i+=5;
-		} else {
-			unicode = copystr(utf8,str+i,6);
-			i+=6;
-		}
+		int len = unicode_len(str[i]);
+		unicode = copystr(utf8, str+i, len);
+		i+=len;
 		struct font_context ct = char_size(unicode, utf8, l->size, l->edge);
 		w += ct.w + l->space_w;
 		if (h==0) {
@@ -460,42 +470,28 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 
 	char utf8[7];
 	int i;
-	int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0;
+	int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0, idx = 0;
 	for (i=0; str && str[i];) {
 		int unicode;
-		uint8_t c = (uint8_t)str[i];
-		if ((c&0x80) == 0) {
-			unicode = copystr(utf8,str+i,1);
-			i+=1;
-		} else if ((c&0xe0) == 0xc0) {
-			unicode = copystr(utf8,str+i,2);
-			i+=2;
-		} else if ((c&0xf0) == 0xe0) {
-			unicode = copystr(utf8,str+i,3);
-			i+=3;
-		} else if ((c&0xf8) == 0xf0) {
-			unicode = copystr(utf8,str+i,4);
-			i+=4;
-		} else if ((c&0xfc) == 0xf8) {
-			unicode = copystr(utf8,str+i,5);
-			i+=5;
-		} else {
-			unicode = copystr(utf8,str+i,6);
-			i+=6;
-		}
+		int len = unicode_len(str[i]);
+		unicode = copystr(utf8, str+i, len);
+		i+=len;
 		w += draw_size(unicode, utf8, l->size, l->edge) + l->space_w;
-        if (ch == 0) {
-            ch = draw_height(unicode, utf8, l->size, l->edge) + l->space_h;
-        }
-        
-        if((l->auto_scale == 0 && w > l->width) || unicode == '\n') {
-            draw_line(rich, l, srt, arg, color, cy, w, pre, i, &char_cnt);
-            cy += ch;
-            pre = i;
-            w = 0; ch = 0;
-        }
+		if (ch == 0) {
+				ch = draw_height(unicode, utf8, l->size, l->edge) + l->space_h;
+		}
+		
+		float space_scale=1.0;
+		uint32_t lf = get_rich_filed_lf(rich, idx, &space_scale);
+		if((l->auto_scale == 0 && lf) || unicode == '\n') {
+				draw_line(rich, l, srt, arg, color, cy, w, pre, i, &char_cnt, space_scale);
+				cy += ch;
+				pre = i;
+				w = 0; ch = 0;
+		}
+		idx++;
 	}
     
-	draw_line(rich, l, srt, arg, color, cy, w, pre, i, &char_cnt);
+	draw_line(rich, l, srt, arg, color, cy, w, pre, i, &char_cnt, 1.0);
 }
 
