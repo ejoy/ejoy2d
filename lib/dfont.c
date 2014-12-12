@@ -65,6 +65,33 @@ hash(int c, int font, int edge) {
 }
 #endif
 
+size_t
+dfont_size(int width, int height) {
+	int max_line = height / TINY_FONT;
+	int max_char = max_line * width / TINY_FONT;
+	size_t ssize = max_char * sizeof(struct hash_rect);
+	size_t lsize = max_line * sizeof(struct font_line);
+	return sizeof(struct dfont) + ssize + lsize;
+}
+
+void
+dfont_init(void* d, int width, int height) {
+	int max_line = height / TINY_FONT;
+	int max_char = max_line * width / TINY_FONT;
+	size_t ssize = max_char * sizeof(struct hash_rect);
+	
+	struct dfont *df = (struct dfont*)d;
+	
+	df->width = width;
+	df->height = height;
+	df->max_line = 0;
+	df->version = 0;
+	INIT_LIST_HEAD(&df->time);
+	df->freelist = (struct hash_rect *)(df+1);
+	df->line = (struct font_line *)((intptr_t)df->freelist + ssize);
+	init_hash(df, max_char);
+}
+
 struct dfont *
 dfont_create(int width, int height) {
 	int max_line = height / TINY_FONT;
