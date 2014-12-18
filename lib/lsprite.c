@@ -1386,6 +1386,14 @@ lnewmaterial(lua_State *L) {
 	return 2;	// return table, program
 }
 
+static struct dfont*
+get_dfont(lua_State *L) {
+	lua_getfield(L, 1, "__obj");
+	struct dfont *df = (struct dfont*)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	return df;
+}
+
 static int
 lnewdfont(lua_State *L) {
 	int width = luaL_checkinteger(L, 1);
@@ -1394,7 +1402,7 @@ lnewdfont(lua_State *L) {
 	int id = luaL_checkinteger(L, 4);
 	
 	lua_createtable(L, 0, 1);
-	size_t size = dfont_size(width, height);
+	size_t size = dfont_data_size(width, height);
 	void * d = lua_newuserdata(L, size);
 	dfont_init(d, width, height);
 	lua_setfield(L, -2, "__obj");
@@ -1413,10 +1421,27 @@ lnewdfont(lua_State *L) {
 }
 
 static int
-ldfont_lookup(lua_State *L) {
-	lua_getfield(L, 1, "__obj");
-	struct dfont *df = (struct dfont*)lua_touserdata(L, -1);
+ldeldfont(lua_State *L) {
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
+
+	lua_getfield(L, 1, "texture");
+	int tid = luaL_checkunsigned(L, -1);
 	lua_pop(L, 1);
+	
+	texture_unload(tid);
+	
+	return 0;
+}
+
+static int
+ldfont_lookup(lua_State *L) {
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
 	
 	int id = luaL_checkinteger(L, 2);
 	int rect_size = luaL_checkinteger(L, 3);
@@ -1435,10 +1460,25 @@ ldfont_lookup(lua_State *L) {
 }
 
 static int
+ldfont_remove(lua_State *L) {
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
+	
+	int id = luaL_checkinteger(L, 2);
+	int rect_size = luaL_checkinteger(L, 3);
+	dfont_remove(df, id, rect_size, 0);
+	
+	return 0;
+}
+
+static int
 ldfont_insert(lua_State *L) {
-	lua_getfield(L, 1, "__obj");
-	struct dfont *df = (struct dfont*)lua_touserdata(L, -1);
-	lua_pop(L, 1);
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
 	
 	lua_getfield(L, 1, "texture");
 	int tid = luaL_checkunsigned(L, -1);
@@ -1475,6 +1515,7 @@ ldfont_mothod(lua_State *L) {
 	luaL_Reg l[] = {
 		{"insert", ldfont_insert},
 		{"lookup", ldfont_lookup},
+		{"remove", ldfont_remove},
 		{NULL,NULL},
 	};
 	luaL_newlib(L, l);
@@ -1487,8 +1528,9 @@ ejoy2d_sprite(lua_State *L) {
 		{ "label", lnewlabel },
 		{ "proxy", lnewproxy },
 		{ "dfont", lnewdfont },
+		{ "delete_dfont", ldeldfont },
 		{ "new_material", lnewmaterial },
-        { "enable_visible_test", lenable_visible_test },
+		{ "enable_visible_test", lenable_visible_test },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
