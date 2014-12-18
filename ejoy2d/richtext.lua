@@ -71,7 +71,7 @@ local CTL_CODE_LINEFEED=2
 M.operates = {
 	yellow	={val=0xFFFFFF00,type="color"},
 	red			={val=0xFFFF0000,type="color"},
-	blue		={val=0xFF000003,type="color"},
+	blue		={val=0xFF0000FF,type="color"},
 	green		={val=0xFF00FF00,type="color"},
 	stop			={type=CTL_CODE_POP},
 	lf 			={type=CTL_CODE_LINEFEED},
@@ -283,7 +283,7 @@ function M:layout(label, txt, fields)
 					else
 						local scale = width * 1000 / (line_width - forward_len)
 						-- local scale = line_width * 1000 / (line_width - forward_len)
-						if scale <= 1250 then
+						if scale <= 1250 and scale > 0 then
 							extra_len = forward_len
 							line_width = line_width - extra_len
 							add_linefeed(fields, ((start+1) / gap)-1, scale)
