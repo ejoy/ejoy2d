@@ -566,6 +566,8 @@ bind_texture(struct render *R, struct texture * tex, int slice, GLenum *type, in
 		*type = GL_TEXTURE_2D;
 		*target = GL_TEXTURE_2D;
 	} else {
+        
+        
 		assert(tex->type == TEXTURE_CUBE);
 		*type = GL_TEXTURE_CUBE_MAP;
 		*target = GL_TEXTURE_CUBE_MAP_POSITIVE_X + slice;
@@ -752,8 +754,10 @@ render_target_create(struct render *R, int width, int height, enum TEXTURE_FORMA
 	RID tex = render_texture_create(R, width, height, format, TEXTURE_2D, 0);
 	if (tex == 0)
 		return 0;
+    
 	render_texture_update(R, tex, width, height, NULL, 0, 0);
 	RID rt = create_rt(R, tex);
+    
 	glBindFramebuffer(GL_FRAMEBUFFER, R->default_framebuffer);
 	R->last.target = 0;
 	R->changeflag |= CHANGE_TARGET;
@@ -761,6 +765,7 @@ render_target_create(struct render *R, int width, int height, enum TEXTURE_FORMA
 	if (rt == 0) {
 		render_release(R, TEXTURE, tex);
 	}
+
 	CHECK_GL_ERROR
 	return rt;
 }
@@ -777,7 +782,7 @@ render_target_texture(struct render *R, RID rt) {
 
 // render state
 
-static void
+void
 render_state_commit(struct render *R) {
 	if (R->changeflag & CHANGE_INDEXBUFFER) {
 		RID ib = R->current.indexbuffer;
@@ -813,6 +818,7 @@ render_state_commit(struct render *R) {
 				}
 			}
 		}
+        
 		CHECK_GL_ERROR
 	}
 
@@ -1029,3 +1035,4 @@ int
 render_version(struct render *R) {
 	return OPENGLES;
 }
+

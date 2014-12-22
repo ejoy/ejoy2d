@@ -151,5 +151,6 @@ void render_state_reset(struct render *R);
 
 void render_clear(struct render *R, enum CLEAR_MASK mask, unsigned long argb);
 void render_draw(struct render *R, enum DRAW_MODE mode, int fromidx, int ni);
+void render_state_commit(struct render *R);
 
 #endif

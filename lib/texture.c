@@ -126,8 +126,15 @@ texture_active_rt(int id) {
 	struct texture *tex = &POOL.tex[id];
 
 	render_set(R, TARGET, tex->fb, 0);
-
+    render_state_commit(R);
+    
 	return NULL;
+}
+
+void
+texture_deactive_rt() {
+    render_set(R, TARGET, 0, 0);
+    render_state_commit(R);
 }
 
 int

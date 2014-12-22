@@ -34,6 +34,20 @@ screen_init(float w, float h, float scale) {
 }
 
 void
+screen_set_viewport(float w, float h) {
+    if (R) {
+        render_setviewport(R, 0, 0, w, h);
+    }
+}
+
+void
+screen_get_info(int* w, int* h, float* scale) {
+    *w = SCREEN.width;
+    *h = SCREEN.height;
+    *scale = SCREEN.scale;
+}
+
+void
 screen_trans(float *x, float *y) {
 	*x *= SCREEN.invw;
 	*y *= SCREEN.invh;
