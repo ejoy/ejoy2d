@@ -9,6 +9,7 @@ local method = c.method
 local method_fetch = method.fetch
 local method_test = method.test
 local method_fetch_by_index = method.fetch_by_index
+local dfont_method = c.dfont_method
 local fetch
 local test
 
@@ -142,6 +143,21 @@ end
 function sprite.proxy()
 	local cobj = c.proxy()
 	return debug.setmetatable(cobj, sprite_meta)
+end
+
+local dfont_meta = {}
+
+function dfont_meta.__index(spr, key)
+	if dfont_method[key] then
+		return dfont_method[key]
+	else
+		error("Unsupport dfont get " ..  key)
+	end
+end
+
+function sprite.dfont(width, height, fmt, tid)
+	local cobj = c.dfont(width, height, fmt, tid)
+	return debug.setmetatable(cobj, dfont_meta)
 end
 
 return sprite
