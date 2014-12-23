@@ -4,6 +4,9 @@
 #include "shader.h"
 #include "particle.h"
 #include "material.h"
+#include "dfont.h"
+#include "render.h"
+#include "texture.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -14,6 +17,13 @@
 #define SRT_SY 4
 #define SRT_ROT 5
 #define SRT_SCALE 6
+
+static struct render *R = NULL;
+
+void
+lsprite_initrender(struct render* r) {
+	R = r;
+}
 
 static struct sprite *
 newlabel(lua_State *L, struct pack_label *label) {
@@ -1376,14 +1386,163 @@ lnewmaterial(lua_State *L) {
 	return 2;	// return table, program
 }
 
+static struct dfont*
+get_dfont(lua_State *L) {
+	lua_getfield(L, 1, "__obj");
+	struct dfont *df = (struct dfont*)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	return df;
+}
+
+static int
+lnewdfont(lua_State *L) {
+	int width = luaL_checkinteger(L, 1);
+	int height = luaL_checkinteger(L, 2);
+	int format = luaL_checkinteger(L, 3);
+	int id = luaL_checkinteger(L, 4);
+	
+	lua_createtable(L, 0, 1);
+	size_t size = dfont_data_size(width, height);
+	void * d = lua_newuserdata(L, size);
+	dfont_init(d, width, height);
+	lua_setfield(L, -2, "__obj");
+	
+	const char* err = texture_load(id, format, width, height, NULL, 0);
+	if (err) {
+		return luaL_error(L, err);
+	}
+	
+	RID tex = texture_glid(id);
+	render_texture_update(R, tex, width, height, NULL, 0, 0);
+	lua_pushinteger(L, id);
+	lua_setfield(L, -2, "texture");
+	
+	return 1;
+}
+
+static int
+ldeldfont(lua_State *L) {
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
+
+	lua_getfield(L, 1, "texture");
+	int tid = luaL_checkunsigned(L, -1);
+	lua_pop(L, 1);
+	
+	texture_unload(tid);
+	
+	return 0;
+}
+
+static int
+ldfont_flush(lua_State *L) {
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
+	
+	dfont_flush(df);
+	return 0;
+}
+
+static int
+ldfont_lookup(lua_State *L) {
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
+	
+	int id = luaL_checkinteger(L, 2);
+	int rect_size = luaL_checkinteger(L, 3);
+	
+	const struct dfont_rect * rect = dfont_lookup(df, id, rect_size, 0);
+	
+	if (rect) {
+		lua_pushinteger(L, rect->x);
+		lua_pushinteger(L, rect->y);
+		lua_pushinteger(L, rect->w);
+		lua_pushinteger(L, rect->h);
+		return 4;
+	} else {
+		return 0;
+	}
+}
+
+static int
+ldfont_remove(lua_State *L) {
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
+	
+	int id = luaL_checkinteger(L, 2);
+	int rect_size = luaL_checkinteger(L, 3);
+	dfont_remove(df, id, rect_size, 0);
+	
+	return 0;
+}
+
+static int
+ldfont_insert(lua_State *L) {
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
+	
+	lua_getfield(L, 1, "texture");
+	int tid = luaL_checkunsigned(L, -1);
+	lua_pop(L, 1);
+	RID tex = texture_glid(tid);
+	
+	int id = luaL_checkinteger(L, 2);
+	int rect_size = luaL_checkinteger(L, 3);
+	int w = luaL_checkinteger(L, 4);
+	int h = luaL_checkinteger(L, 5);
+	void* buff = lua_touserdata(L, 6);
+	
+	const struct dfont_rect * rect = dfont_lookup(df, id, rect_size, 0);
+	if (rect==NULL) {
+		rect = dfont_insert(df, id, rect_size, w, h, 0);
+		if (rect) {
+			render_texture_subupdate(R, tex, buff, rect->x, rect->y, rect->w, rect->h);
+		}
+	}
+	
+	if (rect) {
+		lua_pushinteger(L, rect->x);
+		lua_pushinteger(L, rect->y);
+		lua_pushinteger(L, rect->w);
+		lua_pushinteger(L, rect->h);
+		return 4;
+	} else {
+		return 0;
+	}
+}
+
+static void
+ldfont_mothod(lua_State *L) {
+	luaL_Reg l[] = {
+		{"insert", ldfont_insert},
+		{"lookup", ldfont_lookup},
+		{"remove", ldfont_remove},
+		{"flush", ldfont_flush},
+		{NULL,NULL},
+	};
+	luaL_newlib(L, l);
+}
+
 int
 ejoy2d_sprite(lua_State *L) {
 	luaL_Reg l[] ={
 		{ "new", lnew },
 		{ "label", lnewlabel },
 		{ "proxy", lnewproxy },
+		{ "dfont", lnewdfont },
+		{ "delete_dfont", ldeldfont },
 		{ "new_material", lnewmaterial },
-        { "enable_visible_test", lenable_visible_test },
+		{ "enable_visible_test", lenable_visible_test },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
@@ -1394,6 +1553,8 @@ ejoy2d_sprite(lua_State *L) {
 	lua_setfield(L, -2, "get");
 	lsetter(L);
 	lua_setfield(L, -2, "set");
+	ldfont_mothod(L);
+	lua_setfield(L, -2, "dfont_method");
 
 	return 1;
 }

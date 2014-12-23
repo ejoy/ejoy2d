@@ -65,13 +65,23 @@ hash(int c, int font, int edge) {
 }
 #endif
 
-struct dfont *
-dfont_create(int width, int height) {
+size_t
+dfont_data_size(int width, int height) {
 	int max_line = height / TINY_FONT;
 	int max_char = max_line * width / TINY_FONT;
 	size_t ssize = max_char * sizeof(struct hash_rect);
 	size_t lsize = max_line * sizeof(struct font_line);
-	struct dfont *df = (struct dfont *)malloc(sizeof(struct dfont) + ssize + lsize);
+	return sizeof(struct dfont) + ssize + lsize;
+}
+
+void
+dfont_init(void* d, int width, int height) {
+	int max_line = height / TINY_FONT;
+	int max_char = max_line * width / TINY_FONT;
+	size_t ssize = max_char * sizeof(struct hash_rect);
+	
+	struct dfont *df = (struct dfont*)d;
+	
 	df->width = width;
 	df->height = height;
 	df->max_line = 0;
@@ -80,8 +90,15 @@ dfont_create(int width, int height) {
 	df->freelist = (struct hash_rect *)(df+1);
 	df->line = (struct font_line *)((intptr_t)df->freelist + ssize);
 	init_hash(df, max_char);
+}
 
-	return df;
+struct dfont *
+dfont_create(int width, int height) {
+	size_t size = dfont_data_size(width, height);
+	void *df = malloc(size);
+	dfont_init(df, width, height);
+	
+	return (struct dfont*)df;
 }
 
 void
@@ -92,6 +109,20 @@ dfont_release(struct dfont *df) {
 void 
 dfont_flush(struct dfont *df) {
 	++df->version;
+}
+
+void
+dfont_remove(struct dfont *df, int c, int font, int edge) {
+	int h = hash(c, font, edge);
+	struct hash_rect *hr = df->hash[h];
+	while (hr) {
+		if (hr->c == c && hr->font == font) {
+			list_move(&hr->time, &df->time);
+			hr->version = df->version-1;
+			return;
+		}
+		hr = hr->next_hash;
+	}
 }
 
 const struct dfont_rect * 
