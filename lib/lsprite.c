@@ -1437,6 +1437,17 @@ ldeldfont(lua_State *L) {
 }
 
 static int
+ldfont_flush(lua_State *L) {
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
+	
+	dfont_flush(df);
+	return 0;
+}
+
+static int
 ldfont_lookup(lua_State *L) {
 	struct dfont *df = get_dfont(L);
 	if (!df) {
@@ -1516,6 +1527,7 @@ ldfont_mothod(lua_State *L) {
 		{"insert", ldfont_insert},
 		{"lookup", ldfont_lookup},
 		{"remove", ldfont_remove},
+		{"flush", ldfont_flush},
 		{NULL,NULL},
 	};
 	luaL_newlib(L, l);
