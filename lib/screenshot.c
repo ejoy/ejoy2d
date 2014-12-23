@@ -7,21 +7,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-static unsigned char*
-_get_screenshot_pixels(int x, int y, int w, int h) {
-	if (w <= 0 || h <= 0) {
-		return NULL;
+static void
+_get_screenshot_pixels(int x, int y, int w, int h, unsigned char *pixels) {
+	if (w <= 0 || h <= 0 || !pixels) {
+		return;
 	}
 
 	glFinish();
-
-	size_t size = w * h * 4;
-	GLubyte* pixels = (GLubyte*) malloc(size);
-	if (!pixels) {
-		return NULL;
-	}
 	glReadPixels(x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-	return pixels;
 }
 
 static void
@@ -72,25 +65,20 @@ _fill_sprite_with_texure(int tex_id, struct sprite* s, int w, int h) {
 }
 
 int
-screenshot(int x, int y, int w, int h, int tex_id, struct sprite* spr, unsigned char** ppixles) {
-	if (!ppixles || !spr)
+screenshot(int x, int y, int w, int h, int tex_id, struct sprite* spr, unsigned char* pixels) {
+	if (!pixels || !spr)
 		return -1;
 
-	unsigned char* pixels = _get_screenshot_pixels(x, y, w, h);
+	_get_screenshot_pixels(x, y, w, h, pixels);
 	texture_load(tex_id, TEXTURE_RGBA8, w, h, pixels, 0);
 	_fill_sprite_with_texure(tex_id, spr, w, h);
-	*ppixles = pixels;
 	return 0;
 }
 
 void
-release_screenshot(int tex_id, unsigned char* pixels) {
+release_screenshot(int tex_id) {
 	if (tex_id) {
 		texture_unload(tex_id);
-	}
-
-	if (pixels) {
-		free(pixels);
 	}
 }
 
