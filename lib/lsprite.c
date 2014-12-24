@@ -451,8 +451,10 @@ lsettext(lua_State *L) {
 	}
 	if (lua_isnoneornil(L, 2)) {
 		s->data.rich_text = NULL;
-		lua_pushnil(L);
-		lua_setuservalue(L, 1);
+
+		get_reftable(L, 1);
+		lua_pushnil(L);   //sprite, nil, uservalue, nil
+		lua_setfield(L, -2, "richtext");
 		return 0;
 	}
 /*  if (lua_isstring(L, 2)) {
@@ -529,21 +531,30 @@ lsettext(lua_State *L) {
 			((struct label_field*)(fields+i))->val = luaL_checkinteger(L, -1);
 		}
 		lua_pop(L, 1);
-		
+
 		//extend here
 
 		lua_pop(L, 1);
 	}
   lua_pop(L, 1);
 
-	lua_createtable(L,3,0);
+	get_reftable(L, 1);
+
+	lua_createtable(L,3,0); //sprite, table, userdata, userdata, uservalue, table
+
+	//userdata of rich_text
 	lua_pushvalue(L, 3);
 	lua_rawseti(L, -2, 1);
+
+	//userdata of fields
 	lua_pushvalue(L, 4);
 	lua_rawseti(L, -2, 2);
+
+	//string
 	lua_rawgeti(L, 2, 1);
 	lua_rawseti(L, -2, 3);
-	lua_setuservalue(L, 1);
+
+	lua_setfield(L, -2, "richtext");
 
 	s->data.rich_text = rich;
 	return 0;
@@ -642,6 +653,29 @@ lgetmaterial(lua_State *L) {
 	return 0;
 }
 
+/*
+static int
+lgetreftable(lua_State *L) {
+	//struct sprite *s = self(L);
+	get_reftable(L, 1);
+	return 1;
+}*/
+
+//static const char * ud_key = "user_data";
+static uint32_t ud_key = 0xFFFF;
+static int
+lgetusrdata(lua_State *L) {
+	get_reftable(L, 1);
+	lua_rawgetp(L, -1, &ud_key);
+	if (lua_isnoneornil(L, -1)) {
+		lua_newtable(L);
+		lua_pushvalue(L, -1);  //sprite, uservalue, nil, table, table
+		
+		lua_rawsetp(L, 2, &ud_key);
+	}
+	return 1;
+}
+
 static void
 lgetter(lua_State *L) {
 	luaL_Reg l[] = {
@@ -662,6 +696,8 @@ lgetter(lua_State *L) {
 		{"parent", lgetparent },
 		{"program", lgetprogram },
 		{"material", lgetmaterial },
+//		{"ref_table", lgetreftable },
+		{"usr_data", lgetusrdata },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
