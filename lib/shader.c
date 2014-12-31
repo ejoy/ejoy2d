@@ -57,6 +57,8 @@ struct render_state {
 
 static struct render_state *RS = NULL;
 
+void lsprite_initrender(struct render *r);
+
 void
 shader_init() {
 	if (RS) return;
@@ -78,6 +80,7 @@ shader_init() {
 	texture_initrender(rs->R);
 	screen_initrender(rs->R);
 	label_initrender(rs->R);
+	lsprite_initrender(rs->R);
 	renderbuffer_initrender(rs->R);
 
 	rs->current_program = -1;
@@ -163,6 +166,7 @@ shader_unload() {
 	texture_initrender(NULL);
 	screen_initrender(NULL);
 	label_initrender(NULL);
+	lsprite_initrender(NULL);
 	renderbuffer_initrender(NULL);
 
 	render_exit(R);
@@ -439,7 +443,7 @@ material_init(void *self, int size, int prog) {
 	struct program *p = &RS->program[prog];
 	assert(size >= rsz);
 	memset(self, 0, rsz);
-	struct material * m = self;
+	struct material * m = (struct material *)self;
 	m->p = p;
 	int i;
 	for (i=0;i<MAX_TEXTURE_CHANNEL;i++) {

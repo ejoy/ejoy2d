@@ -51,8 +51,8 @@ texture_reduce(enum TEXTURE_FORMAT type, int *width, int *height, void *buffer) 
 	if (type != TEXTURE_RGBA8) {
 		return;
 	}
-	uint32_t *src = buffer;
-	uint32_t *dst = buffer;
+	uint32_t *src = (uint32_t*)buffer;
+	uint32_t *dst = (uint32_t*)buffer;
 	int i,j;
 	for (i=0;i<h;i+=2) {
 		for (j=0;j<w;j+=2) {
