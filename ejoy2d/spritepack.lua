@@ -313,3 +313,4 @@ function spritepack.query( packname, name )
 end
 
 return spritepack
+
