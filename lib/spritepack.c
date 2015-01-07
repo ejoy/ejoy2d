@@ -2,7 +2,6 @@
 #include "matrix.h"
 #include "shader.h"
 #include "array.h"
-#include "texture.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -108,8 +107,25 @@ get_texid(struct import_stream *is, int texid) {
 	return is->pack->tex[texid];
 }
 
+static inline void
+cal_texture_coord(float invw, float invh, float x, float y, uint16_t *u, uint16_t *v) {
+    x *= invw;
+    y *= invh;
+    
+    if (x > 1.0f)
+        x = 1.0f;
+    if (y > 1.0f)
+        y = 1.0f;
+    
+    x *= 0xffff;
+    y *= 0xffff;
+    
+    *u = (uint16_t)x;
+    *v = (uint16_t)y;
+}
+
 static void
-import_picture(struct import_stream *is) {
+import_picture(struct import_stream *is, float invw, float invh) {
 	int n = import_byte(is);
 	struct pack_picture * pp = (struct pack_picture *)ialloc(is->alloc, SIZEOF_PICTURE + n * SIZEOF_QUAD);
 	pp->n = n;
@@ -122,7 +138,7 @@ import_picture(struct import_stream *is) {
 			float x = (float)import_word(is);
 			float y = (float)import_word(is);
 			// todo: check the return value
-			texture_coord(q->texid, x, y, &q->texture_coord[j], &q->texture_coord[j+1]);
+			cal_texture_coord(invw, invh, x, y, &q->texture_coord[j], &q->texture_coord[j+1]);
 		}
 		for (j=0;j<8;j++) {
 			q->screen_coord[j] = import_int32(is);
@@ -131,7 +147,7 @@ import_picture(struct import_stream *is) {
 }
 
 static void
-import_polygon(struct import_stream *is) {
+import_polygon(struct import_stream *is, float invw, float invh) {
 	int n = import_byte(is);
 	struct pack_polygon * pp = (struct pack_polygon *)ialloc(is->alloc, SIZEOF_POLYGON + n * SIZEOF_POLY);
 	pp->n = n;
@@ -147,7 +163,7 @@ import_polygon(struct import_stream *is) {
 			float x = (float)import_word(is);
 			float y = (float)import_word(is);
 			// todo: check the return value
-			texture_coord(p->texid, x, y, &p->texture_coord[j], &p->texture_coord[j+1]);
+			cal_texture_coord(invw, invh, x, y, &p->texture_coord[j], &p->texture_coord[j+1]);
 		}
 		for (j=0;j<p->n*2;j++) {
 			p->screen_coord[j] = import_int32(is);
@@ -274,7 +290,7 @@ import_pannel(struct import_stream *is) {
 }
 
 static void
-import_sprite(struct import_stream *is) {
+import_sprite(struct import_stream *is, float invw, float invh) {
 	int id = import_word(is);
 	if (id <0 || id >= is->pack->n) {
 		luaL_error(is->alloc->L, "Invalid stream : wrong id %d", id);
@@ -288,13 +304,13 @@ import_sprite(struct import_stream *is) {
 	is->pack->data[id] = is->alloc->buffer;
 	switch (type) {
 	case TYPE_PICTURE:
-		import_picture(is);
+		import_picture(is, invw, invh);
 		break;
 	case TYPE_ANIMATION:
 		import_animation(is);
 		break;
 	case TYPE_POLYGON:
-		import_polygon(is);
+		import_polygon(is, invw, invh);
 		break;
 	case TYPE_LABEL:
 		import_label(is);
@@ -322,6 +338,8 @@ static int
 limport(lua_State *L) {
 	int max_id = (int)luaL_checkinteger(L, 2);
 	int size = (int)luaL_checkinteger(L, 3);
+    float invw = (float)luaL_checknumber(L, 6);
+    float invh = (float)luaL_checknumber(L, 7);
 	int tex;
 	int tt = lua_type(L,1);
 	if (tt == LUA_TNIL) {
@@ -376,7 +394,7 @@ limport(lua_State *L) {
 	}
 
 	while (is.size != 0) {
-		import_sprite(&is);
+		import_sprite(&is, invw, invh);
 	}
 
 	return 1;
