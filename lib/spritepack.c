@@ -8,6 +8,9 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
+
+#include "texture.h"
 
 #define TAG_ID 1
 #define TAG_COLOR 2
@@ -138,7 +141,11 @@ import_picture(struct import_stream *is, float invw, float invh) {
 			float x = (float)import_word(is);
 			float y = (float)import_word(is);
 			// todo: check the return value
-			cal_texture_coord(invw, invh, x, y, &q->texture_coord[j], &q->texture_coord[j+1]);
+            int ret = texture_coord(q->texid, x, y, &q->texture_coord[j], &q->texture_coord[j+1]);
+            if (ret != 0) {
+                assert(invw > 0 && invh > 0);
+                cal_texture_coord(invw, invh, x, y, &q->texture_coord[j], &q->texture_coord[j+1]);
+            }
 		}
 		for (j=0;j<8;j++) {
 			q->screen_coord[j] = import_int32(is);
@@ -162,8 +169,11 @@ import_polygon(struct import_stream *is, float invw, float invh) {
 		for (j=0;j<p->n*2;j+=2) {
 			float x = (float)import_word(is);
 			float y = (float)import_word(is);
-			// todo: check the return value
-			cal_texture_coord(invw, invh, x, y, &p->texture_coord[j], &p->texture_coord[j+1]);
+            int ret = texture_coord(p->texid, x, y, &p->texture_coord[j], &p->texture_coord[j+1]);
+            if (ret != 0) {
+                assert(invw > 0 && invh > 0);
+                cal_texture_coord(invw, invh, x, y, &p->texture_coord[j], &p->texture_coord[j+1]);
+            }
 		}
 		for (j=0;j<p->n*2;j++) {
 			p->screen_coord[j] = import_int32(is);
@@ -338,8 +348,14 @@ static int
 limport(lua_State *L) {
 	int max_id = (int)luaL_checkinteger(L, 2);
 	int size = (int)luaL_checkinteger(L, 3);
-    float invw = (float)luaL_checknumber(L, 6);
-    float invh = (float)luaL_checknumber(L, 7);
+    
+    float invw = -1;
+    float invh = -1;
+    if (lua_isnumber(L, 6))
+        invw = (float)lua_tonumber(L, 6);
+    if (lua_isnumber(L, 7))
+        invh = (float)lua_tonumber(L, 7);
+    
 	int tex;
 	int tt = lua_type(L,1);
 	if (tt == LUA_TNIL) {
