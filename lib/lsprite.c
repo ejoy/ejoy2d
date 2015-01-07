@@ -1339,6 +1339,18 @@ lget_pic_tex_coord(lua_State *L) {
 	return 8;
 }
 
+static int
+lhas_action(lua_State *L) {
+    struct sprite * s = self(L);
+    if (s->type != TYPE_ANIMATION) {
+        return luaL_error(L, "Only anim has action info");
+    }
+    const char* act = luaL_checkstring(L, 2);
+    lua_pushinteger(L, sprite_has_action(s, act));
+    return 1;
+}
+
+
 static void
 lmethod(lua_State *L) {
 	luaL_Reg l[] = {
@@ -1372,6 +1384,7 @@ lmethod(lua_State *L) {
 		{ "anchor_particle", lset_anchor_particle },
 		{ "calc_matrix", lcalc_matrix },
 		{ "pic_tex_coord", lget_pic_tex_coord },
+        { "has_action", lhas_action },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);
@@ -1619,7 +1632,6 @@ ejoy2d_sprite(lua_State *L) {
         { "draw_label_only", ldraw_label_only },
         { "visible_test", lvisible_test },
         { "viewport_srt", lviewport_srt },
-		{ "enable_visible_test", lvisible_test },	// TODEL
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);

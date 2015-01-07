@@ -168,6 +168,22 @@ sprite_action(struct sprite *s, const char * action) {
 	}
 }
 
+int
+sprite_has_action(struct sprite *s, const char * action) {
+    if (s->type != TYPE_ANIMATION) {
+        return -1;
+    }
+    int i;
+    struct pack_animation *ani = s->s.ani;
+    for (i=0;i<ani->action_number;i++) {
+        const char *name = ani->action[i].name;
+        if (name && strcmp(name, action)==0) {
+            return s->total_frame;
+        }
+    }
+    return -1;
+}
+
 void
 sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	if (id < 0 || id >=	pack->n)
