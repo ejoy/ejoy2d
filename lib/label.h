@@ -10,6 +10,14 @@
 
 #define RL_COLOR 1
 #define RL_LINEFEED 2
+#define RL_SPRITE 3
+#define RL_SPACE 4
+#define MAX_LABEL_SPRITE_COUNT 16
+
+struct label_sprite {
+	struct sprite *s;
+	int w, h, mat;
+};
 
 struct label_field {
 	struct {
@@ -20,6 +28,7 @@ struct label_field {
 	union {
 		uint32_t color;
 		int val;
+		label_sprite *ls;
 	};
 };
 
@@ -27,7 +36,7 @@ struct rich_text {
 	int count;
 	int width;
 	int height;
-  const char *text;
+    const char *text;
 	struct label_field *fields;
 };
 
@@ -38,6 +47,7 @@ void label_unload();
 void label_flush();
 
 void label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg);
+void label_draw_sprite(const struct rich_text *rich, struct srt *srt, const struct sprite_trans *arg);
 void label_size(const char * str, struct pack_label * l, int* width, int* height);
 int label_char_size(struct pack_label* l, const char* chr, int* width, int* height, int* unicode);
 uint32_t label_get_color(struct pack_label * l, const struct sprite_trans *arg);

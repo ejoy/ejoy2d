@@ -1,4 +1,5 @@
 
+local ej = require "ejoy2d"
 
 --------------------helpers--------------------
 function string.char_len(str)
@@ -67,14 +68,16 @@ local gap = 4
 local CTL_CODE_POP=0
 local CTL_CODE_COLOR=1
 local CTL_CODE_LINEFEED=2
+local CLT_CODE_ANIM=3
 
 M.operates = {
-	yellow	={val=0xFFFFFF00,type="color"},
-	red			={val=0xFFFF0000,type="color"},
-	blue		={val=0xFF0000FF,type="color"},
-	green		={val=0xFF00FF00,type="color"},
-	stop			={type=CTL_CODE_POP},
-	lf 			={type=CTL_CODE_LINEFEED},
+	yellow      =   {val=0xFFFFFF00,type="color"},
+	red         =   {val=0xFFFF0000,type="color"},
+	blue        =   {val=0xFF0000FF,type="color"},
+	green       =   {val=0xFF00FF00,type="color"},
+	stop        =   {type=CTL_CODE_POP},
+	lf          =   {type=CTL_CODE_LINEFEED},
+    anim        =   {type=CLT_CODE_ANIM},
 }
 
 
@@ -91,6 +94,7 @@ function M.is_rich(txt)
 end
 
 function M:format(label, txt)
+    local sprite_fields = {}
 	local fields = {}
 	local tag_cnt = 0
 	for match in string.gmatch(txt, "(#%[%w+%])") do
@@ -103,21 +107,58 @@ function M:format(label, txt)
 	local s=1
 	local e=1
 	local pos_cnt = 0
-	for i=1, tag_cnt do
+    local i = 1
+    while i <= tag_cnt do
 		s, e = string.find(txt, "(#%[%w+%])")
 		local tag = string.sub(txt, s+2, e-1)
-		if not self.operates[tag] then
+        local operate = self.operates[tag]
+		if not operate then
 			txt = string.gsub(txt, "(#%[%w+%])", "", 1)
 		else
-			local pos = string.char_len(string.sub(txt, 1, s))
-			pos_cnt = pos_cnt+1
-			pos_pieces[pos_cnt] = pos
+            if operate.type == CLT_CODE_ANIM and i < tag_cnt then
+                local tmp_txt = string.gsub(txt, "(#%[%w+%])", "", 1)
+                local ts, te = string.find(tmp_txt, "(#%[%w+%])")
 
-			pos_cnt = pos_cnt+1
-			pos_pieces[pos_cnt] = tag
+                local anim_txt = string.sub(tmp_txt, s, ts - 1)
+                local sprite_field = {}
+                string.gsub(anim_txt, "%w+", function(pattern)
+                    table.insert(sprite_field, pattern) end)
 
-			txt = string.gsub(txt, "(#%[%w+%])", "", 1)
+                local len = #sprite_field
+                local space = 0
+                if len >= 2 then
+                    local pack = sprite_field[1]
+                    for index = 2, len do
+                        local name = sprite_field[index]
+                        local sprite = ej.sprite(pack, name)
+                        local field= {
+                            s - 1, 0,
+                            CLT_CODE_ANIM,
+                            sprite,
+                        }
+                        local aabb = {sprite:aabb()}
+                        local w = math.abs(aabb[3] - aabb[1])
+                        local h = math.abs(aabb[4] - aabb[2])
+                        space = math.max(space, h)
+
+                        table.insert(fields, field)
+                        table.insert(sprite_fields, {field, w, h})
+                    end
+                end
+
+                txt = string.sub(tmp_txt, 1, s - 1) .. string.sub(tmp_txt, ts)
+            else
+                local pos = string.char_len(string.sub(txt, 1, s))
+                pos_cnt = pos_cnt+1
+                pos_pieces[pos_cnt] = pos
+
+                pos_cnt = pos_cnt+1
+                pos_pieces[pos_cnt] = tag
+
+                txt = string.gsub(txt, "(#%[%w+%])", "", 1)
+            end
 		end
+        i = i + 1
 	end
 
 	local count = pos_cnt / 2
@@ -157,12 +198,13 @@ function M:format(label, txt)
 		end
 	end
 
-	return self:_post_format(label, txt, fields)
+	return self:_post_format(label, txt, fields, sprite_fields)
 end
 
-function M:_post_format(label, txt, fields)
-	local w, h = self:layout(label, txt, fields)
-	return {txt, fields, w, h}
+function M:_post_format(label, txt, fields, sprite_fields)
+	local w, h = self:layout(label, txt, fields, sprite_fields)
+    local sprite_count = sprite_fields and #sprite_fields or 0
+	return {txt, fields, w, h, sprite_count}
 end
 
 function M:_locate_alnum(sizes, anchor)
@@ -212,7 +254,7 @@ local function char_unicode(idx)
 	return char_sizes[idx+3]
 end
 
-function M:layout(label, txt, fields)
+function M:layout(label, txt, fields, sprite_fields)
 	-- print(txt)
 	--{label_width, label_height, char_width_1, char_width_1, unicode_len_1, unicode_1...}
 	local size_cnt = label:char_size(char_sizes, txt)
@@ -221,10 +263,32 @@ function M:layout(label, txt, fields)
 
 	local line_width = 0
 	local char_idx = 1
+    local pre_char_idx = 0
 	local ignore_next, extra_len = 0, 0
 	local max_width, max_height, line_max_height=0, 0, 0
 	for i=3, size_cnt, gap do
 		local idx = i
+        local anim_height = 0
+
+        pre_char_idx = char_idx
+		char_idx = char_idx + char_unicode_len(idx)
+
+        if sprite_fields then
+            for _, sprite_field in ipairs(sprite_fields) do
+                local field = sprite_field[1]
+                local w = sprite_field[2]
+                local h = sprite_field[3]
+
+                if field[1] >= pre_char_idx and field[1] < char_idx then
+                    -- local sprite = field[4]
+                    -- local ps_height = max_height > 0 and max_height or 0
+                    -- sprite:ps(line_width + w, ps_height)
+                    line_width = line_width + w
+                    anim_height = math.max(anim_height, h)
+                end
+            end
+        end
+
 		if ignore_next == 0 then
 			line_width = line_width + char_width(idx)
 		else
@@ -234,14 +298,15 @@ function M:layout(label, txt, fields)
 			line_width = line_width + extra_len
 			extra_len=0
 		end
+
+        local cur_height = math.max(anim_height, char_height(idx))
 		--reset if \n
 		if char_unicode(idx) == 10 then
-			max_height = max_height + char_height(idx)
+			max_height = max_height + cur_height
 			line_width = 0
 		end
 
-		line_max_height = char_height(idx) > line_max_height and char_height(idx) or line_max_height
-		char_idx = char_idx + char_unicode_len(idx)
+		line_max_height = cur_height > line_max_height and cur_height or line_max_height
 
 		if line_width >= width then
 			--line width equalization
@@ -281,15 +346,17 @@ function M:layout(label, txt, fields)
 						add_linefeed(fields, pos+1, scale)
 						-- print("shrink:", scale)
 					else
-						local scale = width * 1000 / (line_width - forward_len)
-						-- local scale = line_width * 1000 / (line_width - forward_len)
-						if scale <= 1250 and scale > 0 then
-							extra_len = forward_len
-							line_width = line_width - extra_len
-							add_linefeed(fields, ((start+1) / gap)-1, scale)
-						else
-							add_linefeed(fields, pos)
-						end
+                        -- FIXME:
+                        -- local scale = width * 1000 / (line_width - forward_len)
+                        -- -- local scale = line_width * 1000 / (line_width - forward_len)
+                        -- if scale <= 1250 and scale > 0 then
+                        --     extra_len = forward_len
+                        --     line_width = line_width - extra_len
+                        --     add_linefeed(fields, ((start+1) / gap)-1, scale)
+                        -- else
+                        --     add_linefeed(fields, pos)
+                        -- end
+                        add_linefeed(fields, pos)
 						-- print("extend:", scale)
 					end
 				end

@@ -452,8 +452,8 @@ drawparticle(struct sprite *s, struct particle_system *ps, struct pack_picture *
 	s->t.color = old_c;
 }
 
-static int
-draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct material * material) {
+int
+sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct material * material) {
 	struct sprite_trans temp;
 	struct matrix temp_matrix;
 	struct sprite_trans *t = sprite_trans_mul(&s->t, ts, &temp, &temp_matrix);
@@ -471,6 +471,9 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct m
 		return 0;
 	case TYPE_LABEL:
 		if (s->data.rich_text) {
+            switch_program(t, PROGRAM_PICTURE, material);
+            label_draw_sprite(s->data.rich_text, srt, t);
+
 			t->program = PROGRAM_DEFAULT;	// label never set user defined program
 			switch_program(t, s->s.label->edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT, material);
 			label_draw(s->data.rich_text, s->s.label, srt, t);
@@ -513,7 +516,7 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct m
 		struct sprite_trans temp2;
 		struct matrix temp_matrix2;
 		struct sprite_trans *ct = sprite_trans_mul(&pp->t, t, &temp2, &temp_matrix2);
-		scissor += draw_child(child, srt, ct, material);
+		scissor += sprite_draw_child(child, srt, ct, material);
 	}
 	for (i=0;i<scissor;i++) {
 		scissor_pop();
@@ -541,7 +544,7 @@ sprite_child_visible(struct sprite *s, const char * childname) {
 void
 sprite_draw(struct sprite *s, struct srt *srt) {
 	if (s->visible) {
-		draw_child(s, srt, NULL, NULL);
+		sprite_draw_child(s, srt, NULL, NULL);
 	}
 }
 
@@ -553,7 +556,7 @@ sprite_draw_as_child(struct sprite *s, struct srt *srt, struct matrix *mat, uint
 		st.color = color;
 		st.additive = 0;
 		st.program = PROGRAM_DEFAULT;
-		draw_child(s, srt, &st, NULL);
+		sprite_draw_child(s, srt, &st, NULL);
 	}
 }
 
