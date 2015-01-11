@@ -410,7 +410,9 @@ set_label_sprite_mat(const struct rich_text *rich, int istart, int iend, float *
 
 				int *mat = m->m;
 				mat[4] = (*cx + ls->w / 2) * SCREEN_SCALE;
-				mat[5] = (*cy - ls->h / 4) * SCREEN_SCALE;
+				mat[5] = (*cy) * SCREEN_SCALE;
+
+                ls->mat = 1;
 			}
 
 			*cx += ls->w;
@@ -468,6 +470,8 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
         cx = 0.0;
     }
 
+	set_label_sprite_mat(rich, -1, -1, &cx, &cy);
+
     int char_cnt = 0;
     for (j=start; j<end;) {
         int unicode;
@@ -489,9 +493,6 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
 
 			set_label_sprite_mat(rich, j - len, j - 1, &cx, &cy);
         }
-    }
-    if (start==0 && end==0) {
-		set_label_sprite_mat(rich, -1, -1, &cx, &cy);
     }
 
     *pre_char_cnt += char_cnt;
@@ -577,6 +578,8 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 	int i;
 	int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0, idx = 0, ls = 0, sw = 0;
 
+	pre_draw_label_sprite(rich, -1, -1, &sw, &ls);
+
 	for (i=0; str && str[i];) {
 		int unicode;
 		int len = unicode_len(str[i]);
@@ -604,9 +607,6 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 		idx++;
 	}
     
-    if (i == 0) {
-		pre_draw_label_sprite(rich, -1, -1, &sw, &ls);
-    }
 
     if (ls > ch) {
         cy += (ls - ch);

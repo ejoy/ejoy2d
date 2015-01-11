@@ -266,25 +266,40 @@ function M:layout(label, txt, fields, sprite_fields)
     local pre_char_idx = 0
 	local ignore_next, extra_len = 0, 0
 	local max_width, max_height, line_max_height=0, 0, 0
-	for i=3, size_cnt, gap do
+    local need_inc = true
+    local sprite_field_index = 1
+
+    local i = 3
+    while i <= size_cnt do
 		local idx = i
         local anim_height = 0
 
-        pre_char_idx = char_idx
-		char_idx = char_idx + char_unicode_len(idx)
+        if need_inc then
+            pre_char_idx = char_idx
+            char_idx = char_idx + char_unicode_len(idx)
+        end
+
+        need_inc = true
 
         if sprite_fields then
-            for _, sprite_field in ipairs(sprite_fields) do
+            while sprite_field_index <= #sprite_fields do
+                local sprite_field = sprite_fields[sprite_field_index]
+
                 local field = sprite_field[1]
                 local w = sprite_field[2]
                 local h = sprite_field[3]
 
-                if field[1] >= pre_char_idx and field[1] < char_idx then
-                    -- local sprite = field[4]
-                    -- local ps_height = max_height > 0 and max_height or 0
-                    -- sprite:ps(line_width + w, ps_height)
+                if field[1] > pre_char_idx and field[1] <= char_idx then
                     line_width = line_width + w
                     anim_height = math.max(anim_height, h)
+                    sprite_field_index = sprite_field_index + 1
+
+                    if line_width >= width then
+                        need_inc = false
+                        break
+                    end
+                else
+                    break
                 end
             end
         end
@@ -346,7 +361,7 @@ function M:layout(label, txt, fields, sprite_fields)
 						add_linefeed(fields, pos+1, scale)
 						-- print("shrink:", scale)
 					else
-                        -- FIXME:
+                        -- NOTE:
                         -- local scale = width * 1000 / (line_width - forward_len)
                         -- -- local scale = line_width * 1000 / (line_width - forward_len)
                         -- if scale <= 1250 and scale > 0 then
@@ -365,6 +380,10 @@ function M:layout(label, txt, fields, sprite_fields)
 			end
 			line_width = 0
 		end
+
+        if need_inc then
+            i = i + gap
+        end
 	end
 	if line_width < width and line_width > 0 then
 		max_height = max_height + line_max_height
