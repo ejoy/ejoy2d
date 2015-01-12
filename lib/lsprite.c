@@ -475,7 +475,7 @@ lsettext(lua_State *L) {
   }*/
 
   s->data.rich_text = NULL;
-  if (!lua_istable(L, 2) || lua_rawlen(L, 2) != 4) {
+  if (!lua_istable(L, 2) || lua_rawlen(L, 2) != 5) {
     return luaL_error(L, "rich text must has a table with two items");
   }
 
@@ -490,7 +490,7 @@ lsettext(lua_State *L) {
 	struct rich_text *rich = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
 
 	rich->text = txt;
-  rich->count = cnt;
+    rich->count = cnt;
 	lua_rawgeti(L, 2, 3);
 	rich->width = luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
@@ -498,13 +498,19 @@ lsettext(lua_State *L) {
 	lua_rawgeti(L, 2, 4);
 	rich->height = luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
-	
+
+	lua_rawgeti(L, 2, 5);
+	int sprite_count = luaL_checkinteger(L, -1);
+	lua_pop(L, 1);
+
+	lua_createtable(L, 3 + sprite_count * 2, 0); //sprite, table, userdata, table
+
 	int size = cnt * sizeof(struct label_field);
-	rich->fields = (struct label_field*)lua_newuserdata(L, size);
+	rich->fields = (struct label_field*)lua_newuserdata(L, size); // sprite, table, userdata, table, userdata
 
 	struct label_field *fields = rich->fields;
-	int i;
-  lua_rawgeti(L, 2, 2);
+	int i, sc = 0;
+    lua_rawgeti(L, 2, 2);
 	for (i=0; i<cnt; i++) {
 		lua_rawgeti(L, -1, i+1);
 		if (!lua_istable(L,-1)) {
@@ -515,9 +521,9 @@ lsettext(lua_State *L) {
 		((struct label_field*)(fields+i))->start = luaL_checkunsigned(L, -1);
 		lua_pop(L, 1);
 
-    lua_rawgeti(L, -1, 2);  //end
+		lua_rawgeti(L, -1, 2);  //end
 		((struct label_field*)(fields+i))->end = luaL_checkunsigned(L, -1);
-    lua_pop(L, 1);
+		lua_pop(L, 1);
 
 		lua_rawgeti(L, -1, 3);  //type
 		uint32_t type = luaL_checkunsigned(L, -1);
@@ -527,7 +533,28 @@ lsettext(lua_State *L) {
 		lua_rawgeti(L, -1, 4); //val
 		if (type == RL_COLOR) {
 			((struct label_field*)(fields+i))->color = luaL_checkunsigned(L, -1);
-		} else {
+		} else if (type == RL_SPRITE) {
+			if (sc >= sprite_count) {
+				return luaL_error(L, "rich text sprite count error %d %d", sprite_count, sc);
+			}
+
+			struct sprite *s = (struct sprite *)lua_touserdata(L, -1);
+			lua_pushvalue(L, -1);
+			lua_rawseti(L, 4, sc * 2 + 1);
+
+			struct label_sprite *ls = (struct label_sprite *)lua_newuserdata(L, sizeof(struct label_sprite));
+			ls->w = 0; ls->h = 0; ls->mat = 0;
+			ls->s = s;
+
+			lua_pushvalue(L, -1);
+			lua_rawseti(L, 4, sc * 2 + 2);
+
+			lua_pop(L, 1);
+
+			((struct label_field*)(fields+i))->ls = ls;
+
+			sc++;
+        } else {
 			((struct label_field*)(fields+i))->val = luaL_checkinteger(L, -1);
 		}
 		lua_pop(L, 1);
@@ -536,24 +563,29 @@ lsettext(lua_State *L) {
 
 		lua_pop(L, 1);
 	}
-  lua_pop(L, 1);
+   lua_pop(L, 1);
 
-	get_reftable(L, 1);
+   if (sprite_count != sc) {
+	   return luaL_error(L, "rich text sprite count error %d %d", sprite_count, sc);
+   }
+   rich->sprite_count = sc;
 
-	lua_createtable(L,3,0); //sprite, table, userdata, userdata, uservalue, table
+	get_reftable(L, 1); // sprite, table, userdata, table, userdata, table
 
+	int count = sc * 2;
 	//userdata of rich_text
 	lua_pushvalue(L, 3);
-	lua_rawseti(L, -2, 1);
+	lua_rawseti(L, 4, count + 1);
 
 	//userdata of fields
-	lua_pushvalue(L, 4);
-	lua_rawseti(L, -2, 2);
+	lua_pushvalue(L, 5);
+	lua_rawseti(L, 4, count + 2);
 
 	//string
 	lua_rawgeti(L, 2, 1);
-	lua_rawseti(L, -2, 3);
+	lua_rawseti(L, 4, count + 3);
 
+	lua_pushvalue(L, 4);
 	lua_setfield(L, -2, "richtext");
 
 	s->data.rich_text = rich;
@@ -1494,7 +1526,7 @@ lnewdfont(lua_State *L) {
 	dfont_init(d, width, height);
 	lua_setfield(L, -2, "__obj");
 	
-	const char* err = texture_load(id, format, width, height, NULL, 0);
+	const char* err = texture_load(id, (enum TEXTURE_FORMAT)format, width, height, NULL, 0);
 	if (err) {
 		return luaL_error(L, err);
 	}

@@ -5,17 +5,20 @@
 #include "spritepack.h"
 #include "screen.h"
 #include "array.h"
+#include "sprite.h"
 
 #include "render.h"
 
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 #define TEX_HEIGHT 1024
 #define TEX_WIDTH 1024
 #define FONT_SIZE 31
 #define TEX_FMT TEXTURE_A8
+#define ESC 27
 
 static RID Tex;
 static struct dfont * Dfont = NULL;
@@ -338,6 +341,76 @@ get_rich_filed_lf(const struct rich_text *rich, int idx, float * offset) {
 	return false;
 }
 
+static struct label_sprite *
+get_rich_field_sprite(const struct rich_text *rich, int start) {
+    int i;
+    for (i=0; i<rich->count; i++) {
+        struct label_field *field = (struct label_field*)(rich->fields+i);
+        if (field->type==RL_SPRITE && field->start == start) {
+            return field->ls;
+        }
+    }
+
+    return NULL;
+}
+
+static void
+set_label_sprite_aabb(struct label_sprite *ls) {
+	struct sprite *s = ls->s;
+
+	int aabb[4];
+	sprite_aabb(s, NULL, false, aabb);
+	ls->w = aabb[2] - aabb[0];
+	ls->h = aabb[3] - aabb[1];
+}
+
+static void
+pre_draw_label_sprite(const struct rich_text *rich, int start, int *sw, int *ls) {
+	struct label_sprite *lsprite = get_rich_field_sprite(rich, start);
+    if (!lsprite) { 
+        return ;
+    }
+
+    if (lsprite->w == 0 && lsprite->h == 0) {
+        set_label_sprite_aabb(lsprite);
+    }
+
+    *sw += lsprite->w;
+
+    if (lsprite->h > *ls) {
+        *ls = lsprite->h;
+    }
+}
+
+static void
+set_label_sprite_mat(const struct rich_text *rich, int start, float *cx, int *cy) {
+	struct label_sprite *ls = get_rich_field_sprite(rich, start);
+    if (!ls) {
+        return ;
+    }
+
+    if (ls->w == 0 && ls->h == 0) {
+        set_label_sprite_aabb(ls);
+    }
+
+    struct sprite *s = ls->s;
+    if (ls->mat== 0) {
+        struct matrix *m = &s->mat;
+        if (s->t.mat == NULL) {
+            matrix_identity(m);
+            s->t.mat = m;
+        }
+
+        int *mat = m->m;
+        mat[4] = (*cx + ls->w / 2) * SCREEN_SCALE;
+        mat[5] = (*cy - ls->h / 4) * SCREEN_SCALE;
+
+        ls->mat = 1;
+    }
+
+    *cx += ls->w;
+}
+
 static int
 unicode_len(const char chr) {
 	uint8_t c = (uint8_t)chr;
@@ -358,7 +431,7 @@ unicode_len(const char chr) {
 
 static void
 draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg,
-          uint32_t color, int cy, int w, int start, int end, int *pre_char_cnt, float space_scale) {
+          uint32_t color, int cy, int w, int sw, int start, int end, int *pre_char_cnt, float space_scale) {
     const char *str = rich->text;
 		float cx;
     int j;
@@ -382,28 +455,39 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
             cx = (l->width - w)/2;
             break;
     }
-  
+
+    cx = cx - sw;
+    if (cx < 0.0) {
+        cx = 0.0;
+    }
+
     int char_cnt = 0;
     for (j=start; j<end;) {
         int unicode;
         char_cnt++;
 			
-				int len = unicode_len(str[j]);
-				unicode = get_unicode(str+j, len);
-				j+=len;
+        int len = unicode_len(str[j]);
+        unicode = get_unicode(str+j, len);
+        j+=len;
 			
         if(unicode != '\n') {
-            uint32_t field_color = get_rich_field_color(rich, *pre_char_cnt+char_cnt);
-						if (field_color == 0) {
-							field_color = color;
-						} else {
-							field_color = color_mul(field_color,  color | 0xffffff);
-						}
-            cx+=(draw_utf8(unicode, cx, cy, size, srt, field_color, arg, l->edge) + l->space_w)*space_scale;
+            if (unicode != ESC) {
+                uint32_t field_color = get_rich_field_color(rich, *pre_char_cnt+char_cnt);
+                if (field_color == 0) {
+                    field_color = color;
+                } else {
+                    field_color = color_mul(field_color,  color | 0xffffff);
+                }
+                cx+=(draw_utf8(unicode, cx, cy, size, srt, field_color, arg, l->edge) + l->space_w)*space_scale;
+            }
+
+			set_label_sprite_mat(rich, j - len, &cx, &cy);
         }
     }
+
     *pre_char_cnt += char_cnt;
 }
+
 
 int
 label_char_size(struct pack_label* l, const char* chr, int* width, int* height, int* unicode) {
@@ -462,6 +546,18 @@ label_get_color(struct pack_label * l, const struct sprite_trans *arg) {
     return color;
 }
 
+
+void
+label_draw_sprite(const struct rich_text *rich, struct srt *srt, const struct sprite_trans *arg) {
+    int i;
+    for (i = 0; i < rich->count; i++) {
+        struct label_field *field = (struct label_field *)(rich->fields+i);
+        if (field->type==RL_SPRITE) {
+            sprite_draw_child(field->ls->s, srt, (struct sprite_trans *)arg, NULL);
+        }
+    }
+}
+
 void
 label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg) {
 	shader_texture(Tex, 0);
@@ -470,28 +566,42 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 
 	char utf8[7];
 	int i;
-	int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0, idx = 0;
+	int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0, idx = 0, ls = 0, sw = 0;
+
 	for (i=0; str && str[i];) {
 		int unicode;
 		int len = unicode_len(str[i]);
 		unicode = copystr(utf8, str+i, len);
 		i+=len;
-		w += draw_size(unicode, utf8, l->size, l->edge) + l->space_w;
-		if (ch == 0) {
-				ch = draw_height(unicode, utf8, l->size, l->edge) + l->space_h;
-		}
+        if (unicode != ESC) {
+            w += draw_size(unicode, utf8, l->size, l->edge) + l->space_w;
+            if (ch == 0) {
+                ch = draw_height(unicode, utf8, l->size, l->edge) + l->space_h;
+            }
+        }
 		
+		pre_draw_label_sprite(rich, i - len, &sw, &ls);
+
 		float space_scale=1.0;
 		uint32_t lf = get_rich_filed_lf(rich, idx, &space_scale);
+
 		if((l->auto_scale == 0 && lf) || unicode == '\n') {
-				draw_line(rich, l, srt, arg, color, cy, w, pre, i, &char_cnt, space_scale);
-				cy += ch;
-				pre = i;
-				w = 0; ch = 0;
+            if (ls > ch) {
+                cy += (ls - ch);
+            }
+            draw_line(rich, l, srt, arg, color, cy, w, sw, pre, i, &char_cnt, space_scale);
+            cy += ch;
+            pre = i;
+            w = 0; ch = 0; ls = 0; sw = 0;
 		}
 		idx++;
 	}
     
-	draw_line(rich, l, srt, arg, color, cy, w, pre, i, &char_cnt, 1.0);
+
+    if (ls > ch) {
+        cy += (ls - ch);
+    }
+	draw_line(rich, l, srt, arg, color, cy, w, sw, pre, i, &char_cnt, 1.0);
 }
+
 

@@ -49,6 +49,7 @@ struct sprite {
 struct sprite_trans * sprite_trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_trans *t, struct matrix *tmp_matrix);
 void sprite_drawquad(struct pack_picture *picture, const struct srt *srt, const struct sprite_trans *arg);
 void sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg);
+int sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct material * material);
 
 // sprite_size must be call before sprite_init
 int sprite_size(struct sprite_pack *pack, int id);
