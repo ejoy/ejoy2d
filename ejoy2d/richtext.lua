@@ -128,7 +128,7 @@ function M:format(label, txt)
 
                 local anim_txt = string.sub(tmp_txt, s, ts - 1)
                 local sprite_field = {}
-                string.gsub(anim_txt, "%w+", function(pattern)
+                string.gsub(anim_txt, "[%w_]+", function(pattern)
                     table.insert(sprite_field, pattern) end)
 
                 local len = #sprite_field
