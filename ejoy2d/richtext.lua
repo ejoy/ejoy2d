@@ -1,6 +1,9 @@
 
 local ej = require "ejoy2d"
 
+local ESC_CODE = 27
+local ESC = string.char(ESC_CODE)
+
 --------------------helpers--------------------
 function string.char_len(str)
   local _, len = string.gsub(str, "[^\128-\193]", "")
@@ -9,6 +12,10 @@ end
 
 function string.plain_format(str)
   return string.gsub(str, "(#%[%w+%])", "")
+end
+
+function is_esc(unicode)
+    return unicode == ESC_CODE
 end
 
 local function is_ASCII_DBC_punct(unicode)
@@ -126,13 +133,15 @@ function M:format(label, txt)
 
                 local len = #sprite_field
                 local space = 0
+                local esc_string = ""
+
                 if len >= 2 then
                     local pack = sprite_field[1]
                     for index = 2, len do
                         local name = sprite_field[index]
                         local sprite = ej.sprite(pack, name)
                         local field= {
-                            s - 1, 0,
+                            s - 1 + (index - 2), 0,
                             CLT_CODE_ANIM,
                             sprite,
                         }
@@ -144,9 +153,11 @@ function M:format(label, txt)
                         table.insert(fields, field)
                         table.insert(sprite_fields, {field, w, h})
                     end
+
+                    esc_string = string.rep(ESC, len - 1)
                 end
 
-                txt = string.sub(tmp_txt, 1, s - 1) .. string.sub(tmp_txt, ts)
+                txt = string.format("%s%s%s", string.sub(tmp_txt, 1, s - 1), esc_string, string.sub(tmp_txt, ts))
             else
                 local pos = string.char_len(string.sub(txt, 1, s))
                 pos_cnt = pos_cnt+1
@@ -266,46 +277,37 @@ function M:layout(label, txt, fields, sprite_fields)
     local pre_char_idx = 0
 	local ignore_next, extra_len = 0, 0
 	local max_width, max_height, line_max_height=0, 0, 0
-    local need_inc = true
     local sprite_field_index = 1
 
     local i = 3
-    while i <= size_cnt do
+    for i = 3, size_cnt, gap do
 		local idx = i
         local anim_height = 0
+        local is_char_esc = is_esc(char_unicode(idx))
 
-        if need_inc then
-            pre_char_idx = char_idx
-            char_idx = char_idx + char_unicode_len(idx)
-        end
-
-        need_inc = true
+        pre_char_idx = char_idx
+        char_idx = char_idx + char_unicode_len(idx)
 
         if sprite_fields then
-            while sprite_field_index <= #sprite_fields do
+            if sprite_field_index <= #sprite_fields then
                 local sprite_field = sprite_fields[sprite_field_index]
 
                 local field = sprite_field[1]
                 local w = sprite_field[2]
                 local h = sprite_field[3]
 
-                if field[1] > pre_char_idx and field[1] <= char_idx then
+                if field[1] == pre_char_idx - 1 then
                     line_width = line_width + w
                     anim_height = math.max(anim_height, h)
                     sprite_field_index = sprite_field_index + 1
-
-                    if line_width >= width then
-                        need_inc = false
-                        break
-                    end
-                else
-                    break
                 end
             end
         end
 
 		if ignore_next == 0 then
-			line_width = line_width + char_width(idx)
+            if not is_char_esc then
+                line_width = line_width + char_width(idx)
+            end
 		else
 			ignore_next = ignore_next-1
 		end
@@ -314,7 +316,13 @@ function M:layout(label, txt, fields, sprite_fields)
 			extra_len=0
 		end
 
-        local cur_height = math.max(anim_height, char_height(idx))
+        local cur_height
+        if is_char_esc then
+            cur_height = 0
+        else
+            cur_height = math.max(anim_height, char_height(idx))
+        end
+
 		--reset if \n
 		if char_unicode(idx) == 10 then
 			max_height = max_height + cur_height
@@ -338,7 +346,7 @@ function M:layout(label, txt, fields, sprite_fields)
 			max_height = max_height + line_max_height
 			line_max_height = 0
 
-			local pos = (idx+1) / gap
+            local pos = (idx+1) / gap
 			local next_unicode = char_unicode(idx+gap)
 			--make sure punctation does not stand at line head
 			if is_punct(next_unicode) then
@@ -353,13 +361,12 @@ function M:layout(label, txt, fields, sprite_fields)
 					add_linefeed(fields, pos)
 				else
 					local forward_len, start, stop, backward_len = self:_locate_alnum(char_sizes, idx)
-					if stop == idx+gap and not is_punct(char_unicode(stop+gap)) then
+					if not is_char_esc and stop == idx+gap and not is_punct(char_unicode(stop+gap)) then
 						ignore_next = ignore_next+1
 						local scale = line_width * 1000 / (line_width + char_width(stop))
 						scale = scale >= 970 and scale or 1000
 						line_width = line_width + char_width(stop)
 						add_linefeed(fields, pos+1, scale)
-						-- print("shrink:", scale)
 					else
                         -- NOTE:
                         -- local scale = width * 1000 / (line_width - forward_len)
@@ -372,19 +379,13 @@ function M:layout(label, txt, fields, sprite_fields)
                         --     add_linefeed(fields, pos)
                         -- end
                         add_linefeed(fields, pos)
-						-- print("extend:", scale)
 					end
 				end
-
-				-- print("............delta:", line_width, line_width - width, char_width(idx), ignore_next)
 			end
 			line_width = 0
 		end
-
-        if need_inc then
-            i = i + gap
-        end
 	end
+
 	if line_width < width and line_width > 0 then
 		max_height = max_height + line_max_height
 	end

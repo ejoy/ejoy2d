@@ -503,10 +503,6 @@ lsettext(lua_State *L) {
 	int sprite_count = luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
 
-	if (sprite_count > MAX_LABEL_SPRITE_COUNT) {
-		return luaL_error(L, "too many sprites %d", sprite_count);
-	}
-
 	lua_createtable(L, 3 + sprite_count * 2, 0); //sprite, table, userdata, table
 
 	int size = cnt * sizeof(struct label_field);

@@ -18,12 +18,11 @@
 #define TEX_WIDTH 1024
 #define FONT_SIZE 31
 #define TEX_FMT TEXTURE_A8
+#define ESC 27
 
 static RID Tex;
 static struct dfont * Dfont = NULL;
 static struct render *R = NULL;
-
-static struct label_sprite *sprite_array[MAX_LABEL_SPRITE_COUNT];
 
 void 
 label_initrender(struct render *r) {
@@ -342,21 +341,17 @@ get_rich_filed_lf(const struct rich_text *rich, int idx, float * offset) {
 	return false;
 }
 
-static int
-get_rich_field_sprite(const struct rich_text *rich, int istart, int iend) {
-    int i, count = 0;
+static struct label_sprite *
+get_rich_field_sprite(const struct rich_text *rich, int start) {
+    int i;
     for (i=0; i<rich->count; i++) {
         struct label_field *field = (struct label_field*)(rich->fields+i);
-        if (field->type==RL_SPRITE && istart <= field->start - 1 && iend >= field->start - 1) {
-            sprite_array[count++] = field->ls;
-        }
-
-        if (count >= MAX_LABEL_SPRITE_COUNT) {
-            break;
+        if (field->type==RL_SPRITE && field->start == start) {
+            return field->ls;
         }
     }
 
-    return count;
+    return NULL;
 }
 
 static void
@@ -370,54 +365,50 @@ set_label_sprite_aabb(struct label_sprite *ls) {
 }
 
 static void
-pre_draw_label_sprite(const struct rich_text *rich, int istart, int iend, int *sw, int *ls) {
-	int j;
-	int count = get_rich_field_sprite(rich, istart, iend);
-	if (count > 0) {
-		for (j=0; j<count; j++) {
-			struct label_sprite *lsprite = sprite_array[j];
-			if (lsprite->w == 0 && lsprite->h == 0) {
-				set_label_sprite_aabb(lsprite);
-			}
+pre_draw_label_sprite(const struct rich_text *rich, int start, int *sw, int *ls) {
+	struct label_sprite *lsprite = get_rich_field_sprite(rich, start);
+    if (!lsprite) { 
+        return ;
+    }
 
-			*sw += lsprite->w;
+    if (lsprite->w == 0 && lsprite->h == 0) {
+        set_label_sprite_aabb(lsprite);
+    }
 
-			if (lsprite->h > *ls) {
-				*ls = lsprite->h;
-			}
-		}
-	}
+    *sw += lsprite->w;
+
+    if (lsprite->h > *ls) {
+        *ls = lsprite->h;
+    }
 }
 
 static void
-set_label_sprite_mat(const struct rich_text *rich, int istart, int iend, float *cx, int *cy) {
-	int i;
-	int count = get_rich_field_sprite(rich, istart, iend);
-	if(count > 0) {
-		for(i=0; i < count; ++i) {
-			struct label_sprite *ls = sprite_array[i];
-			if (ls->w == 0 && ls->h == 0) {
-				set_label_sprite_aabb(ls);
-			}
+set_label_sprite_mat(const struct rich_text *rich, int start, float *cx, int *cy) {
+	struct label_sprite *ls = get_rich_field_sprite(rich, start);
+    if (!ls) {
+        return ;
+    }
 
-			struct sprite *s = ls->s;
-			if (ls->mat== 0) {
-				struct matrix *m = &s->mat;
-				if (s->t.mat == NULL) {
-					matrix_identity(m);
-					s->t.mat = m;
-				}
+    if (ls->w == 0 && ls->h == 0) {
+        set_label_sprite_aabb(ls);
+    }
 
-				int *mat = m->m;
-				mat[4] = (*cx + ls->w / 2) * SCREEN_SCALE;
-				mat[5] = (*cy) * SCREEN_SCALE;
+    struct sprite *s = ls->s;
+    if (ls->mat== 0) {
+        struct matrix *m = &s->mat;
+        if (s->t.mat == NULL) {
+            matrix_identity(m);
+            s->t.mat = m;
+        }
 
-                ls->mat = 1;
-			}
+        int *mat = m->m;
+        mat[4] = (*cx + ls->w / 2) * SCREEN_SCALE;
+        mat[5] = (*cy - ls->h / 4) * SCREEN_SCALE;
 
-			*cx += ls->w;
-		}
-	}
+        ls->mat = 1;
+    }
+
+    *cx += ls->w;
 }
 
 static int
@@ -470,8 +461,6 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
         cx = 0.0;
     }
 
-	set_label_sprite_mat(rich, -1, -1, &cx, &cy);
-
     int char_cnt = 0;
     for (j=start; j<end;) {
         int unicode;
@@ -482,16 +471,17 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
         j+=len;
 			
         if(unicode != '\n') {
-            uint32_t field_color = get_rich_field_color(rich, *pre_char_cnt+char_cnt);
-            if (field_color == 0) {
-                field_color = color;
-            } else {
-                field_color = color_mul(field_color,  color | 0xffffff);
+            if (unicode != ESC) {
+                uint32_t field_color = get_rich_field_color(rich, *pre_char_cnt+char_cnt);
+                if (field_color == 0) {
+                    field_color = color;
+                } else {
+                    field_color = color_mul(field_color,  color | 0xffffff);
+                }
+                cx+=(draw_utf8(unicode, cx, cy, size, srt, field_color, arg, l->edge) + l->space_w)*space_scale;
             }
-            cx+=(draw_utf8(unicode, cx, cy, size, srt, field_color, arg, l->edge) + l->space_w)*space_scale;
 
-
-			set_label_sprite_mat(rich, j - len, j - 1, &cx, &cy);
+			set_label_sprite_mat(rich, j - len, &cx, &cy);
         }
     }
 
@@ -578,22 +568,22 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 	int i;
 	int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0, idx = 0, ls = 0, sw = 0;
 
-	pre_draw_label_sprite(rich, -1, -1, &sw, &ls);
-
 	for (i=0; str && str[i];) {
 		int unicode;
 		int len = unicode_len(str[i]);
 		unicode = copystr(utf8, str+i, len);
 		i+=len;
-		w += draw_size(unicode, utf8, l->size, l->edge) + l->space_w;
-		if (ch == 0) {
-            ch = draw_height(unicode, utf8, l->size, l->edge) + l->space_h;
-		}
+        if (unicode != ESC) {
+            w += draw_size(unicode, utf8, l->size, l->edge) + l->space_w;
+            if (ch == 0) {
+                ch = draw_height(unicode, utf8, l->size, l->edge) + l->space_h;
+            }
+        }
 		
+		pre_draw_label_sprite(rich, i - len, &sw, &ls);
+
 		float space_scale=1.0;
 		uint32_t lf = get_rich_filed_lf(rich, idx, &space_scale);
-
-		pre_draw_label_sprite(rich, i - len, i - 1, &sw, &ls);
 
 		if((l->auto_scale == 0 && lf) || unicode == '\n') {
             if (ls > ch) {

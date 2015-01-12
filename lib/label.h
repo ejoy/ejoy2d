@@ -12,7 +12,6 @@
 #define RL_LINEFEED 2
 #define RL_SPRITE 3
 #define RL_SPACE 4
-#define MAX_LABEL_SPRITE_COUNT 16
 
 struct label_sprite {
 	struct sprite *s;
@@ -28,7 +27,7 @@ struct label_field {
 	union {
 		uint32_t color;
 		int val;
-		label_sprite *ls;
+		struct label_sprite *ls;
 	};
 };
 
