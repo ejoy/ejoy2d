@@ -568,6 +568,7 @@ lsettext(lua_State *L) {
    if (sprite_count != sc) {
 	   return luaL_error(L, "rich text sprite count error %d %d", sprite_count, sc);
    }
+   rich->sprite_count = sc;
 
 	get_reftable(L, 1); // sprite, table, userdata, table, userdata, table
 

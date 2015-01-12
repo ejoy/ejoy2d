@@ -35,6 +35,7 @@ struct rich_text {
 	int count;
 	int width;
 	int height;
+    int sprite_count;
     const char *text;
 	struct label_field *fields;
 };

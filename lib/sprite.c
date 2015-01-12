@@ -471,8 +471,10 @@ sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, s
 		return 0;
 	case TYPE_LABEL:
 		if (s->data.rich_text) {
-            switch_program(t, PROGRAM_PICTURE, material);
-            label_draw_sprite(s->data.rich_text, srt, t);
+            if (s->data.rich_text->sprite_count > 0) {
+                switch_program(t, PROGRAM_PICTURE, material);
+                label_draw_sprite(s->data.rich_text, srt, t);
+            }
 
 			t->program = PROGRAM_DEFAULT;	// label never set user defined program
 			switch_program(t, s->s.label->edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT, material);
