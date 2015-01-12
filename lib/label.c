@@ -403,7 +403,7 @@ set_label_sprite_mat(const struct rich_text *rich, int start, float *cx, int *cy
 
         int *mat = m->m;
         mat[4] = (*cx + ls->w / 2) * SCREEN_SCALE;
-        mat[5] = (*cy - ls->h / 4) * SCREEN_SCALE;
+        mat[5] = *cy * SCREEN_SCALE;
 
         ls->mat = 1;
     }
