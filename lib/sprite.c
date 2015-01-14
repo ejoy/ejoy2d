@@ -527,8 +527,13 @@ sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, s
 	case TYPE_LABEL:
 		if (s->data.rich_text && global_lable_only != 1) {
             if (s->data.rich_text->sprite_count > 0) {
+                int pre_value = global_lable_only;
+                global_lable_only = 0;
+                
                 switch_program(t, PROGRAM_PICTURE, material);
                 label_draw_sprite(s->data.rich_text, srt, t);
+                
+                global_lable_only = pre_value;
             }
 
 			t->program = PROGRAM_DEFAULT;	// label never set user defined program

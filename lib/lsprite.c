@@ -589,6 +589,11 @@ lsettext(lua_State *L) {
 	lua_setfield(L, -2, "richtext");
 
 	s->data.rich_text = rich;
+    
+    if (sc > 0) {
+        sprite_draw(s, NULL);
+    }
+    
 	return 0;
 }
 
