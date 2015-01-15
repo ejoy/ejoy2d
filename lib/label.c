@@ -566,7 +566,7 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 
 	char utf8[7];
 	int i;
-	int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0, idx = 0, ls = 0, sw = 0;
+	int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0, idx = 0, ls = 0, sw = 0, ty;
 
 	for (i=0; str && str[i];) {
 		int unicode;
@@ -587,10 +587,13 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 
 		if((l->auto_scale == 0 && lf) || unicode == '\n') {
             if (ls > ch) {
-                cy += (ls - ch);
+                ty = (ls - ch) / 2;
+                cy += ty;
+            } else {
+                ty = 0;
             }
             draw_line(rich, l, srt, arg, color, cy, w, sw, pre, i, &char_cnt, space_scale);
-            cy += ch;
+            cy += (ch + ty);
             pre = i;
             w = 0; ch = 0; ls = 0; sw = 0;
 		}
@@ -599,7 +602,7 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
     
 
     if (ls > ch) {
-        cy += (ls - ch);
+        cy += (ls - ch) / 2;
     }
 	draw_line(rich, l, srt, arg, color, cy, w, sw, pre, i, &char_cnt, 1.0);
 }
