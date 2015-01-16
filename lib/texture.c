@@ -242,3 +242,22 @@ texture_delete_framebuffer(int id) {
         tex->fb = 0;
     }
 }
+
+const char * 
+texture_update(int id, int pixel_width, int pixel_height, void *data) {
+	if (id >= MAX_TEXTURE) {
+		return "Too many texture";
+	}
+
+	if(data == NULL){
+		return "no content";
+	}
+	struct texture * tex = &POOL.tex[id];
+	if(tex->id == 0){
+		return "not a valid texture";
+	}
+	render_texture_update(R, tex->id, pixel_width, pixel_height, data, 0, 0);
+
+	return NULL;
+}
+
