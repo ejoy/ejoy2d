@@ -412,6 +412,19 @@ lsetscissor(lua_State *L) {
 }
 
 static int
+lsetautoscale(lua_State *L) {
+    struct sprite *s = self(L);
+    if (s->type != TYPE_LABEL) {
+        return luaL_error(L, "Only label can set auto_scale");
+    }
+
+    bool auto_scale = lua_toboolean(L, 2);
+    s->s.label->auto_scale = auto_scale;
+
+    return 0;
+}
+
+static int
 lgetname(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->name == NULL)
@@ -717,6 +730,7 @@ lsetter(lua_State *L) {
 		{"message", lsetmessage },
 		{"program", lsetprogram },
 		{"scissor", lsetscissor },
+        {"auto_scale", lsetautoscale},
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
