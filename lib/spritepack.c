@@ -327,7 +327,7 @@ import_matrix_chunk(struct import_stream *is) {
 }
 
 static void
-import_sprite(struct import_stream *is) {
+import_sprite(struct import_stream *is, float invw, float invh) {
 	int id = import_word(is);
 	int type = import_byte(is);
 	if (type == TYPE_MATRIX) {
