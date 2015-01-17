@@ -203,7 +203,7 @@ import_frame(struct pack_frame * pf, struct import_stream *is, int maxc) {
 				m[j] = import_int32(is);
 			}
 		} else if (tag & TAG_MATRIXREF) {
-			int ref = import_word(is);
+			int ref = import_int32(is);
 			if (ref >= is->matrix_n) {
 				luaL_error(is->alloc->L, "Invalid stream (%d): no martix ref %d", is->current_id, ref);
 			}
@@ -288,7 +288,7 @@ static void
 import_matrix_chunk(struct import_stream *is) {
 	if (is->matrix)
 		luaL_error(is->alloc->L, "Invalid stream : only one matrix chunk support");
-	int n = import_word(is);
+	int n = import_int32(is);
 	is->matrix = (struct matrix *)ialloc(is->alloc, n * SIZEOF_MATRIX);
 	is->matrix_n = n;
 	int i,j;
