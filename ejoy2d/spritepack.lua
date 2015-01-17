@@ -110,7 +110,7 @@ local function pack_part(data, ret)
 		table.insert(ret, pack.word(data.index))
 		if mat then
 			if type(mat) == "number" then
-				table.insert(ret, pack.word(mat))
+				table.insert(ret, pack.int32(mat))
 			else
 				for i=1,6 do
 					table.insert(ret, pack.int32(mat[i]))
@@ -209,7 +209,7 @@ function spritepack.pack( data )
 			table.insert(ret.data, pack.word(0))	-- dummy id for TYPE_MATRIX
 			table.insert(ret.data, pack.byte(TYPE_MATRIX))
 			local n = #v
-			table.insert(ret.data, pack.word(n))
+			table.insert(ret.data, pack.int32(n))
 			for _, mat in ipairs(v) do
 				for i=1,6 do
 					table.insert(ret.data, pack.int32(mat[i]))
