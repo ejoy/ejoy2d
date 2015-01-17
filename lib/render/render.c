@@ -503,7 +503,7 @@ apply_vb(struct render *R) {
 				stride = buf->stride;
 			}
 			glEnableVertexAttribArray(i);
-			glVertexAttribPointer(i, al->size, al->type, al->normalized, stride, (void *)(al->offset));
+			glVertexAttribPointer(i, al->size, al->type, al->normalized, stride, (const GLvoid *)(ptrdiff_t)(al->offset));
 		}
 	}
 

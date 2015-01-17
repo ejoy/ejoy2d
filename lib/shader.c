@@ -20,7 +20,7 @@
 
 #define MAX_PROGRAM 16
 
-#define BUFFER_OFFSET(f) ((int)&(((struct vertex *)NULL)->f))
+#define BUFFER_OFFSET(f) ((intptr_t)&(((struct vertex *)NULL)->f))
 
 #define MAX_UNIFORM 16
 #define MAX_TEXTURE_CHANNEL 8
