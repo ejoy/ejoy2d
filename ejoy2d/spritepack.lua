@@ -15,6 +15,7 @@ local TYPE_ANIMATION = assert(pack.TYPE_ANIMATION)
 local TYPE_POLYGON = assert(pack.TYPE_POLYGON)
 local TYPE_LABEL = assert(pack.TYPE_LABEL)
 local TYPE_PANNEL = assert(pack.TYPE_PANNEL)
+local TYPE_MATRIX =assert(pack.TYPE_MATRIX)
 
 local function pack_picture(src, ret)
 	table.insert(ret , pack.byte(TYPE_PICTURE))
@@ -85,11 +86,15 @@ local function pack_part(data, ret)
 		local tag = "i"
 		assert(data.index, "frame need an index")
 		local mat = data.mat
-		if is_identity(mat) then
-			mat = nil
-		end
-		if mat then
-			tag = tag .. "m"
+		if type(mat) == "number" then
+			tag = tag .. "M"
+		else
+			if is_identity(mat) then
+				mat = nil
+			end
+			if mat then
+				tag = tag .. "m"
+			end
 		end
 		if data.color and data.color ~= 0xffffffff then
 			tag = tag .. "c"
@@ -104,8 +109,12 @@ local function pack_part(data, ret)
 
 		table.insert(ret, pack.word(data.index))
 		if mat then
-			for i=1,6 do
-				table.insert(ret, pack.int32(mat[i]))
+			if type(mat) == "number" then
+				table.insert(ret, pack.int32(mat))
+			else
+				for i=1,6 do
+					table.insert(ret, pack.int32(mat[i]))
+				end
 			end
 		end
 		if data.color and data.color ~= 0xffffffff then
@@ -196,7 +205,18 @@ function spritepack.pack( data )
 	local ani_maxid = 0
 
 	for _,v in ipairs(data) do
-		if v.type ~= "particle" then
+		if v.type == "matrix" then
+			table.insert(ret.data, pack.word(0))	-- dummy id for TYPE_MATRIX
+			table.insert(ret.data, pack.byte(TYPE_MATRIX))
+			local n = #v
+			table.insert(ret.data, pack.int32(n))
+			for _, mat in ipairs(v) do
+				for i=1,6 do
+					table.insert(ret.data, pack.int32(mat[i]))
+				end
+			end
+			ret.size = ret.size + n * 24	-- each matrix 24 bytes
+		elseif v.type ~= "particle" then
 			local id = assert(tonumber(v.id))
 			if id > ret.maxid then
 				ret.maxid = id
