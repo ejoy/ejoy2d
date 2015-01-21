@@ -4,11 +4,12 @@
 
 #include <lua.h>
 #include <lauxlib.h>
-
+#include <stdlib.h>
 
 static int
 ldelbuffer(lua_State *L) {
 	struct render_buffer *rb = (struct render_buffer *)lua_touserdata(L, 1);
+    free(rb->vb);
 	renderbuffer_unload(rb);
 	return 0;
 }
@@ -49,7 +50,14 @@ ldrawbuffer(lua_State *L) {
 
 static int
 lnewbuffer(lua_State *L) {
+    int size = luaL_optint(L, 1, MAX_COMMBINE);
+
 	struct render_buffer *rb = (struct render_buffer *)lua_newuserdata(L, sizeof(*rb));
+
+
+    rb->vb_size = size;
+    rb->vb = (struct quad *)malloc(sizeof(struct quad) * size);
+
 	renderbuffer_init(rb);
 	if (luaL_newmetatable(L, "renderbuffer")) {
 		luaL_Reg l[] = {

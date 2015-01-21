@@ -17,7 +17,7 @@ renderbuffer_initrender(struct render *r) {
 
 int
 renderbuffer_add(struct render_buffer *rb, const struct vertex_pack vb[4], uint32_t color, uint32_t additive) {
-	if (rb->object >= MAX_COMMBINE) {
+	if (rb->object >= rb->vb_size) {
 		return 1;
 	}
 
@@ -34,7 +34,7 @@ renderbuffer_add(struct render_buffer *rb, const struct vertex_pack vb[4], uint3
 		q->p[i].add[2] = (additive) & 0xff;
 		q->p[i].add[3] = (additive >> 24) & 0xff;
 	}
-	if (++rb->object >= MAX_COMMBINE) {
+	if (++rb->object >= rb->vb_size) {
 		return 1;
 	}
 	return 0;

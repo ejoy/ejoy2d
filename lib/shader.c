@@ -87,9 +87,9 @@ shader_init() {
 	rs->blendchange = 0;
 	render_setblend(rs->R, BLEND_ONE, BLEND_ONE_MINUS_SRC_ALPHA);
 
-	uint16_t idxs[6 * MAX_COMMBINE];
+	uint16_t idxs[6 * MAX_COMMBINE * 10];
 	int i;
-	for (i=0;i<MAX_COMMBINE;i++) {
+	for (i=0;i<MAX_COMMBINE * 10;i++) {
 		idxs[i*6] = i*4;
 		idxs[i*6+1] = i*4+1;
 		idxs[i*6+2] = i*4+2;
@@ -98,7 +98,9 @@ shader_init() {
 		idxs[i*6+5] = i*4+3;
 	}
 	
-	rs->index_buffer = render_buffer_create(rs->R, INDEXBUFFER, idxs, 6 * MAX_COMMBINE, sizeof(uint16_t));
+    rs->vb.vb_size = MAX_COMMBINE;
+    rs->vb.vb = (struct quad *)malloc(sizeof(struct quad) * MAX_COMMBINE);
+	rs->index_buffer = render_buffer_create(rs->R, INDEXBUFFER, idxs, 6 * MAX_COMMBINE * 10, sizeof(uint16_t));
 	rs->vertex_buffer = render_buffer_create(rs->R, VERTEXBUFFER, NULL,  4 * MAX_COMMBINE, sizeof(struct vertex));
 
 	struct vertex_attrib va[4] = {
@@ -168,6 +170,8 @@ shader_unload() {
 	label_initrender(NULL);
 	lsprite_initrender(NULL);
 	renderbuffer_initrender(NULL);
+    
+    free(RS->vb.vb);
 
 	render_exit(R);
 	free(R);

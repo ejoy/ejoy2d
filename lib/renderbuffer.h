@@ -26,8 +26,9 @@ struct quad {
 struct render_buffer {
 	int object;
 	int texid;
+    int vb_size;
 	RID vbid;
-	struct quad vb[MAX_COMMBINE];
+	struct quad *vb;
 };
 
 
