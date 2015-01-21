@@ -604,6 +604,22 @@ sprite_child_visible(struct sprite *s, const char * childname) {
 }
 
 void
+sprite_set_child_visible(struct sprite *s, const char * childname, bool visible) {
+    struct pack_animation *ani = s->s.ani;
+    int frame = real_frame(s) + s->start_frame;
+    struct pack_frame * pf = &ani->frame[frame];
+    int i;
+    for (i=0;i<pf->n;i++) {
+        struct pack_part *pp = &pf->part[i];
+        int index = pp->component_id;
+        struct sprite * child = s->data.children[index];
+        if (child->name && strcmp(childname, child->name) == 1) {
+            child->visible = visible;
+        }
+    }
+}
+
+void
 sprite_draw(struct sprite *s, struct srt *srt) {
 	if (s->visible) {
 		sprite_draw_child(s, srt, NULL, NULL);

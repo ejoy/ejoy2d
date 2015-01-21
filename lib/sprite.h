@@ -80,6 +80,7 @@ void sprite_matrix(struct sprite *s, struct matrix *mat);
 void sprite_label_only(int lable_only);
 void enable_screen_visible_test(bool enable);
 bool sprite_child_visible(struct sprite *s, const char * childname);
+void sprite_set_child_visible(struct sprite *s, const char * childname, bool visible);
 int sprite_material_size(struct sprite *s);
 
 int ejoy2d_sprite(lua_State *L);

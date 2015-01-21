@@ -1010,6 +1010,14 @@ lchild_visible(lua_State *L) {
 }
 
 static int
+lset_child_visible(lua_State *L) {
+    struct sprite *s = self(L);
+    const char * name = luaL_checkstring(L,2);
+    sprite_set_child_visible(s, name, lua_toboolean(L, 3));
+    return 0;
+}
+
+static int
 lchildren_name(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->type != TYPE_ANIMATION)
@@ -1430,6 +1438,7 @@ lmethod(lua_State *L) {
 		{ "text_size", ltext_size},
 		{ "char_size", lchar_size},
 		{ "child_visible", lchild_visible },
+        { "set_child_visible", lset_child_visible },
 		{ "children_name", lchildren_name },
 		{ "world_pos", lgetwpos },
 		{ "anchor_particle", lset_anchor_particle },
