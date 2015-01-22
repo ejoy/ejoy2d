@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 
 #define MAX_VB_SLOT 8
 #define MAX_ATTRIB 16
