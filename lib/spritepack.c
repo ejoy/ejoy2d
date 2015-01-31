@@ -456,7 +456,7 @@ lpackint32(lua_State *L) {
 
 static int
 lpackcolor(lua_State *L) {
-	uint32_t n = luaL_checkunsigned(L,1);
+	uint32_t n = luaL_checkinteger(L,1);
 
 	uint8_t buf[4] = {
 		(uint8_t)n&0xff ,
@@ -668,7 +668,7 @@ limport_value(lua_State *L) {
 			| data[off+1] << 8
 			| data[off+2] << 16
 			| data[off+3] << 24;
-		lua_pushunsigned(L, v);
+		lua_pushinteger(L, v);
 		break;
 	}
 	case 's': {

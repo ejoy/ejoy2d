@@ -67,7 +67,7 @@ lnewlabel(lua_State *L) {
 	label.width = (int)luaL_checkinteger(L,1);
 	label.height = (int)luaL_checkinteger(L,2);
 	label.size = (int)luaL_checkinteger(L,3);
-	label.color = (uint32_t)luaL_optunsigned(L,4,0xffffffff);
+	label.color = (uint32_t)luaL_optinteger(L,4,0xffffffff);
 	label.space_w = (int)lua_tointeger(L, 5);
 	label.space_h = (int)lua_tointeger(L, 6);
 	label.auto_scale = (int)lua_tointeger(L, 7);
@@ -525,21 +525,21 @@ lsettext(lua_State *L) {
 		}
 
 		lua_rawgeti(L, -1, 1);  //start
-		((struct label_field*)(fields+i))->start = luaL_checkunsigned(L, -1);
+		((struct label_field*)(fields+i))->start = luaL_checkinteger(L, -1);
 		lua_pop(L, 1);
 
     lua_rawgeti(L, -1, 2);  //end
-		((struct label_field*)(fields+i))->end = luaL_checkunsigned(L, -1);
+		((struct label_field*)(fields+i))->end = luaL_checkinteger(L, -1);
     lua_pop(L, 1);
 
 		lua_rawgeti(L, -1, 3);  //type
-		uint32_t type = luaL_checkunsigned(L, -1);
+		uint32_t type = luaL_checkinteger(L, -1);
 		((struct label_field*)(fields+i))->type = type;
 		lua_pop(L, 1);
 		
 		lua_rawgeti(L, -1, 4); //val
 		if (type == RL_COLOR) {
-			((struct label_field*)(fields+i))->color = luaL_checkunsigned(L, -1);
+			((struct label_field*)(fields+i))->color = luaL_checkinteger(L, -1);
 		} else {
 			((struct label_field*)(fields+i))->val = luaL_checkinteger(L, -1);
 		}
@@ -591,11 +591,11 @@ lgetcolor(lua_State *L) {
 	struct sprite *s = self(L);
     if (s->type != TYPE_LABEL)
     {
-        lua_pushunsigned(L, s->t.color);
+        lua_pushinteger(L, s->t.color);
     }
     else
     {
-        lua_pushunsigned(L, label_get_color(s->s.label, &s->t));
+        lua_pushinteger(L, label_get_color(s->s.label, &s->t));
     }
 	return 1;
 }
@@ -603,7 +603,7 @@ lgetcolor(lua_State *L) {
 static int
 lsetcolor(lua_State *L) {
 	struct sprite *s = self(L);
-	uint32_t color = luaL_checkunsigned(L,2);
+	uint32_t color = luaL_checkinteger(L,2);
 	s->t.color = color;
 	return 0;
 }
@@ -611,7 +611,7 @@ lsetcolor(lua_State *L) {
 static int
 lsetalpha(lua_State *L) {
 	struct sprite *s = self(L);
-	uint8_t alpha = luaL_checkunsigned(L, 2);
+	uint8_t alpha = luaL_checkinteger(L, 2);
 	s->t.color = (s->t.color >> 8) | (alpha << 24);
 	return 0;
 }
@@ -619,21 +619,21 @@ lsetalpha(lua_State *L) {
 static int
 lgetalpha(lua_State *L) {
 	struct sprite *s = self(L);
-	lua_pushunsigned(L, s->t.color >> 24);
+	lua_pushinteger(L, s->t.color >> 24);
 	return 1;
 }
 
 static int
 lgetadditive(lua_State *L) {
 	struct sprite *s = self(L);
-	lua_pushunsigned(L, s->t.additive);
+	lua_pushinteger(L, s->t.additive);
 	return 1;
 }
 
 static int
 lsetadditive(lua_State *L) {
 	struct sprite *s = self(L);
-	uint32_t additive = luaL_checkunsigned(L,2);
+	uint32_t additive = luaL_checkinteger(L,2);
 	s->t.additive = additive;
 	return 0;
 }
@@ -1031,7 +1031,7 @@ lmatrix_multi_draw(lua_State *L) {
 			struct matrix *m = (struct matrix *)lua_touserdata(L, -2);
 			matrix_mul(&tmp, m, mat);
 			s->t.mat = &tmp;
-			s->t.color = (uint32_t)lua_tounsigned(L, -1);
+			s->t.color = (uint32_t)lua_tointeger(L, -1);
 			lua_pop(L, 2);
 
 			sprite_draw(s, NULL);
@@ -1042,7 +1042,7 @@ lmatrix_multi_draw(lua_State *L) {
 			lua_rawgeti(L, 5, i+1);
 			struct matrix *m = (struct matrix *)lua_touserdata(L, -2);
 			s->t.mat = m;
-			s->t.color = (uint32_t)lua_tounsigned(L, -1);
+			s->t.color = (uint32_t)lua_tointeger(L, -1);
 			lua_pop(L, 2);
 
 			sprite_draw(s, NULL);
@@ -1089,7 +1089,7 @@ lmulti_draw(lua_State *L) {
             lua_rawgeti(L, 4, i+1);
             lua_rawgeti(L, 5, i+1);
             s->t.mat = (struct matrix *)lua_touserdata(L, -2);
-            s->t.color = (uint32_t)lua_tounsigned(L, -1);
+            s->t.color = (uint32_t)lua_tointeger(L, -1);
             lua_pop(L, 2);
 
             sprite_draw_as_child(s, &srt, parent_mat, parent_color);
@@ -1100,8 +1100,8 @@ lmulti_draw(lua_State *L) {
             lua_rawgeti(L, 5, i+1);
             lua_rawgeti(L, 6, i+1);
             s->t.mat = (struct matrix *)lua_touserdata(L, -3);
-            s->t.color = (uint32_t)lua_tounsigned(L, -2);
-            s->t.additive = (uint32_t)lua_tounsigned(L, -1);
+            s->t.color = (uint32_t)lua_tointeger(L, -2);
+            s->t.additive = (uint32_t)lua_tointeger(L, -1);
             lua_pop(L, 3);
 
             sprite_draw_as_child(s, &srt, parent_mat, parent_color);
@@ -1478,7 +1478,7 @@ ldeldfont(lua_State *L) {
 	}
 
 	lua_getfield(L, 1, "texture");
-	int tid = luaL_checkunsigned(L, -1);
+	int tid = luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
 	
 	texture_unload(tid);
@@ -1542,7 +1542,7 @@ ldfont_insert(lua_State *L) {
 	}
 	
 	lua_getfield(L, 1, "texture");
-	int tid = luaL_checkunsigned(L, -1);
+	int tid = luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
 	RID tex = texture_glid(tid);
 	
