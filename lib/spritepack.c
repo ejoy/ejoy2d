@@ -449,13 +449,13 @@ limport(lua_State *L) {
 	return 1;
 }
 
-static uint32_t
+static int32_t
 readinteger(lua_State *L, int idx) {
 	if (lua_isinteger(L, idx)) {
-		return (uint32_t)lua_tointeger(L, idx);
+		return (int32_t)lua_tointeger(L, idx);
 	} else {
 		lua_Number n = luaL_checknumber(L, idx);
-		return (uint32_t)n;
+		return (int32_t)n;
 	}
 }
 
