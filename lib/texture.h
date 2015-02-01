@@ -21,4 +21,13 @@ void texture_swap(int ida, int idb);
 void texture_size(int id, int *width, int *height);
 void texture_delete_framebuffer(int id);
 
+/// update content of texture
+/// width and height may not equal the original by design
+/// useful for some condition 
+/// async texture load,for example,
+/// becasue we can first push a much more small avatar
+const char* texture_update(int id, int width, int height, void *buffer);
+
+
+
 #endif
