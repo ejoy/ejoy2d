@@ -415,9 +415,19 @@ limport(lua_State *L) {
 	return 1;
 }
 
+static uint32_t
+readinteger(lua_State *L, int idx) {
+	if (lua_isinteger(L, idx)) {
+		return (uint32_t)lua_tointeger(L, idx);
+	} else {
+		lua_Number n = luaL_checknumber(L, idx);
+		return (uint32_t)n;
+	}
+}
+
 static int
 lpackbyte(lua_State *L) {
-	int n = (int)luaL_checkinteger(L, 1);
+	int n = (int)readinteger(L, 1);
 	if (n < 0 || n > 255) {
 		return luaL_error(L, "pack byte %d", n);
 	}
@@ -428,7 +438,7 @@ lpackbyte(lua_State *L) {
 
 static int
 lpackword(lua_State *L) {
-	int n = (int)luaL_checkinteger(L, 1);
+	int n = (int)readinteger(L, 1);
 	if (n < 0 || n > 0xffff) {
 		return luaL_error(L, "pack word %d", n);
 	}
@@ -442,7 +452,7 @@ lpackword(lua_State *L) {
 
 static int
 lpackint32(lua_State *L) {
-	int32_t sn = (int32_t)luaL_checkinteger(L, 1);
+	int32_t sn = (int32_t)readinteger(L, 1);
 	uint32_t n = (uint32_t) sn;
 	uint8_t buf[4] = {
 		(uint8_t)n&0xff ,
