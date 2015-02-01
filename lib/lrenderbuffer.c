@@ -50,7 +50,7 @@ ldrawbuffer(lua_State *L) {
 
 static int
 lnewbuffer(lua_State *L) {
-    int size = luaL_optint(L, 1, MAX_COMMBINE);
+    int size = luaL_optinteger(L, 1, MAX_COMMBINE);
 
 	struct render_buffer *rb = (struct render_buffer *)lua_newuserdata(L, sizeof(*rb));
 
