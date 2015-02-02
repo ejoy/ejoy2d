@@ -1457,7 +1457,7 @@ lnewdfont(lua_State *L) {
 	dfont_init(d, width, height);
 	lua_setfield(L, -2, "__obj");
 	
-	const char* err = texture_load(id, format, width, height, NULL, 0);
+	const char* err = texture_load(id, (TEXTURE_FORMAT)format, width, height, NULL, 0);
 	if (err) {
 		return luaL_error(L, err);
 	}
