@@ -56,9 +56,9 @@ ldraw(lua_State *L) {
 	uint32_t color = 0xffffffff;
 
 	if (!lua_isnoneornil(L,3)) {
-		color = (uint32_t)lua_tounsigned(L,3);
+		color = (uint32_t)lua_tointeger(L,3);
 	}
-	uint32_t additive = (uint32_t)luaL_optunsigned(L,4,0);
+	uint32_t additive = (uint32_t)luaL_optinteger(L,4,0);
 	shader_program(PROGRAM_PICTURE, NULL);
 	shader_texture(texid, 0);
 	int n = lua_rawlen(L, 2);
@@ -114,7 +114,7 @@ lversion(lua_State *L) {
 
 static int
 lclear(lua_State *L) {
-	uint32_t c = luaL_optunsigned(L, 1, 0xff000000);
+	uint32_t c = luaL_optinteger(L, 1, 0xff000000);
 	shader_clear(c);
 
 	return 0;
