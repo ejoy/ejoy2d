@@ -133,7 +133,7 @@ render_buffer_create(struct render *R, enum RENDER_OBJ what, const void *data, i
 		return 0;
 	glGenBuffers(1, &buf->glid);
 	glBindBuffer(gltype, buf->glid);
-	if (data) {
+	if (data && n > 0) {
 		glBufferData(gltype, n * stride, data, GL_STATIC_DRAW);
 		buf->n = n;
 	} else {
