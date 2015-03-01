@@ -43,6 +43,16 @@ lmul(lua_State *L) {
 }
 
 static int
+llmul(lua_State *L) {
+	struct matrix *m1 = (struct matrix *)lua_touserdata(L, 1);
+	struct matrix *m2 = (struct matrix *)lua_touserdata(L, 2);
+	struct matrix source = *m1;
+	matrix_mul(m1, m2, &source);
+	lua_settop(L,1);
+	return 1;
+}
+
+static int
 linverse(lua_State *L) {
 	struct matrix *m = (struct matrix *)lua_touserdata(L, 1);
 	struct matrix source = *m;
@@ -219,6 +229,7 @@ ejoy2d_matrix(lua_State *L) {
 		{ "rs", lrs },
 		{ "inverse", linverse },
 		{ "mul", lmul },
+		{ "lmul", llmul },
 		{ "tostring", ltostring },
 		{ "identity", lidentity},
 		{ "export", lexport },

@@ -50,6 +50,7 @@ traceback(lua_State *L) {
 void
 ejoy2d_win_init(int argc, char *argv[]) {
 	G = create_game();
+	screen_init(WIDTH,HEIGHT,1.0f);
 	lua_State *L = ejoy2d_game_lua(G->game);
 	lua_pushcfunction(L, traceback);
 	int tb = lua_gettop(L);
@@ -78,7 +79,6 @@ ejoy2d_win_init(int argc, char *argv[]) {
 
 	lua_pop(L,1);
 
-	screen_init(WIDTH,HEIGHT,1.0f);
 	ejoy2d_game_start(G->game);
 }
 

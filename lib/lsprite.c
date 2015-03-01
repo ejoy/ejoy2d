@@ -3,6 +3,10 @@
 #include "label.h"
 #include "shader.h"
 #include "particle.h"
+#include "material.h"
+#include "dfont.h"
+#include "render.h"
+#include "texture.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -13,6 +17,13 @@
 #define SRT_SY 4
 #define SRT_ROT 5
 #define SRT_SCALE 6
+
+static struct render *R = NULL;
+
+void
+lsprite_initrender(struct render* r) {
+	R = r;
+}
 
 static struct sprite *
 newlabel(lua_State *L, struct pack_label *label) {
@@ -29,6 +40,7 @@ newlabel(lua_State *L, struct pack_label *label) {
 	s->t.program = PROGRAM_DEFAULT;
 	s->message = false;
 	s->visible = true;
+	s->multimount = false;
 	s->name = NULL;
 	s->id = 0;
 	s->type = TYPE_LABEL;
@@ -36,6 +48,7 @@ newlabel(lua_State *L, struct pack_label *label) {
 	s->total_frame = 0;
 	s->frame = 0;
 	s->data.rich_text = NULL;
+	s->material = NULL;
 	return s;
 }
 
@@ -54,11 +67,11 @@ lnewlabel(lua_State *L) {
 	label.width = (int)luaL_checkinteger(L,1);
 	label.height = (int)luaL_checkinteger(L,2);
 	label.size = (int)luaL_checkinteger(L,3);
-	label.color = (uint32_t)luaL_optunsigned(L,4,0xffffffff);
-    label.space_w = 0;
-    label.space_h = 0;
-    label.auto_scale = 1;
-    label.edge = 1;
+	label.color = (uint32_t)luaL_optinteger(L,4,0xffffffff);
+	label.space_w = (int)lua_tointeger(L, 5);
+	label.space_h = (int)lua_tointeger(L, 6);
+	label.auto_scale = (int)lua_tointeger(L, 7);
+	label.edge = (int)lua_tointeger(L, 8);
 	const char * align = lua_tostring(L,5);
 	if (align == NULL) {
 		label.align = LABEL_ALIGN_LEFT;
@@ -123,12 +136,6 @@ fill_srt(lua_State *L, struct srt *srt, int idx) {
 	srt->rot = rot * (1024.0 / 360.0);
 }
 
-static int
-lgenoutline(lua_State *L) {
-  label_gen_outline(lua_toboolean(L, 1));
-  return 0;
-}
-
 static const char * srt_key[] = {
 	"x",
 	"y",
@@ -157,7 +164,7 @@ update_message(struct sprite * s, struct sprite_pack * pack, int parentid, int c
 
 static struct sprite *
 newanchor(lua_State *L) {
-	int sz = sizeof(struct sprite) + sizeof(struct matrix);
+	int sz = sizeof(struct sprite) + sizeof(struct anchor_data);
 	struct sprite * s = (struct sprite *)lua_newuserdata(L, sz);
 	s->parent = NULL;
 	s->t.mat = NULL;
@@ -166,11 +173,15 @@ newanchor(lua_State *L) {
 	s->t.program = PROGRAM_DEFAULT;
 	s->message = false;
 	s->visible = false;	// anchor is invisible by default
+	s->multimount = false;
 	s->name = NULL;
 	s->id = ANCHOR_ID;
 	s->type = TYPE_ANCHOR;
-	s->ps = NULL;
-	s->s.mat = (struct matrix *)(s+1);
+	s->data.anchor = (struct anchor_data *)(s+1);
+	s->data.anchor->ps = NULL;
+	s->data.anchor->pic = NULL;
+	s->s.mat = &s->data.anchor->mat;
+	s->material = NULL;
 	matrix_identity(s->s.mat);
 
 	return s;
@@ -198,10 +209,10 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 			lua_setuservalue(L, -3);	// set uservalue for sprite
 		}
 		struct sprite *c = newsprite(L, pack, childid);
-		c->name = sprite_childname(s, i);
-		sprite_mount(s, i, c);
-		update_message(c, pack, id, i, s->frame);
 		if (c) {
+			c->name = sprite_childname(s, i);
+			sprite_mount(s, i, c);
+			update_message(c, pack, id, i, s->frame);
 			lua_rawseti(L, -2, i+1);
 		}
 	}
@@ -238,6 +249,17 @@ self(lua_State *L) {
 		luaL_error(L, "Need sprite");
 	}
 	return s;
+}
+
+static void
+get_reftable(lua_State *L, int index) {
+	lua_getuservalue(L, index);
+	if (lua_isnil(L, -1)) {
+		lua_pop(L, 1);
+		lua_createtable(L, 0, 1);
+		lua_pushvalue(L, -1);
+		lua_setuservalue(L, index);
+	}
 }
 
 static int
@@ -334,6 +356,7 @@ lgetwmat(lua_State *L) {
 	}
 	return luaL_error(L, "Only anchor can get world matrix");
 }
+
 static int
 lgetwpos(lua_State *L) {
 	struct sprite *s = self(L);
@@ -345,13 +368,12 @@ lgetwpos(lua_State *L) {
 	} else {
 		struct srt srt;
 		fill_srt(L,&srt,2);
-		struct sprite *t = (struct sprite *)lua_touserdata(L, 3);
-		if (t == NULL) {
-			luaL_error(L, "Need target sprite");
-		}
+
+		struct matrix tmp;
+		sprite_matrix(s, &tmp);
 
 		int pos[2];
-		if (sprite_pos(s, &srt, t, pos) == 0) {
+		if (sprite_pos(s, &srt, &tmp, pos) == 0) {
 			lua_pushinteger(L, pos[0]);
 			lua_pushinteger(L, pos[1]);
 			return 2;
@@ -370,6 +392,12 @@ lsetprogram(lua_State *L) {
 	} else {
 		s->t.program = (int)luaL_checkinteger(L,2);
 	}
+	if (s->material) {
+		s->material = NULL;
+		get_reftable(L, 1);
+		lua_pushnil(L);
+		lua_setfield(L, -2, "material");
+	}
 	return 0;
 }
 
@@ -384,21 +412,16 @@ lsetscissor(lua_State *L) {
 }
 
 static int
-lsetpicmask(lua_State *L) {
-	struct sprite *s = self(L);
-	if (s->type != TYPE_PICTURE) {
-		return luaL_error(L, "Only picture can set mask");
-	}
-	struct sprite *mask = (struct sprite*) lua_touserdata(L, 2);
-	if (mask && mask->type != TYPE_PICTURE) {
-    return luaL_error(L, "Mask must be picture");
-	}
-	struct pack_picture *m = NULL;
-	if (mask) {
-		m = mask->s.pic;
-	}
-	s->data.mask = m;
-	return 0;
+lsetautoscale(lua_State *L) {
+    struct sprite *s = self(L);
+    if (s->type != TYPE_LABEL) {
+        return luaL_error(L, "Only label can set auto_scale");
+    }
+
+    bool auto_scale = lua_toboolean(L, 2);
+    s->s.label->auto_scale = auto_scale;
+
+    return 0;
 }
 
 static int
@@ -441,14 +464,18 @@ lsettext(lua_State *L) {
 	}
 	if (lua_isnoneornil(L, 2)) {
 		s->data.rich_text = NULL;
-		lua_pushnil(L);
-		lua_setuservalue(L, 1);
+
+		get_reftable(L, 1);
+		lua_pushnil(L);   //sprite, nil, uservalue, nil
+		lua_setfield(L, -2, "richtext");
 		return 0;
 	}
-  if (lua_isstring(L, 2)) {
+/*  if (lua_isstring(L, 2)) {
     s->data.rich_text = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
     s->data.rich_text->text = lua_tostring(L, 2);
     s->data.rich_text->count = 0;
+		s->data.rich_text->width = 0;
+		s->data.rich_text->height = 0;
 		s->data.rich_text->fields = NULL;
 
 		lua_createtable(L, 2, 0);
@@ -458,25 +485,33 @@ lsettext(lua_State *L) {
 		lua_rawseti(L, -2, 2);
 		lua_setuservalue(L, 1);
     return 0;
-  }
-  
+  }*/
+
   s->data.rich_text = NULL;
-  if (!lua_istable(L, 2) || lua_rawlen(L, 2) != 2) {
+  if (!lua_istable(L, 2) || lua_rawlen(L, 2) != 4) {
     return luaL_error(L, "rich text must has a table with two items");
   }
-  
+
   lua_rawgeti(L, 2, 1);
   const char *txt = luaL_checkstring(L, -1);
   lua_pop(L, 1);
-  
+
   lua_rawgeti(L, 2, 2);
 	int cnt = lua_rawlen(L, -1);
   lua_pop(L, 1);
-  
+
 	struct rich_text *rich = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
-	
+
 	rich->text = txt;
   rich->count = cnt;
+	lua_rawgeti(L, 2, 3);
+	rich->width = luaL_checkinteger(L, -1);
+	lua_pop(L, 1);
+	
+	lua_rawgeti(L, 2, 4);
+	rich->height = luaL_checkinteger(L, -1);
+	lua_pop(L, 1);
+	
 	int size = cnt * sizeof(struct label_field);
 	rich->fields = (struct label_field*)lua_newuserdata(L, size);
 
@@ -492,13 +527,22 @@ lsettext(lua_State *L) {
 		lua_rawgeti(L, -1, 1);  //start
 		((struct label_field*)(fields+i))->start = luaL_checkinteger(L, -1);
 		lua_pop(L, 1);
-    
+
     lua_rawgeti(L, -1, 2);  //end
 		((struct label_field*)(fields+i))->end = luaL_checkinteger(L, -1);
     lua_pop(L, 1);
 
-		lua_rawgeti(L, -1, 3);  //color
-		((struct label_field*)(fields+i))->color = luaL_checkunsigned(L, -1); 
+		lua_rawgeti(L, -1, 3);  //type
+		uint32_t type = luaL_checkinteger(L, -1);
+		((struct label_field*)(fields+i))->type = type;
+		lua_pop(L, 1);
+		
+		lua_rawgeti(L, -1, 4); //val
+		if (type == RL_COLOR) {
+			((struct label_field*)(fields+i))->color = luaL_checkinteger(L, -1);
+		} else {
+			((struct label_field*)(fields+i))->val = luaL_checkinteger(L, -1);
+		}
 		lua_pop(L, 1);
 
 		//extend here
@@ -507,14 +551,23 @@ lsettext(lua_State *L) {
 	}
   lua_pop(L, 1);
 
-	lua_createtable(L,3,0);
+	get_reftable(L, 1);
+
+	lua_createtable(L,3,0); //sprite, table, userdata, userdata, uservalue, table
+
+	//userdata of rich_text
 	lua_pushvalue(L, 3);
 	lua_rawseti(L, -2, 1);
+
+	//userdata of fields
 	lua_pushvalue(L, 4);
 	lua_rawseti(L, -2, 2);
+
+	//string
 	lua_rawgeti(L, 2, 1);
 	lua_rawseti(L, -2, 3);
-	lua_setuservalue(L, 1);
+
+	lua_setfield(L, -2, "richtext");
 
 	s->data.rich_text = rich;
 	return 0;
@@ -538,11 +591,11 @@ lgetcolor(lua_State *L) {
 	struct sprite *s = self(L);
     if (s->type != TYPE_LABEL)
     {
-        lua_pushunsigned(L, s->t.color);
+        lua_pushinteger(L, s->t.color);
     }
     else
     {
-        lua_pushunsigned(L, label_get_color(s->s.label, &s->t));
+        lua_pushinteger(L, label_get_color(s->s.label, &s->t));
     }
 	return 1;
 }
@@ -550,7 +603,7 @@ lgetcolor(lua_State *L) {
 static int
 lsetcolor(lua_State *L) {
 	struct sprite *s = self(L);
-	uint32_t color = luaL_checkunsigned(L,2);
+	uint32_t color = luaL_checkinteger(L,2);
 	s->t.color = color;
 	return 0;
 }
@@ -558,7 +611,7 @@ lsetcolor(lua_State *L) {
 static int
 lsetalpha(lua_State *L) {
 	struct sprite *s = self(L);
-	uint8_t alpha = luaL_checkunsigned(L, 2);
+	uint8_t alpha = luaL_checkinteger(L, 2);
 	s->t.color = (s->t.color >> 8) | (alpha << 24);
 	return 0;
 }
@@ -566,23 +619,74 @@ lsetalpha(lua_State *L) {
 static int
 lgetalpha(lua_State *L) {
 	struct sprite *s = self(L);
-	lua_pushunsigned(L, s->t.color >> 24);
+	lua_pushinteger(L, s->t.color >> 24);
 	return 1;
 }
 
 static int
 lgetadditive(lua_State *L) {
 	struct sprite *s = self(L);
-	lua_pushunsigned(L, s->t.additive);
+	lua_pushinteger(L, s->t.additive);
 	return 1;
 }
 
 static int
 lsetadditive(lua_State *L) {
 	struct sprite *s = self(L);
-	uint32_t additive = luaL_checkunsigned(L,2);
+	uint32_t additive = luaL_checkinteger(L,2);
 	s->t.additive = additive;
 	return 0;
+}
+
+static int
+lgetparent(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->parent == NULL)
+		return 0;
+	lua_getuservalue(L, 1);
+	lua_rawgeti(L, -1, 0);
+	return 1;
+}
+
+static int
+lgetprogram(lua_State *L) {
+	struct sprite *s = self(L);
+	lua_pushinteger(L, s->t.program);
+	return 1;
+}
+
+static int
+lgetmaterial(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->material) {
+		get_reftable(L,1);
+		lua_getfield(L, -1, "material");
+		return 1;
+	}
+	return 0;
+}
+
+/*
+static int
+lgetreftable(lua_State *L) {
+	//struct sprite *s = self(L);
+	get_reftable(L, 1);
+	return 1;
+}*/
+
+//static const char * ud_key = "user_data";
+static uint32_t ud_key = 0xFFFF;
+static int
+lgetusrdata(lua_State *L) {
+	get_reftable(L, 1);
+	lua_rawgetp(L, -1, &ud_key);
+	if (lua_isnoneornil(L, -1)) {
+		lua_newtable(L);
+		lua_pushvalue(L, -1);  //sprite, uservalue, nil, table, table
+		
+		lua_rawsetp(L, 2, &ud_key);
+	}
+	return 1;
 }
 
 static void
@@ -600,8 +704,13 @@ lgetter(lua_State *L) {
 		{"message", lgetmessage },
 		{"matrix", lgetmat },
 		{"world_matrix", lgetwmat },
-		{"parent_name", lgetparentname },
-		{"has_parent", lhasparent },
+		{"parent_name", lgetparentname },	// todo: maybe unused , use parent instead
+		{"has_parent", lhasparent },	// todo: maybe unused , use parent instead
+		{"parent", lgetparent },
+		{"program", lgetprogram },
+		{"material", lgetmaterial },
+//		{"ref_table", lgetreftable },
+		{"usr_data", lgetusrdata },
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
@@ -621,10 +730,28 @@ lsetter(lua_State *L) {
 		{"message", lsetmessage },
 		{"program", lsetprogram },
 		{"scissor", lsetscissor },
-		{"picture_mask", lsetpicmask },
+        {"auto_scale", lsetautoscale},
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
+}
+
+static void
+ref_parent(lua_State *L, int index, int parent) {
+	get_reftable(L, index);
+	lua_pushvalue(L, parent);
+	lua_rawseti(L, -2, 0);	// set self to uservalue[0] (parent)
+	lua_pop(L, 1);
+}
+
+static void
+fetch_parent(lua_State *L, int index) {
+	lua_getuservalue(L, 1);
+	lua_rawgeti(L, -1, index+1);
+	// A child may not exist, but the name is valid. (empty dummy child)
+	if (!lua_isnil(L, -1)) {
+		ref_parent(L, lua_gettop(L), 1);
+	}
 }
 
 static int
@@ -634,28 +761,47 @@ lfetch(lua_State *L) {
 	int index = sprite_child(s, name);
 	if (index < 0)
 		return 0;
-	lua_getuservalue(L, 1);
-	lua_rawgeti(L, -1, index+1);
+	if (!s->multimount)	{ // multimount has no parent
+		fetch_parent(L, index);
+	}
 
 	return 1;
 }
 
 static int
 lfetch_by_index(lua_State *L) {
-  struct sprite *s = self(L);
-  if (s->type != TYPE_ANIMATION) {
-    return luaL_error(L, "Only animation can fetch by index");
-  }
-  int index = (int)luaL_checkinteger(L, 2);
-  struct pack_animation *ani = s->s.ani;
-  if (index < 0 || index >= ani->component_number) {
-    return luaL_error(L, "Component index out of range:%d", index);
-  }
-  
-  lua_getuservalue(L, 1);
-  lua_rawgeti(L, -1, index+1);
-  
-  return 1;
+	struct sprite *s = self(L);
+	if (s->type != TYPE_ANIMATION) {
+		return luaL_error(L, "Only animation can fetch by index");
+	}
+	int index = (int)luaL_checkinteger(L, 2);
+	struct pack_animation *ani = s->s.ani;
+	if (index < 0 || index >= ani->component_number) {
+		return luaL_error(L, "Component index out of range:%d", index);
+	}
+
+	fetch_parent(L, index);
+
+	return 1;
+}
+
+static void
+unlink_parent(lua_State *L, struct sprite * child, int idx) {
+	lua_getuservalue(L, idx);	// reftable
+	lua_rawgeti(L, -1, 0);	// reftable parent
+	struct sprite * parent = (struct sprite *)lua_touserdata(L, -1);
+	if (parent == NULL) {
+		luaL_error(L, "No parent object");
+	}
+	int index = sprite_child_ptr(parent, child);
+	if (index < 0) {
+		luaL_error(L, "Invalid child object");
+	}
+	lua_getuservalue(L, -1);	// reftable parent parentref
+	lua_pushnil(L);
+	lua_rawseti(L, -2, index+1);
+	lua_pop(L, 3);
+	sprite_mount(parent, index, NULL);
 }
 
 static int
@@ -667,20 +813,47 @@ lmount(lua_State *L) {
 		return luaL_error(L, "No child name %s", name);
 	}
 	lua_getuservalue(L, 1);
+
 	struct sprite * child = (struct sprite *)lua_touserdata(L, 3);
+
+	lua_rawgeti(L, -1, index+1);
+	if (lua_isnil(L, -1)) {
+		lua_pop(L, 1);
+	} else {
+		struct sprite * c = (struct sprite *)lua_touserdata(L, -1);
+		if (c == child) {
+			// mount not change
+			return 0;
+		}
+		if (!c->multimount) {
+			// try to remove parent ref
+			lua_getuservalue(L, -1);
+			if (lua_istable(L, -1)) {
+				lua_pushnil(L);
+				lua_rawseti(L, -2, 0);
+			}
+			lua_pop(L, 2);
+		} else {
+			lua_pop(L, 1);
+		}
+	}
+
 	if (child == NULL) {
 		sprite_mount(s, index, NULL);
 		lua_pushnil(L);
 		lua_rawseti(L, -2, index+1);
 	} else {
 		if (child->parent) {
-			struct sprite* p = child->parent;
-			sprite_mount(p, index, NULL);
-			//return luaL_error(L, "Can't mount sprite %p twice,pre parent:%p: %s", child,child->parent,child->name);
+			unlink_parent(L, child, 3);
 		}
 		sprite_mount(s, index, child);
 		lua_pushvalue(L, 3);
 		lua_rawseti(L, -2, index+1);
+
+		if (!child->multimount)	{ // multimount has no parent
+			// set child's new parent
+			ref_parent(L, 3, 1);
+		}
 	}
 	return 0;
 }
@@ -704,13 +877,62 @@ laabb(lua_State *L) {
 	struct sprite *s = self(L);
 	struct srt srt;
 	fill_srt(L,&srt,2);
+	bool world = lua_toboolean(L, 3);
+	
 	int aabb[4];
-	sprite_aabb(s, &srt, aabb);
+	sprite_aabb(s, &srt, world, aabb);
 	int i;
 	for (i=0;i<4;i++) {
 		lua_pushinteger(L, aabb[i]);
 	}
 	return 4;
+}
+
+static int
+lchar_size(lua_State *L) {
+	struct sprite *s = self(L);
+	if (s->type != TYPE_LABEL) {
+		return luaL_error(L, "Ony label can get char_size");
+	}
+	int idx=0;
+	luaL_checktype(L,2,LUA_TTABLE);
+	lua_pushinteger(L, s->s.label->width);
+	lua_rawseti(L, 2, ++idx);
+	lua_pushinteger(L, s->s.label->height);
+	lua_rawseti(L, 2, ++idx);
+	
+	const char* str = NULL;
+	if (!lua_isnil(L, 3)) {
+		str = lua_tostring(L, 3);
+	} else {
+		if (!s->data.rich_text || !s->data.rich_text->text) {
+			lua_pushinteger(L, idx);
+			return 1;
+		}
+		str = s->data.rich_text->text;
+	}
+	
+	if (!str) {
+		lua_pushinteger(L, idx);
+		return 1;
+	}
+	
+	int i;
+	for (i=0; str[i];) {
+		int width=0, height=0, unicode=0;
+		int len = label_char_size(s->s.label, str+i, &width, &height, &unicode);
+		lua_pushinteger(L, width);
+		lua_rawseti(L, 2, ++idx);
+		lua_pushinteger(L, height);
+		lua_rawseti(L, 2, ++idx);
+		lua_pushinteger(L, len);
+		lua_rawseti(L, 2, ++idx);
+		lua_pushinteger(L, unicode);
+		lua_rawseti(L, 2, ++idx);
+		i += len;
+	}
+	lua_pushinteger(L, idx);
+	return 1;
 }
 
 static int
@@ -720,11 +942,13 @@ ltext_size(lua_State *L) {
 		return luaL_error(L, "Ony label can get label_size");
 	}
 	int width = 0, height = 0;
-  if (s->data.rich_text != NULL)
-      label_size(s->data.rich_text->text, s->s.label, &width, &height);
+	if (s->data.rich_text != NULL) {
+		width = s->data.rich_text->width;
+		height = s->data.rich_text->height;
+	}
 	lua_pushinteger(L, width);
 	lua_pushinteger(L, height);
-    lua_pushinteger(L, s->s.label->size);
+	lua_pushinteger(L, s->s.label->size);
 	return 3;
 }
 
@@ -758,11 +982,18 @@ lset_anchor_particle(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->type != TYPE_ANCHOR)
 		return luaL_error(L, "need a anchor");
-	s->ps = (struct particle_system*)lua_touserdata(L, 2);
+
+	// ref the ps object and pic to anchor object
+	get_reftable(L, 1);
+	lua_pushvalue(L, 2);
+	lua_rawseti(L, -2, 0);
+	lua_pop(L, 1);
+
+	s->data.anchor->ps = (struct particle_system*)lua_touserdata(L, 2);
 	struct sprite *p = (struct sprite *)lua_touserdata(L, 3);
-	if (p==NULL)
-		return luaL_error(L, "need a sprite");
-	s->data.mask = p->s.pic;
+	if (p==NULL || p->type != TYPE_PICTURE)
+		return luaL_error(L, "need a picture sprite");
+	s->data.anchor->pic = p->s.pic;
 
 	return 0;
 }
@@ -800,7 +1031,7 @@ lmatrix_multi_draw(lua_State *L) {
 			struct matrix *m = (struct matrix *)lua_touserdata(L, -2);
 			matrix_mul(&tmp, m, mat);
 			s->t.mat = &tmp;
-			s->t.color = (uint32_t)lua_tounsigned(L, -1);
+			s->t.color = (uint32_t)lua_tointeger(L, -1);
 			lua_pop(L, 2);
 
 			sprite_draw(s, NULL);
@@ -811,7 +1042,7 @@ lmatrix_multi_draw(lua_State *L) {
 			lua_rawgeti(L, 5, i+1);
 			struct matrix *m = (struct matrix *)lua_touserdata(L, -2);
 			s->t.mat = m;
-			s->t.color = (uint32_t)lua_tounsigned(L, -1);
+			s->t.color = (uint32_t)lua_tointeger(L, -1);
 			lua_pop(L, 2);
 
 			sprite_draw(s, NULL);
@@ -858,7 +1089,7 @@ lmulti_draw(lua_State *L) {
             lua_rawgeti(L, 4, i+1);
             lua_rawgeti(L, 5, i+1);
             s->t.mat = (struct matrix *)lua_touserdata(L, -2);
-            s->t.color = (uint32_t)lua_tounsigned(L, -1);
+            s->t.color = (uint32_t)lua_tointeger(L, -1);
             lua_pop(L, 2);
 
             sprite_draw_as_child(s, &srt, parent_mat, parent_color);
@@ -869,8 +1100,8 @@ lmulti_draw(lua_State *L) {
             lua_rawgeti(L, 5, i+1);
             lua_rawgeti(L, 6, i+1);
             s->t.mat = (struct matrix *)lua_touserdata(L, -3);
-            s->t.color = (uint32_t)lua_tounsigned(L, -2);
-            s->t.additive = (uint32_t)lua_tounsigned(L, -1);
+            s->t.color = (uint32_t)lua_tointeger(L, -2);
+            s->t.additive = (uint32_t)lua_tointeger(L, -1);
             lua_pop(L, 3);
 
             sprite_draw_as_child(s, &srt, parent_mat, parent_color);
@@ -891,9 +1122,12 @@ lookup(lua_State *L, struct sprite * spr) {
 	for (i=0;sprite_component(root, i)>=0;i++) {
 		struct sprite * child = root->data.children[i];
 		if (child) {
-			lua_rawgeti(L, -1, i+1);
+			lua_rawgeti(L, -1, i+1);	// parent, reftable, child
 			if (child == spr) {
-				lua_replace(L,-2);
+				int child_index = lua_gettop(L);
+				int parent_index = child_index - 2;
+				ref_parent(L, child_index, parent_index);
+				lua_replace(L,-2);	// parent
 				return child;
 			} else {
 				lua_pop(L,1);
@@ -1038,9 +1272,48 @@ lrecursion_frame(lua_State *L) {
 
 static int
 lenable_visible_test(lua_State *L) {
-    bool enable = lua_toboolean(L, 1);
-    enable_screen_visible_test(enable);
-    return 0;
+	// todo: remove this api
+	return 0;
+}
+
+static int
+lcalc_matrix(lua_State *L) {
+	struct sprite * s = self(L);
+	struct matrix * mat = (struct matrix *)lua_touserdata(L, 2);
+	if (mat == NULL) {
+		return luaL_argerror(L, 2, "need a matrix");
+	}
+	struct matrix *local_matrix = s->t.mat;
+	if (local_matrix) {
+		struct matrix tmp;
+		sprite_matrix(s, &tmp);
+		matrix_mul(mat, local_matrix, &tmp);
+	} else {
+		sprite_matrix(s, mat);
+	}
+
+	lua_settop(L, 2);
+	return 1;
+}
+
+static int
+lget_pic_tex_coord(lua_State *L) {
+	struct sprite * s = self(L);
+	if (s->type != TYPE_PICTURE) {
+		return luaL_error(L, "Only picture can get tex coord");
+	}
+	int index = (int)luaL_checkinteger(L, 2);
+	struct pack_picture * pic = s->s.pic;
+	if (index < 0 || index >= pic->n) {
+		return luaL_error(L, "pic rect index out of range:[0,%d)", pic->n);
+	}
+	struct pack_quad quad = pic->rect[index];
+	int i;
+	for (i=0; i<4; i++) {
+		lua_pushnumber(L, quad.texture_coord[2*i] / 65535.0f);
+		lua_pushnumber(L, quad.texture_coord[2*i+1] / 65535.0f);
+	}
+	return 8;
 }
 
 static void
@@ -1068,13 +1341,246 @@ lmethod(lua_State *L) {
 		{ "test", ltest },
 		{ "aabb", laabb },
 		{ "text_size", ltext_size},
+		{ "char_size", lchar_size},
 		{ "child_visible", lchild_visible },
 		{ "children_name", lchildren_name },
 		{ "world_pos", lgetwpos },
 		{ "anchor_particle", lset_anchor_particle },
+		{ "calc_matrix", lcalc_matrix },
+		{ "pic_tex_coord", lget_pic_tex_coord },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);
+}
+
+static int
+lnewproxy(lua_State *L) {
+	static struct pack_part part = {
+		{
+			NULL,	// mat
+			0xffffffff,	// color
+			0,	// additive
+			PROGRAM_DEFAULT,
+			0,	// _dummy
+		},	// trans
+		0,	// component_id
+		0,	// touchable
+	};
+	static struct pack_frame frame = {
+		&part,
+		1,	// n
+		0,	// _dummy
+	};
+	static struct pack_action action = {
+		NULL,	// name
+		1,	// number
+		0,	// start_frame
+	};
+	static struct pack_animation ani = {
+		&frame,
+		&action,
+		1,	// frame_number
+		1,	// action_number
+		1,	// component_number
+		0,	// _dummy
+		{{
+			"proxy",	// name
+			0,	// id
+			0,	// _dummy
+		}},
+	};
+	struct sprite * s = (struct sprite *)lua_newuserdata(L, sizeof(struct sprite));
+	lua_newtable(L);
+	lua_setuservalue(L, -2);
+
+	s->parent = NULL;
+	s->s.ani = &ani;
+	s->t.mat = NULL;
+	s->t.color = 0xffffffff;
+	s->t.additive = 0;
+	s->t.program = PROGRAM_DEFAULT;
+	s->message = false;
+	s->visible = true;
+	s->multimount = true;
+	s->name = NULL;
+	s->id = 0;
+	s->type = TYPE_ANIMATION;
+	s->start_frame = 0;
+	s->total_frame = 0;
+	s->frame = 0;
+	s->material = NULL;
+	s->data.children[0] = NULL;
+	sprite_action(s, NULL);
+
+	return 1;
+}
+
+static int
+lnewmaterial(lua_State *L) {
+	struct sprite *s = self(L);
+	int sz = sprite_material_size(s);
+	if (sz == 0)
+		return luaL_error(L, "The program has not material");
+	get_reftable(L, 1);	
+
+	lua_createtable(L, 0, 1);
+	void * m = lua_newuserdata(L, sz); // sprite, uservalue, table, matertial
+	s->material = (struct material*)m;
+	material_init(m, sz, s->t.program);
+	lua_setfield(L, -2, "__obj");
+
+	lua_pushvalue(L, -1);	// sprite, uservalue, table, table
+	lua_setfield(L, -3, "material");
+	lua_pushinteger(L, s->t.program);
+
+	return 2;	// return table, program
+}
+
+static struct dfont*
+get_dfont(lua_State *L) {
+	lua_getfield(L, 1, "__obj");
+	struct dfont *df = (struct dfont*)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	return df;
+}
+
+static int
+lnewdfont(lua_State *L) {
+	int width = luaL_checkinteger(L, 1);
+	int height = luaL_checkinteger(L, 2);
+	int format = luaL_checkinteger(L, 3);
+	int id = luaL_checkinteger(L, 4);
+	
+	lua_createtable(L, 0, 1);
+	size_t size = dfont_data_size(width, height);
+	void * d = lua_newuserdata(L, size);
+	dfont_init(d, width, height);
+	lua_setfield(L, -2, "__obj");
+	
+	const char* err = texture_load(id, (TEXTURE_FORMAT)format, width, height, NULL, 0);
+	if (err) {
+		return luaL_error(L, err);
+	}
+	
+	RID tex = texture_glid(id);
+	render_texture_update(R, tex, width, height, NULL, 0, 0);
+	lua_pushinteger(L, id);
+	lua_setfield(L, -2, "texture");
+	
+	return 1;
+}
+
+static int
+ldeldfont(lua_State *L) {
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
+
+	lua_getfield(L, 1, "texture");
+	int tid = luaL_checkinteger(L, -1);
+	lua_pop(L, 1);
+	
+	texture_unload(tid);
+	
+	return 0;
+}
+
+static int
+ldfont_flush(lua_State *L) {
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
+	
+	dfont_flush(df);
+	return 0;
+}
+
+static int
+ldfont_lookup(lua_State *L) {
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
+	
+	int id = luaL_checkinteger(L, 2);
+	int rect_size = luaL_checkinteger(L, 3);
+	
+	const struct dfont_rect * rect = dfont_lookup(df, id, rect_size, 0);
+	
+	if (rect) {
+		lua_pushinteger(L, rect->x);
+		lua_pushinteger(L, rect->y);
+		lua_pushinteger(L, rect->w);
+		lua_pushinteger(L, rect->h);
+		return 4;
+	} else {
+		return 0;
+	}
+}
+
+static int
+ldfont_remove(lua_State *L) {
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
+	
+	int id = luaL_checkinteger(L, 2);
+	int rect_size = luaL_checkinteger(L, 3);
+	dfont_remove(df, id, rect_size, 0);
+	
+	return 0;
+}
+
+static int
+ldfont_insert(lua_State *L) {
+	struct dfont *df = get_dfont(L);
+	if (!df) {
+		return luaL_error(L, "invalid dfont table");
+	}
+	
+	lua_getfield(L, 1, "texture");
+	int tid = luaL_checkinteger(L, -1);
+	lua_pop(L, 1);
+	RID tex = texture_glid(tid);
+	
+	int id = luaL_checkinteger(L, 2);
+	int rect_size = luaL_checkinteger(L, 3);
+	int w = luaL_checkinteger(L, 4);
+	int h = luaL_checkinteger(L, 5);
+	void* buff = lua_touserdata(L, 6);
+	
+	const struct dfont_rect * rect = dfont_lookup(df, id, rect_size, 0);
+	if (rect==NULL) {
+		rect = dfont_insert(df, id, rect_size, w, h, 0);
+		if (rect) {
+			render_texture_subupdate(R, tex, buff, rect->x, rect->y, rect->w, rect->h);
+		}
+	}
+	
+	if (rect) {
+		lua_pushinteger(L, rect->x);
+		lua_pushinteger(L, rect->y);
+		lua_pushinteger(L, rect->w);
+		lua_pushinteger(L, rect->h);
+		return 4;
+	} else {
+		return 0;
+	}
+}
+
+static void
+ldfont_mothod(lua_State *L) {
+	luaL_Reg l[] = {
+		{"insert", ldfont_insert},
+		{"lookup", ldfont_lookup},
+		{"remove", ldfont_remove},
+		{"flush", ldfont_flush},
+		{NULL,NULL},
+	};
+	luaL_newlib(L, l);
 }
 
 int
@@ -1082,8 +1588,11 @@ ejoy2d_sprite(lua_State *L) {
 	luaL_Reg l[] ={
 		{ "new", lnew },
 		{ "label", lnewlabel },
-		{ "label_gen_outline", lgenoutline },
-        { "enable_visible_test", lenable_visible_test },
+		{ "proxy", lnewproxy },
+		{ "dfont", lnewdfont },
+		{ "delete_dfont", ldeldfont },
+		{ "new_material", lnewmaterial },
+		{ "enable_visible_test", lenable_visible_test },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
@@ -1094,6 +1603,8 @@ ejoy2d_sprite(lua_State *L) {
 	lua_setfield(L, -2, "get");
 	lsetter(L);
 	lua_setfield(L, -2, "set");
+	ldfont_mothod(L);
+	lua_setfield(L, -2, "dfont_method");
 
 	return 1;
 }

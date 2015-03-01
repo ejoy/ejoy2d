@@ -209,7 +209,7 @@ ldata(lua_State *L) {
 		lua_rawseti(L, 2, i+1);
 
 		uint32_t c = color4f(&p->color);
-		lua_pushunsigned(L, c);
+		lua_pushinteger(L, c);
 		lua_rawseti(L, 3, i+1);
 	}
 

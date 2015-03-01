@@ -5,7 +5,7 @@
 
 #define OPENGLES 2
 #include <OpenGLES/ES2/gl.h>
-#import <OpenGLES/ES1/glext.h>
+#import <OpenGLES/ES2/glext.h>
 
 #elif defined(linux) || defined(__linux) || defined(__linux__)
 

@@ -4,15 +4,33 @@ local pack = require "ejoy2d.spritepack"
 local shader = require "ejoy2d.shader"
 local richtext = require "ejoy2d.richtext"
 
+local setmetatable = setmetatable
 local method = c.method
 local method_fetch = method.fetch
 local method_test = method.test
 local method_fetch_by_index = method.fetch_by_index
+local dfont_method = c.dfont_method
 local fetch
 local test
 
 local get = c.get
 local set = c.set
+
+local get_material = get.material
+function get:material()
+	local m = get_material(self)
+	if m == nil then
+		local prog
+		m, prog = c.new_material(self)
+		if m == nil then
+			return
+		end
+		local meta = shader.material_meta(prog)
+		setmetatable(m, meta)
+	end
+
+	return m
+end
 
 local set_program = set.program
 function set:program(prog)
@@ -25,10 +43,12 @@ end
 
 local set_text = set.text
 function set:text(txt)
-	if type(txt) == "string" then
-		set_text(self, richtext:format(txt))
+	if not txt or txt == "" then
+		set_text(self, nil)
 	else
-		set_text(self, txt)
+		local t = type(txt)
+		assert(t=="string" or t=="number")
+		set_text(self, richtext:format(self, tostring(txt)))
 	end
 end
 
@@ -62,6 +82,15 @@ function sprite_meta.__newindex(spr, key, v)
 	method.mount(spr, key, v)
 end
 
+local get_parent = get.parent
+function get:parent()
+	local p = get_parent(self)
+	if p and not getmetatable(p) then
+		return debug.setmetatable(p, sprite_meta)
+	end
+	return p
+end
+
 -- local function
 function fetch(spr, child)
 	local cobj = method_fetch(spr, child)
@@ -78,7 +107,7 @@ function test(...)
 	end
 end
 
-function fetch_by_index(spr, index)
+local function fetch_by_index(spr, index)
 	local cobj = method_fetch_by_index(spr, index)
 	if cobj then
 		return debug.setmetatable(cobj, sprite_meta)
@@ -109,6 +138,26 @@ function sprite.label(tbl)
 		end
 		return l
 	end
+end
+
+function sprite.proxy()
+	local cobj = c.proxy()
+	return debug.setmetatable(cobj, sprite_meta)
+end
+
+local dfont_meta = {}
+
+function dfont_meta.__index(spr, key)
+	if dfont_method[key] then
+		return dfont_method[key]
+	else
+		error("Unsupport dfont get " ..  key)
+	end
+end
+
+function sprite.dfont(width, height, fmt, tid)
+	local cobj = c.dfont(width, height, fmt, tid)
+	return debug.setmetatable(cobj, dfont_meta)
 end
 
 return sprite

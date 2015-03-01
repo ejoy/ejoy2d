@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3F8A328719C16FCD00DD18FA /* lrenderbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F8A328219C16FCD00DD18FA /* lrenderbuffer.c */; };
+		3F8A328819C16FCD00DD18FA /* renderbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F8A328519C16FCD00DD18FA /* renderbuffer.c */; };
+		3F9C3AD319C17B360081BC5F /* ejoy2d in Resources */ = {isa = PBXBuildFile; fileRef = 3F9C3AD119C17B210081BC5F /* ejoy2d */; };
+		3F9C3AD419C17B3B0081BC5F /* examples in Resources */ = {isa = PBXBuildFile; fileRef = 3F9C3AD019C17A470081BC5F /* examples */; };
 		F4E6FA2118D2B142005A8D23 /* window.c in Sources */ = {isa = PBXBuildFile; fileRef = F4E6FA1D18D2B142005A8D23 /* window.c */; };
 		F4E6FA2218D2B142005A8D23 /* winfont.c in Sources */ = {isa = PBXBuildFile; fileRef = F4E6FA1E18D2B142005A8D23 /* winfont.c */; };
 		F4E6FA2318D2B142005A8D23 /* winfw.c in Sources */ = {isa = PBXBuildFile; fileRef = F4E6FA1F18D2B142005A8D23 /* winfw.c */; };
@@ -61,19 +65,14 @@
 		F4EA75D918CF6CEA00C37D31 /* texture.c in Sources */ = {isa = PBXBuildFile; fileRef = F4EA75B718CF6CEA00C37D31 /* texture.c */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		F44EF71418CF2816005EFAC1 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 12;
-			dstPath = "";
-			dstSubfolderSpec = 16;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
+		3F8A328219C16FCD00DD18FA /* lrenderbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lrenderbuffer.c; sourceTree = "<group>"; };
+		3F8A328319C16FCD00DD18FA /* lrenderbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lrenderbuffer.h; sourceTree = "<group>"; };
+		3F8A328419C16FCD00DD18FA /* platform_print.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = platform_print.h; sourceTree = "<group>"; };
+		3F8A328519C16FCD00DD18FA /* renderbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = renderbuffer.c; sourceTree = "<group>"; };
+		3F8A328619C16FCD00DD18FA /* renderbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = renderbuffer.h; sourceTree = "<group>"; };
+		3F9C3AD019C17A470081BC5F /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; name = examples; path = ../../examples; sourceTree = "<group>"; };
+		3F9C3AD119C17B210081BC5F /* ejoy2d */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ejoy2d; path = ../../ejoy2d; sourceTree = "<group>"; };
 		F44EF71618CF2816005EFAC1 /* example */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = example; sourceTree = BUILT_PRODUCTS_DIR; };
 		F4816EFA18CF3C9400A0199B /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		F4816EFD18CF3C9400A0199B /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -192,11 +191,13 @@
 		F44EF70B18CF2805005EFAC1 = {
 			isa = PBXGroup;
 			children = (
+				3F9C3AD119C17B210081BC5F /* ejoy2d */,
 				F4E6FAB618D2D361005A8D23 /* lua */,
 				F4E6FA1C18D2B142005A8D23 /* example */,
 				F4EA759618CF6CEA00C37D31 /* lib */,
 				F4816EF918CF3C9400A0199B /* Frameworks */,
 				F44EF71718CF2816005EFAC1 /* Products */,
+				3F9C3AD019C17A470081BC5F /* examples */,
 			);
 			sourceTree = "<group>";
 		};
@@ -308,6 +309,11 @@
 		F4EA759618CF6CEA00C37D31 /* lib */ = {
 			isa = PBXGroup;
 			children = (
+				3F8A328219C16FCD00DD18FA /* lrenderbuffer.c */,
+				3F8A328319C16FCD00DD18FA /* lrenderbuffer.h */,
+				3F8A328419C16FCD00DD18FA /* platform_print.h */,
+				3F8A328519C16FCD00DD18FA /* renderbuffer.c */,
+				3F8A328619C16FCD00DD18FA /* renderbuffer.h */,
 				F4EA759718CF6CEA00C37D31 /* array.h */,
 				F4EA759818CF6CEA00C37D31 /* dfont.c */,
 				F4EA759918CF6CEA00C37D31 /* dfont.h */,
@@ -356,7 +362,7 @@
 			buildPhases = (
 				F44EF71218CF2816005EFAC1 /* Sources */,
 				F44EF71318CF2816005EFAC1 /* Frameworks */,
-				F44EF71418CF2816005EFAC1 /* CopyFiles */,
+				3F9C3AD219C17B320081BC5F /* Resources */,
 			);
 			buildRules = (
 			);
@@ -393,6 +399,18 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		3F9C3AD219C17B320081BC5F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3F9C3AD419C17B3B0081BC5F /* examples in Resources */,
+				3F9C3AD319C17B360081BC5F /* ejoy2d in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		F44EF71218CF2816005EFAC1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -423,6 +441,7 @@
 				F4EA75C118CF6CEA00C37D31 /* lmatrix.c in Sources */,
 				F4E6FB0618D2D361005A8D23 /* lstate.c in Sources */,
 				F4E6FB0418D2D361005A8D23 /* loslib.c in Sources */,
+				3F8A328719C16FCD00DD18FA /* lrenderbuffer.c in Sources */,
 				F4E6FAF318D2D361005A8D23 /* lcode.c in Sources */,
 				F4E6FA2218D2B142005A8D23 /* winfont.c in Sources */,
 				F4E6FB0018D2D361005A8D23 /* lmem.c in Sources */,
@@ -436,6 +455,7 @@
 				F4EA75D918CF6CEA00C37D31 /* texture.c in Sources */,
 				F4EA75B918CF6CEA00C37D31 /* dfont.c in Sources */,
 				F4E6FB0D18D2D361005A8D23 /* lvm.c in Sources */,
+				3F8A328819C16FCD00DD18FA /* renderbuffer.c in Sources */,
 				F4EA75C718CF6CEA00C37D31 /* lsprite.c in Sources */,
 				F4E6FAFD18D2D361005A8D23 /* liolib.c in Sources */,
 				F4EA75BB18CF6CEA00C37D31 /* ejoy2dgame.c in Sources */,

@@ -9,6 +9,7 @@ pack.load {
 
 local obj = ej.sprite("sample","cannon")
 local turret = obj.turret
+
 -- set position (-100,0) scale (0.5)
 obj:ps(-100,0,0.5)
 

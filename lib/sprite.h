@@ -8,6 +8,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+struct material;
+
+struct anchor_data {
+	struct particle_system *ps;
+	struct pack_picture *pic;
+	struct matrix mat;
+};
+
 struct sprite {
 	struct sprite * parent;
 	uint16_t type;
@@ -27,18 +35,19 @@ struct sprite {
 	int frame;
 	bool visible;
 	bool message;
+	bool multimount;
 	const char *name;	// name for parent
+	struct material *material;
 	union {
 		struct sprite * children[1];
 		struct rich_text * rich_text;
 		int scissor;
-		struct pack_picture *mask;  //for picture only
+		struct anchor_data *anchor;
 	} data;
-	struct particle_system *ps;
 };
 
-void sprite_drawquad(struct pack_picture *picture, struct pack_picture *mask, const struct srt *srt, const struct sprite_trans *arg);
-void sprite_drawparticle(struct sprite *s, struct particle_system *ps, const struct srt *srt);
+struct sprite_trans * sprite_trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_trans *t, struct matrix *tmp_matrix);
+void sprite_drawquad(struct pack_picture *picture, const struct srt *srt, const struct sprite_trans *arg);
 void sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg);
 
 // sprite_size must be call before sprite_init
@@ -54,19 +63,21 @@ struct sprite * sprite_test(struct sprite *, struct srt *srt, int x, int y);
 
 // return child index, -1 means not found
 int sprite_child(struct sprite *, const char * childname);
+int sprite_child_ptr(struct sprite *, struct sprite *child);
 // return sprite id in pack, -1 for end
 int sprite_component(struct sprite *, int index);
 const char * sprite_childname(struct sprite *, int index);
 int sprite_setframe(struct sprite *, int frame, bool force_child);
 void sprite_mount(struct sprite *, int index, struct sprite *);
 
-void sprite_aabb(struct sprite *s, struct srt *srt, int aabb[4]);
-int sprite_pos(struct sprite *s, struct srt *srt, struct sprite *t, int pos[2]);
+void sprite_aabb(struct sprite *s, struct srt *srt, bool world_aabb, int aabb[4]);
+int sprite_pos(struct sprite *s, struct srt *srt, struct matrix *m, int pos[2]);	// todo: maybe unused, use sprite_matrix instead
+// calc the sprite's world matrix
+void sprite_matrix(struct sprite *s, struct matrix *mat);
 
 bool sprite_child_visible(struct sprite *s, const char * childname);
+int sprite_material_size(struct sprite *s);
 
 int ejoy2d_sprite(lua_State *L);
-
-void enable_screen_visible_test(bool enable);
 
 #endif
