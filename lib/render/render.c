@@ -110,7 +110,7 @@ check_opengl_error_debug(struct render *R, const char *filename, int line) {
 //		&& error != GL_STACK_UNDERFLOW
 	) {
 		log_printf(&R->log, "GL_ERROR (0x%x) @ %s : %d\n", error, filename, line);
-		exit(1);
+        // exit(1);
 	}
 }
 

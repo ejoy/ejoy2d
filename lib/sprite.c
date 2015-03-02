@@ -11,6 +11,11 @@
 #include "material.h"
 #include "screen.h"
 
+#define USE_DTEX
+#ifdef USE_DTEX
+#include "dtex.h"
+#endif
+
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
@@ -20,9 +25,14 @@ static int global_lable_only = 0;
 static bool enable_visible_test = false;
 static bool draw_scene = false;
 static struct srt viewport_srt;
+static int cur_dtex_id = -1;
 
-void enable_screen_visible_test(bool enable) {
+void sprite_screen_visible_test(bool enable) {
     enable_visible_test = enable;
+}
+
+void sprite_cur_dtex_id(int dtex_id) {
+    cur_dtex_id = dtex_id;
 }
 
 void
@@ -50,16 +60,31 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 	for (i=0;i<picture->n;i++) {
 		struct pack_quad *q = &picture->rect[i];
 		int glid = texture_glid(q->texid);
-		if (glid == 0)
+		if (glid == 0 && cur_dtex_id < 0)
 			continue;
-		shader_texture(glid, 0);
+        
+        const uint16_t* texture_coord = q->texture_coord;
+#ifdef USE_DTEX
+        if (cur_dtex_id >= 0) {
+            int dtex_glid = texture_glid(dtex_texid(cur_dtex_id));
+            if (dtex_glid != 0 ) {
+                const struct dtex_rect* dr = dtex_lookup(cur_dtex_id, q->texture_coord, q->texid);
+                if (dr) {
+                    glid = dtex_glid;
+                    texture_coord = dr->texture_coord;
+                }
+            }
+        }
+#endif
+        
+        shader_texture(glid, 0);
 		for (j=0;j<4;j++) {
 			int xx = q->screen_coord[j*2+0];
 			int yy = q->screen_coord[j*2+1];
 			float vx = (xx * m[0] + yy * m[2]) / 1024 + m[4];
 			float vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
-			float tx = q->texture_coord[j*2+0];
-			float ty = q->texture_coord[j*2+1];
+			float tx = texture_coord[j*2+0];
+			float ty = texture_coord[j*2+1];
 
 			screen_trans(&vx,&vy);
 			vb[j].vx = vx;
@@ -78,7 +103,6 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 		}
 
         struct vertex_pack *tmp_vb = draw_scene ? drawscene_vb : vb;
-        
         if (!enable_visible_test || !screen_is_poly_invisible(tmp_vb, 4))
             shader_draw(vb, arg->color, arg->additive);
 	}

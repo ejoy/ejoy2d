@@ -1335,7 +1335,7 @@ ldraw_label_only(lua_State *L) {
 
 static int
 lvisible_test(lua_State *L) {
-    enable_screen_visible_test(lua_toboolean(L, 1));
+    sprite_screen_visible_test(lua_toboolean(L, 1));
     return 0;
 }
 
@@ -1355,6 +1355,12 @@ lviewport_srt(lua_State *L) {
 
     set_viewport_srt(&srt);
 
+    return 0;
+}
+
+static int
+lset_dtex_id(lua_State *L) {
+    sprite_cur_dtex_id((int)lua_tointeger(L, 1));
     return 0;
 }
 
@@ -1692,6 +1698,7 @@ ejoy2d_sprite(lua_State *L) {
         { "draw_label_only", ldraw_label_only },
         { "visible_test", lvisible_test },
         { "viewport_srt", lviewport_srt },
+        { "set_dtex_id", lset_dtex_id },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
