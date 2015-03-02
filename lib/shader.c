@@ -210,6 +210,8 @@ static void
 renderbuffer_commit(struct render_buffer * rb) {
 	struct render *R = RS->R;
 	render_draw(R, DRAW_TRIANGLE, 0, 6 * rb->object);
+    RS->objcount += rb->object * 2;
+    RS->drawcall++;
 }
 
 static void
@@ -217,8 +219,7 @@ rs_commit() {
 	struct render_buffer * rb = &(RS->vb);
 	if (rb->object == 0)
 		return;
-    RS->objcount += rb->object * 2;
-	RS->drawcall++;
+    
 	struct render *R = RS->R;
 	render_buffer_update(R, RS->vertex_buffer, rb->vb, 4 * rb->object);
 	renderbuffer_commit(rb);
@@ -246,7 +247,6 @@ shader_drawbuffer(struct render_buffer * rb, float tx, float ty, float scale) {
 	shader_setuniform(PROGRAM_RENDERBUFFER, 0, UNIFORM_FLOAT4, v);
 
 	shader_program(PROGRAM_RENDERBUFFER, NULL);
-	RS->drawcall++;
 
 	renderbuffer_commit(rb);
 
