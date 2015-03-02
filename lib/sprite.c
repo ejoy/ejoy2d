@@ -71,6 +71,8 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
                 if (dtex_coord) {
                     glid = dtex_glid;
                     texture_coord = dtex_coord;
+                } else if (glid == 0) {
+                    continue;
                 }
             }
         }
