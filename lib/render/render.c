@@ -3,6 +3,7 @@
 #include "carray.h"
 #include "block.h"
 #include "log.h"
+#include "ejoy2dgame.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -109,8 +110,15 @@ check_opengl_error_debug(struct render *R, const char *filename, int line) {
 //		&& error != GL_STACK_OVERFLOW 
 //		&& error != GL_STACK_UNDERFLOW
 	) {
-		log_printf(&R->log, "GL_ERROR (0x%x) @ %s : %d\n", error, filename, line);
+		// log_printf(&R->log, "GL_ERROR (0x%x) @ %s : %d\n", error, filename, line);
         // exit(1);
+        
+        struct game *G = ejoy2d_game();
+        lua_State *L = ejoy2d_game_lua(G);
+        
+        char err[1024] = {0};
+        sprintf(err, "GL_ERROR (0x%x) @ %s : %d\n", error, filename, line);
+        ejoy2d_handle_error(L, "opengl error", err);
 	}
 }
 
@@ -133,7 +141,7 @@ render_buffer_create(struct render *R, enum RENDER_OBJ what, const void *data, i
 		return 0;
 	glGenBuffers(1, &buf->glid);
 	glBindBuffer(gltype, buf->glid);
-	if (data) {
+	if (data && n > 0) {
 		glBufferData(gltype, n * stride, data, GL_STATIC_DRAW);
 		buf->n = n;
 	} else {
