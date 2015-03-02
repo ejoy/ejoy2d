@@ -11,7 +11,6 @@
 #include "material.h"
 #include "screen.h"
 
-#define USE_DTEX
 #ifdef USE_DTEX
 #include "dtex.h"
 #endif
@@ -68,10 +67,10 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
         if (cur_dtex_id >= 0) {
             int dtex_glid = texture_glid(dtex_texid(cur_dtex_id));
             if (dtex_glid != 0 ) {
-                const struct dtex_rect* dr = dtex_lookup(cur_dtex_id, q->texture_coord, q->texid);
-                if (dr) {
+                const uint16_t* dtex_coord = dtex_lookup(cur_dtex_id, q->texture_coord, q->texid);
+                if (dtex_coord) {
                     glid = dtex_glid;
-                    texture_coord = dr->texture_coord;
+                    texture_coord = dtex_coord;
                 }
             }
         }
