@@ -287,6 +287,7 @@ ejoy2d_game_drawframe(struct game *G) {
 	shader_flush();
 	label_flush();
     G->last_draw_call = drawcall_count();
+    G->last_obj_count = object_count();
 }
 
 int

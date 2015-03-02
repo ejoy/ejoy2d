@@ -49,6 +49,7 @@ struct render_state {
 	RID tex[MAX_TEXTURE_CHANNEL];
 	int blendchange;
 	int drawcall;
+    int objcount;
 	RID vertex_buffer;
 	RID index_buffer;
 	RID layout;
@@ -183,6 +184,7 @@ void
 reset_drawcall_count() {
 	if (RS) {
 		RS->drawcall = 0;
+        RS->objcount = 0;
 	}
 }
 
@@ -193,6 +195,15 @@ drawcall_count() {
 	} else {
 		return 0;
 	}
+}
+
+int
+object_count() {
+    if (RS) {
+        return RS->objcount;
+    } else {
+        return 0;
+    }
 }
 
 static void 
@@ -206,6 +217,7 @@ rs_commit() {
 	struct render_buffer * rb = &(RS->vb);
 	if (rb->object == 0)
 		return;
+    RS->objcount += rb->object * 2;
 	RS->drawcall++;
 	struct render *R = RS->R;
 	render_buffer_update(R, RS->vertex_buffer, rb->vb, 4 * rb->object);

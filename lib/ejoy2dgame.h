@@ -9,6 +9,7 @@ struct game {
 	float logic_time;
     long update_count;
     int last_draw_call;
+    int last_obj_count;
     int cur_fps;
 };
 

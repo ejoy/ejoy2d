@@ -56,6 +56,7 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 	int *m = tmp.m;
     int *drawscene_m = drawscene_tmp.m;
 
+    int draw = 0;
 	for (i=0;i<picture->n;i++) {
 		struct pack_quad *q = &picture->rect[i];
 		int glid = texture_glid(q->texid);
@@ -104,8 +105,10 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 		}
 
         struct vertex_pack *tmp_vb = draw_scene ? drawscene_vb : vb;
-        if (!enable_visible_test || !screen_is_poly_invisible(tmp_vb, 4))
+        if (!enable_visible_test || !screen_is_poly_invisible(tmp_vb, 4)) {
             shader_draw(vb, arg->color, arg->additive);
+            draw = 1;
+        }
 	}
 }
 

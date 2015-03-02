@@ -42,5 +42,6 @@ void shader_reset();
 void shader_mask(float x, float y);
 void reset_drawcall_count();
 int drawcall_count();
+int object_count();
 
 #endif
