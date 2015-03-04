@@ -63,12 +63,12 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 		if (glid == 0 && cur_dtex_id < 0)
 			continue;
         
-        const uint16_t* texture_coord = q->texture_coord;
+        const uv_type* texture_coord = q->texture_coord;
 #ifdef USE_DTEX
         if (cur_dtex_id >= 0) {
             int dtex_glid = texture_glid(dtex_texid(cur_dtex_id));
             if (dtex_glid != 0 ) {
-                const uint16_t* dtex_coord = dtex_lookup(cur_dtex_id, q->texture_coord, q->texid);
+                const uv_type* dtex_coord = dtex_lookup(cur_dtex_id, q->texture_coord, q->texid);
                 if (dtex_coord) {
                     glid = dtex_glid;
                     texture_coord = dtex_coord;

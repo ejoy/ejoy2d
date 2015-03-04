@@ -701,6 +701,37 @@ render_texture_subupdate(struct render *R, RID id, const void *pixels, int x, in
 	CHECK_GL_ERROR
 }
 
+void render_texture_wrapmode(struct render *R, RID id, int mode) {
+    struct texture * tex = (struct texture *)array_ref(&R->texture, id);
+    if (tex == NULL)
+        return;
+    
+    GLenum type;
+    int target;
+    bind_texture(R, tex, 0, &type, &target);
+    
+    switch (mode) {
+        case 0:
+            glTexParameteri( type, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+            glTexParameteri( type, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+            break;
+            
+        case 1:
+            glTexParameteri( type, GL_TEXTURE_WRAP_S, GL_REPEAT );
+            glTexParameteri( type, GL_TEXTURE_WRAP_T, GL_REPEAT );
+            break;
+            
+        case 2:
+            glTexParameteri( type, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT );
+            glTexParameteri( type, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT );
+            break;
+            
+        default:
+            break;
+    }
+
+}
+
 // blend mode
 void 
 render_setblend(struct render *R, enum BLEND_FORMAT src, enum BLEND_FORMAT dst) {

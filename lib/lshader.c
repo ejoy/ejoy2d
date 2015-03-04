@@ -58,7 +58,10 @@ ldraw(lua_State *L) {
 	if (!lua_isnoneornil(L,3)) {
 		color = (uint32_t)lua_tointeger(L,3);
 	}
+    
 	uint32_t additive = (uint32_t)luaL_optinteger(L,4,0);
+    int uv_mul = !lua_isnoneornil(L, 5);
+    
 	shader_program(PROGRAM_PICTURE, NULL);
 	shader_texture(texid, 0);
 	int n = lua_rawlen(L, 2);
@@ -66,6 +69,7 @@ ldraw(lua_State *L) {
 	if (point * 4 != n) {
 		return luaL_error(L, "Invalid polygon");
 	}
+    
 	ARRAY(struct vertex_pack, vb, point);
 	int i;
 	for (i=0;i<point;i++) {
@@ -77,7 +81,7 @@ ldraw(lua_State *L) {
 		float ty = lua_tonumber(L, -3);
 		float vx = lua_tonumber(L, -2);
 		float vy = lua_tonumber(L, -1);
-		uint16_t u,v;
+		uv_type u,v;
 		lua_pop(L,4);
 		screen_trans(&vx,&vy);
 		texture_coord(tex, tx, ty, &u, &v);
@@ -85,12 +89,24 @@ ldraw(lua_State *L) {
 		vb[i].vy = vy - 1.0f;
 		vb[i].tx = u;
 		vb[i].ty = v;
+        
+        if (uv_mul) {
+            lua_rawgeti(L, 5, i*2+1);
+            lua_rawgeti(L, 5, i*2+2);
+            u = u * lua_tonumber(L, -2);
+            v = v * lua_tonumber(L, -1);
+            vb[i].tx *= u;
+            vb[i].ty *= v;
+            lua_pop(L, 2);
+        }
 	}
+    
 	if (point == 4) {
 		shader_draw(vb, color, additive);
 	} else {
 		shader_drawpolygon(point, vb, color, additive);
 	}
+    
 	return 0;
 }
 

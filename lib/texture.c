@@ -138,7 +138,7 @@ texture_deactive_rt() {
 }
 
 int
-texture_coord(int id, float x, float y, uint16_t *u, uint16_t *v) {
+texture_coord(int id, float x, float y, uv_type *u, uv_type *v) {
 	if (id < 0 || id >= POOL.count) {
 		*u = (uint16_t)x;
 		*v = (uint16_t)y;
@@ -147,14 +147,15 @@ texture_coord(int id, float x, float y, uint16_t *u, uint16_t *v) {
 	struct texture *tex = &POOL.tex[id];
 	if (tex->invw == 0) {
 		// not load the texture
-		*u = (uint16_t)x;
-		*v = (uint16_t)y;
+		*u = (uv_type)x;
+		*v = (uv_type)y;
 		return 1;
 	}
-//	x = (x+0.5f) * tex->invw;
-//	y = (y+0.5f) * tex->invh;
-	x *= tex->invw;
-	y *= tex->invh;
+    
+    x *= tex->invw;
+    y *= tex->invh;
+    
+#ifndef UV_FLOAT
 	if (x > 1.0f)
 		x = 1.0f;
 	if (y > 1.0f)
@@ -162,12 +163,14 @@ texture_coord(int id, float x, float y, uint16_t *u, uint16_t *v) {
 
 	x *= 0xffff;
 	y *= 0xffff;
-
-	*u = (uint16_t)x;
-	*v = (uint16_t)y;
-
+#endif
+    
+    *u = (uv_type)x;
+    *v = (uv_type)y;
+    
 	return 0;
 }
+
 
 void 
 texture_unload(int id) {

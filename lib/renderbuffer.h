@@ -9,8 +9,8 @@
 struct vertex_pack {
 	float vx;
 	float vy;
-	uint16_t tx;
-	uint16_t ty;
+	uv_type tx;
+	uv_type ty;
 };
 
 struct vertex {

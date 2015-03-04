@@ -5,6 +5,12 @@
 
 typedef unsigned int RID;
 
+#ifdef UV_FLOAT
+typedef float uv_type;
+#else
+typedef uint16_t uv_type;
+#endif
+
 struct render;
 
 struct render_init_args {
@@ -128,6 +134,7 @@ RID render_texture_create(struct render *R, int width, int height, enum TEXTURE_
 void render_texture_update(struct render *R, RID id, int width, int height, const void *pixels, int slice, int miplevel);
 // subupdate only support slice 0, miplevel 0
 void render_texture_subupdate(struct render *R, RID id, const void *pixels, int x, int y, int w, int h);
+void render_texture_wrapmode(struct render *R, RID id, int mode);
 
 RID render_target_create(struct render *R, int width, int height, enum TEXTURE_FORMAT format);
 // render_release TARGET would not release the texture attachment

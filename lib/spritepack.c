@@ -116,10 +116,11 @@ get_texid(struct import_stream *is, int texid) {
 }
 
 static inline void
-cal_texture_coord(float invw, float invh, float x, float y, uint16_t *u, uint16_t *v) {
+cal_texture_coord(float invw, float invh, float x, float y, uv_type *u, uv_type *v) {
     x *= invw;
     y *= invh;
     
+#ifndef UV_FLOAT
     if (x > 1.0f)
         x = 1.0f;
     if (y > 1.0f)
@@ -127,9 +128,10 @@ cal_texture_coord(float invw, float invh, float x, float y, uint16_t *u, uint16_
     
     x *= 0xffff;
     y *= 0xffff;
+#endif
     
-    *u = (uint16_t)x;
-    *v = (uint16_t)y;
+    *u = (uv_type)x;
+    *v = (uv_type)y;
 }
 
 static void

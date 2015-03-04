@@ -4,6 +4,12 @@
 #include <lua.h>
 #include <stdint.h>
 
+#ifdef UV_FLOAT
+typedef float uv_type;
+#else
+typedef uint16_t uv_type;
+#endif
+
 #define TYPE_EMPTY 0
 #define TYPE_PICTURE 1
 #define TYPE_ANIMATION 2
@@ -48,7 +54,7 @@ struct pack_label {
 
 struct pack_quad {
 	int texid;
-	uint16_t texture_coord[8];
+	uv_type texture_coord[8];
 	int32_t screen_coord[8];
 };
 
