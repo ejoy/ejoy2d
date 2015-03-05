@@ -51,6 +51,28 @@ update_tex(struct render_buffer *rb, int id) {
 	return 0;
 }
 
+static void
+renderbuffer_corner(struct render_buffer *rb, struct vertex_pack *vb) {
+    int i;
+    for (i = 0; i < 4; ++i) {
+        if (vb->vx < rb->corner[0]) {
+            rb->corner[0] = vb->vx;
+        }
+
+        if (vb->vx > rb->corner[1]) {
+            rb->corner[1] = vb->vx;
+        }
+
+        if (vb->vy < rb->corner[2]) {
+            rb->corner[2] = vb->vy;
+        }
+
+        if (vb->vy > rb->corner[3]) {
+            rb->corner[3] = vb->vy;
+        }
+    }
+}
+
 static int
 drawquad(struct render_buffer *rb, struct pack_picture *picture, const struct sprite_trans *arg) {
 	struct matrix tmp;
@@ -76,23 +98,9 @@ drawquad(struct render_buffer *rb, struct pack_picture *picture, const struct sp
 			vb[j].vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
 			vb[j].tx = q->texture_coord[j*2+0];
 			vb[j].ty = q->texture_coord[j*2+1];
-
-            if (vb[j].vx < rb->corner[0]) {
-                rb->corner[0] = vb[j].vx;
-            }
-
-            if (vb[j].vx > rb->corner[1]) {
-                rb->corner[1] = vb[j].vx;
-            }
-
-            if (vb[j].vy < rb->corner[2]) {
-                rb->corner[2] = vb[j].vy;
-            }
-
-            if (vb[j].vy > rb->corner[3]) {
-                rb->corner[3] = vb[j].vy;
-            }
+            renderbuffer_corner(rb, &vb[j]);
 		}
+
 		if (renderbuffer_add(rb, vb, arg->color, arg->additive)) {
 			return 1;
 		}
@@ -156,6 +164,8 @@ drawpolygon(struct render_buffer *rb, struct pack_polygon *poly, const struct sp
 			vb[j].vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
 			vb[j].tx = p->texture_coord[j*2+0];
 			vb[j].ty = p->texture_coord[j*2+1];
+
+            renderbuffer_corner(rb, &vb[j]);
 		}
 		if (add_polygon(rb, pn, vb, arg->color, arg->additive)) {
 			rb->object = object;
