@@ -29,6 +29,8 @@ struct render_buffer {
     int vb_size;
 	RID vbid;
 	struct quad *vb;
+
+    float corner[4];
 };
 
 
