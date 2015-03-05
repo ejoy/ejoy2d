@@ -28,6 +28,7 @@ void shader_flush();
 void shader_clear(unsigned long argb);
 int shader_version();
 void shader_scissortest(int enable);
+void shader_texture_wrapmode(int texid, int mode);
 
 int ejoy2d_shader(lua_State *L);
 

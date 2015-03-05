@@ -1117,6 +1117,35 @@ sprite_setframe(struct sprite *s, int frame, bool force_child) {
 	return total_frame;
 }
 
+void
+sprite_set_texture_wrap(struct sprite *s, int mode, float* uv_mul) {
+    if (s == NULL)
+        return;
+    
+    int i;
+    if (s->type == TYPE_ANIMATION) {
+        struct pack_animation * ani = s->s.ani;
+        for (i=0;i<ani->component_number;i++) {
+            if (ani->component[i].id == ANCHOR_ID)
+                continue;
+            sprite_set_texture_wrap(s->data.children[i], mode, uv_mul);
+        }
+    } else if (s->type == TYPE_PICTURE) {
+        struct pack_picture *pic = s->s.pic;
+        if (pic->n > 0) {
+            // 假设一个sprite只用到一张texture的，一个picture
+            shader_texture_wrapmode(pic->rect[0].texid, mode);
+            int i = 0;
+            for (i = 0; i < 8; i++) {
+                uv_type val = pic->rect[0].texture_coord[i];
+                val *= uv_mul[i];
+                pic->rect[0].texture_coord[i] = val;
+            }
+            return;
+        }
+    }
+}
+
 int 
 sprite_material_size(struct sprite *s) {
 	return material_size(s->t.program);

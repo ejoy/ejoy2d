@@ -922,6 +922,25 @@ ldraw_scene(lua_State *L) {
 }
 
 static int
+lset_wrap_mode(lua_State *L) {
+    struct sprite *s = self(L);
+    float uv_mul[8] = {1.0f, 1.0f,   1.0f, 1.0f,   1.0f, 1.0f,   1.0f, 1.0f};
+    if (!lua_isnoneornil(L, 3)) {
+        int i = 0;
+        for (i = 0; i < 4; i++) {
+            lua_rawgeti(L, 3, i*2+1);
+            lua_rawgeti(L, 3, i*2+2);
+            uv_mul[i*2] = lua_tonumber(L, -2);
+            uv_mul[i*2+1] = lua_tonumber(L, -1);
+            lua_pop(L, 2);
+        }
+    }
+    sprite_set_texture_wrap(s, (int)lua_tointeger(L, 2), uv_mul);
+    
+    return 0;
+}
+
+static int
 laabb(lua_State *L) {
 	struct sprite *s = self(L);
 	struct srt srt;
@@ -1451,6 +1470,7 @@ lmethod(lua_State *L) {
 		{ "calc_matrix", lcalc_matrix },
 		{ "pic_tex_coord", lget_pic_tex_coord },
         { "has_action", lhas_action },
+        { "set_wrap_mode", lset_wrap_mode },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);

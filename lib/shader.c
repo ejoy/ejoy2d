@@ -520,3 +520,11 @@ material_settexture(struct material *m, int channel, int texture) {
 	m->texture[channel] = texture;
 	return 0;
 }
+
+void
+shader_texture_wrapmode(int texid, int mode) {
+    int glid = texture_glid(texid);
+    if (glid == 0)
+        return;
+    render_texture_wrapmode(RS->R, glid, mode);
+}

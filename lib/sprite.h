@@ -82,6 +82,7 @@ void sprite_screen_visible_test(bool enable);
 void sprite_cur_dtex_id(int dtex_id);
 bool sprite_child_visible(struct sprite *s, const char * childname);
 void sprite_set_child_visible(struct sprite *s, const char * childname, bool visible);
+void sprite_set_texture_wrap(struct sprite *s, int mode, float* uv_mul);
 int sprite_material_size(struct sprite *s);
 
 int ejoy2d_sprite(lua_State *L);
