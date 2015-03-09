@@ -51,14 +51,21 @@ texture_reduce(enum TEXTURE_FORMAT type, int *width, int *height, void *buffer) 
 	if (type != TEXTURE_RGBA8) {
 		return;
 	}
+
 	uint32_t *src = (uint32_t*)buffer;
-	uint32_t *dst = (uint32_t*)buffer;
+	char *dst = (char*)buffer;
+    uint32_t average;
+    int count = 0;
 	int i,j;
 	for (i=0;i<h;i+=2) {
 		for (j=0;j<w;j+=2) {
 			uint32_t c[4] = { src[j], src[j+1], src[j+w], src[j+w+1] };
-			*dst = average4(c);
-			++dst;
+            average = average4(c);
+            dst[count] = average & 0xff;
+            dst[count + 1] = (average >> 8) & 0xff;
+            dst[count + 2] = (average >> 16) & 0xff;
+            dst[count + 3] = (average >> 24) & 0xff;
+            count += 4;
 		}
 		src += w*2;
 	}
