@@ -1,6 +1,7 @@
 #include "sprite.h"
 #include "renderbuffer.h"
 #include "shader.h"
+#include "screen.h"
 
 #include <lua.h>
 #include <lauxlib.h>
