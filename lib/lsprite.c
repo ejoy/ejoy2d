@@ -1340,7 +1340,7 @@ lsr(lua_State *L) {
 static int
 lrecursion_frame(lua_State *L) {
 	struct sprite * s = self(L);
-	int frame = (int)luaL_checkinteger(L,2);
+	int frame = (int)luaL_checknumber(L,2);
 	int f = sprite_setframe(s, frame, true);
 	lua_pushinteger(L, f);
 	return 1;
