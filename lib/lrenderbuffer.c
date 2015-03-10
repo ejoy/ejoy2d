@@ -11,7 +11,10 @@
 static int
 ldelbuffer(lua_State *L) {
 	struct render_buffer *rb = (struct render_buffer *)lua_touserdata(L, 1);
-    free(rb->vb);
+    if (rb->vb) {
+        free(rb->vb);
+    }
+
 	renderbuffer_unload(rb);
 	return 0;
 }
@@ -69,6 +72,18 @@ ldrawbuffer(lua_State *L) {
 }
 
 static int
+lfree_vb(lua_State *L) {
+	struct render_buffer *rb = (struct render_buffer *)luaL_checkudata(L, 1, "renderbuffer");
+    if (rb->vb) {
+        free(rb->vb);
+        rb->vb_size = 0;
+        rb->vb = NULL;
+    }
+
+    return 0;
+}
+
+static int
 lnewbuffer(lua_State *L) {
     int size = luaL_optinteger(L, 1, MAX_COMMBINE);
 
@@ -86,6 +101,7 @@ lnewbuffer(lua_State *L) {
 			{ "add", laddsprite },
 			{ "upload", lupload },
 			{ "draw", ldrawbuffer },
+            { "free_vb", lfree_vb },
 			{ NULL, NULL },
 		};
 		luaL_newlib(L, l);
