@@ -68,7 +68,7 @@ struct pack_picture {
 #define SIZEOF_PICTURE (sizeof(struct pack_picture) - sizeof(struct pack_quad))
 
 struct pack_poly {
-	uint16_t *texture_coord;
+	uv_type *texture_coord;
 	int32_t *screen_coord;
 	int texid;
 	int n;
