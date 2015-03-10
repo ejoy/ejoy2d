@@ -24,9 +24,11 @@
 #define CHANGE_TARGET 0x40
 #define CHANGE_SCISSOR 0x80
 
-//#define CHECK_GL_ERROR
-//#define CHECK_GL_ERROR assert(check_opengl_error());
+#ifndef DISABLE_GL_ERROR_CHECK
 #define CHECK_GL_ERROR check_opengl_error_debug((struct render *)R, __FILE__, __LINE__);
+#else
+#define CHECK_GL_ERROR
+#endif
 
 struct buffer {
 	GLuint glid;
