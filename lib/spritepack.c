@@ -147,7 +147,6 @@ import_picture(struct import_stream *is, float invw, float invh) {
 		for (j=0;j<8;j+=2) {
 			float x = (float)import_word(is);
 			float y = (float)import_word(is);
-			// todo: check the return value
             int ret = texture_coord(q->texid, x, y, &q->texture_coord[j], &q->texture_coord[j+1]);
             if (ret != 0) {
                 assert(invw > 0 && invh > 0);
@@ -171,7 +170,7 @@ import_polygon(struct import_stream *is, float invw, float invh) {
 		int texid = import_byte(is);
 		p->texid = get_texid(is, texid);
 		p->n = import_byte(is);
-		p->texture_coord = (uint16_t *)ialloc(is->alloc, p->n * 2 * sizeof(*p->texture_coord));
+		p->texture_coord = (uv_type *)ialloc(is->alloc, p->n * 2 * sizeof(*p->texture_coord));
 		p->screen_coord = (int32_t *)ialloc(is->alloc, p->n * 2 * sizeof(uint32_t));
 		for (j=0;j<p->n*2;j+=2) {
 			float x = (float)import_word(is);
