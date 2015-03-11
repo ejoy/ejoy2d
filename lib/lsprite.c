@@ -1384,6 +1384,16 @@ lset_dtex_id(lua_State *L) {
 }
 
 static int
+ldrawscene_st(lua_State *L) {
+    float s = luaL_checknumber(L, 1);
+    float x = luaL_checknumber(L, 2);
+    float y = luaL_checknumber(L, 3);
+
+    sprite_drawscene_st(s, x, y);
+    return 0;
+}
+
+static int
 lcalc_matrix(lua_State *L) {
 	struct sprite * s = self(L);
 	struct matrix * mat = (struct matrix *)lua_touserdata(L, 2);
@@ -1719,6 +1729,7 @@ ejoy2d_sprite(lua_State *L) {
         { "visible_test", lvisible_test },
         { "viewport_srt", lviewport_srt },
         { "set_dtex_id", lset_dtex_id },
+        { "drawscene_st", ldrawscene_st },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);

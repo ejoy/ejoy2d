@@ -25,6 +25,9 @@ static bool enable_visible_test = false;
 static bool draw_scene = false;
 static struct srt viewport_srt;
 static int cur_dtex_id = -1;
+static struct vertex_pack drawscene_vb[4];
+
+static float scalex, scaley, transx, transy;
 
 void sprite_screen_visible_test(bool enable) {
     enable_visible_test = enable;
@@ -38,7 +41,6 @@ void
 sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const struct sprite_trans *arg) {
 	struct matrix tmp;
 	struct vertex_pack vb[4];
-    struct vertex_pack drawscene_vb[4];
     struct matrix drawscene_tmp;
 	int i,j;
 	if (arg->mat == NULL) {
@@ -48,13 +50,9 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 	}
     if (!draw_scene) {
         matrix_srt(&tmp, srt);
-    } else {
-        drawscene_tmp = tmp;
-        matrix_srt(&drawscene_tmp, &viewport_srt);
     }
 
 	int *m = tmp.m;
-    int *drawscene_m = drawscene_tmp.m;
 
     int draw = 0;
 	for (i=0;i<picture->n;i++) {
@@ -88,6 +86,7 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 			float tx = texture_coord[j*2+0];
 			float ty = texture_coord[j*2+1];
 
+
 			screen_trans(&vx,&vy);
 			vb[j].vx = vx;
 			vb[j].vy = vy;
@@ -95,12 +94,8 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 			vb[j].ty = ty;
 
             if (draw_scene) {
-                float tmp_vx = (xx * drawscene_m[0] + yy * drawscene_m[2]) / 1024 + drawscene_m[4];
-                float tmp_vy = (xx * drawscene_m[1] + yy * drawscene_m[3]) / 1024 + drawscene_m[5];
-                screen_trans(&tmp_vx, &tmp_vy);
-
-                drawscene_vb[j].vx = tmp_vx;
-                drawscene_vb[j].vy = tmp_vy;
+                drawscene_vb[j].vx = vx * scalex + transx;
+                drawscene_vb[j].vy = vy * scaley + transy;
             }
 		}
 
@@ -1169,5 +1164,11 @@ screen_draw_scene_end() {
 void
 set_viewport_srt(struct srt *s) {
     viewport_srt = *s;
+}
+
+void
+sprite_drawscene_st(float s, float x, float y) {
+    scalex = scaley = s;
+    transx = x; transy = y;
 }
 

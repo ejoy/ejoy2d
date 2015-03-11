@@ -89,5 +89,6 @@ int ejoy2d_sprite(lua_State *L);
 void screen_draw_scene_begin();
 void screen_draw_scene_end();
 void set_viewport_srt(struct srt *srt);
+void sprite_drawscene_st(float s, float x, float y);
 
 #endif
