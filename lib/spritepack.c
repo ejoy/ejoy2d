@@ -145,8 +145,8 @@ import_picture(struct import_stream *is, float invw, float invh) {
 		int texid = import_byte(is);
 		q->texid = get_texid(is, texid);
 		for (j=0;j<8;j+=2) {
-			float x = (float)import_word(is);
-			float y = (float)import_word(is);
+			float x = (float)import_int32(is);
+			float y = (float)import_int32(is);
             int ret = texture_coord(q->texid, x, y, &q->texture_coord[j], &q->texture_coord[j+1]);
             if (ret != 0) {
                 assert(invw > 0 && invh > 0);
