@@ -19,10 +19,23 @@
 #define SRT_SCALE 6
 
 static struct render *R = NULL;
+static int view_srt_dirty = true;
 
 void
 lsprite_initrender(struct render* r) {
 	R = r;
+}
+
+// index要>0, 不能是相对值
+static void
+get_reftable(lua_State *L, int index) {
+    lua_getuservalue(L, index);
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 1);
+        lua_createtable(L, 0, 1);
+        lua_pushvalue(L, -1);
+        lua_setuservalue(L, index);
+    }
 }
 
 static struct sprite *
@@ -188,7 +201,7 @@ newanchor(lua_State *L) {
 }
 
 static struct sprite *
-newsprite(lua_State *L, struct sprite_pack *pack, int id) {
+newsprite(lua_State *L, struct sprite_pack *pack, int id, int cache_enable) {
 	if (id == ANCHOR_ID) {
 		return newanchor(L);
 	}
@@ -208,12 +221,25 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 			lua_pushvalue(L,-1);
 			lua_setuservalue(L, -3);	// set uservalue for sprite
 		}
-		struct sprite *c = newsprite(L, pack, childid);
+		struct sprite *c = newsprite(L, pack, childid, cache_enable);
 		if (c) {
 			c->name = sprite_childname(s, i);
 			sprite_mount(s, i, c);
 			update_message(c, pack, id, i, s->frame);
 			lua_rawseti(L, -2, i+1);
+            
+            if (cache_enable && c->type == TYPE_PICTURE) {
+                lua_rawgeti(L, -1, i+1);
+                get_reftable(L, lua_absindex(L, -1));
+                
+                // gen cache userdata
+                int size = sizeof(struct cache_vp);
+                struct cache_vp* cache = (struct cache_vp*)lua_newuserdata(L, size);
+                c->data.vp_cache = cache;
+                lua_setfield(L, -2, "usr_vp_cache");
+                
+                lua_pop(L, 2);
+            }
 		}
 	}
 	if (i>0) {
@@ -235,7 +261,8 @@ lnew(lua_State *L) {
 		return luaL_error(L, "Need a sprite pack");
 	}
 	int id = (int)luaL_checkinteger(L, 2);
-	struct sprite * s = newsprite(L, pack, id);
+    int cache = lua_toboolean(L, 3);
+	struct sprite * s = newsprite(L, pack, id, cache);
 	if (s) {
 		return 1;
 	}
@@ -249,17 +276,6 @@ self(lua_State *L) {
 		luaL_error(L, "Need sprite");
 	}
 	return s;
-}
-
-static void
-get_reftable(lua_State *L, int index) {
-	lua_getuservalue(L, index);
-	if (lua_isnil(L, -1)) {
-		lua_pop(L, 1);
-		lua_createtable(L, 0, 1);
-		lua_pushvalue(L, -1);
-		lua_setuservalue(L, index);
-	}
 }
 
 static int
@@ -914,6 +930,8 @@ ldraw_scene(lua_State *L) {
     screen_draw_scene_begin();
 
     struct sprite *s = self(L);
+    if (view_srt_dirty)
+        s->cache_dirty = true;
     sprite_draw(s, NULL);
 
     screen_draw_scene_end();
@@ -1265,6 +1283,7 @@ ltest(lua_State *L) {
 static int
 lps(lua_State *L) {
 	struct sprite *s = self(L);
+    s->cache_dirty = true;
 	struct matrix *m = &s->mat;
 	if (s->t.mat == NULL) {
 		matrix_identity(m);
@@ -1372,8 +1391,7 @@ lviewport_srt(lua_State *L) {
     srt.scaley = s * 1024;
     srt.rot = 0;
 
-    set_viewport_srt(&srt);
-
+    view_srt_dirty = set_viewport_srt(&srt);
     return 0;
 }
 

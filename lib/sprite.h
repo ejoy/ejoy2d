@@ -3,12 +3,14 @@
 
 #include "spritepack.h"
 #include "matrix.h"
+#include "renderbuffer.h"
 
 #include <lua.h>
 #include <stdint.h>
 #include <stdbool.h>
 
 struct material;
+struct vertex_pack;
 
 struct anchor_data {
 	struct particle_system *ps;
@@ -16,10 +18,16 @@ struct anchor_data {
 	struct matrix mat;
 };
 
+struct cache_vp {
+    struct vertex_pack vb[4];
+    int texglid;
+};
+
 struct sprite {
 	struct sprite * parent;
 	uint16_t type;
 	uint16_t id;
+    bool cache_dirty;
 	struct sprite_trans t;
 	union {
 		struct pack_animation *ani;
@@ -43,13 +51,16 @@ struct sprite {
 		struct rich_text * rich_text;
 		int scissor;
 		struct anchor_data *anchor;
+        struct cache_vp* vp_cache;
 	} data;
 };
 
 struct sprite_trans * sprite_trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_trans *t, struct matrix *tmp_matrix);
 void sprite_drawquad(struct pack_picture *picture, const struct srt *srt, const struct sprite_trans *arg);
+int sprite_drawquad_ex(struct pack_picture *picture, const struct srt *srt, const struct sprite_trans *arg, struct vertex_pack * vp, int tex_glid);
 void sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg);
 int sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct material * material);
+int sprite_draw_child_cache(struct sprite *s, struct sprite_trans * parent_ts, struct sprite_trans * frame_ts, struct material * material);
 
 // sprite_size must be call before sprite_init
 int sprite_size(struct sprite_pack *pack, int id);
@@ -88,7 +99,7 @@ int sprite_material_size(struct sprite *s);
 int ejoy2d_sprite(lua_State *L);
 void screen_draw_scene_begin();
 void screen_draw_scene_end();
-void set_viewport_srt(struct srt *srt);
+int set_viewport_srt(struct srt *srt);
 void sprite_drawscene_st(float s, float x, float y);
 
 #endif

@@ -41,7 +41,6 @@ void
 sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const struct sprite_trans *arg) {
 	struct matrix tmp;
 	struct vertex_pack vb[4];
-    struct matrix drawscene_tmp;
 	int i,j;
 	if (arg->mat == NULL) {
 		matrix_identity(&tmp);
@@ -53,8 +52,6 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
     }
 
 	int *m = tmp.m;
-
-    int draw = 0;
 	for (i=0;i<picture->n;i++) {
 		struct pack_quad *q = &picture->rect[i];
 		int glid = texture_glid(q->texid);
@@ -62,36 +59,17 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 			continue;
         
         const uv_type* texture_coord = q->texture_coord;
-#ifdef USE_DTEX
-        if (cur_dtex_id >= 0 && (glid == 0 || dtex_enable_scale(viewport_srt.scalex))) {
-            int dtex_glid = texture_glid(dtex_texid(cur_dtex_id));
-            if (dtex_glid != 0 ) {
-                const uv_type* dtex_coord = dtex_lookup(cur_dtex_id, q->texture_coord, q->texid);
-                if (dtex_coord) {
-                    glid = dtex_glid;
-                    texture_coord = dtex_coord;
-                } else if (glid == 0) {
-                    continue;
-                }
-            }
-        }
-#endif
-        
-        shader_texture(glid, 0);
 		for (j=0;j<4;j++) {
 			int xx = q->screen_coord[j*2+0];
 			int yy = q->screen_coord[j*2+1];
 			float vx = (xx * m[0] + yy * m[2]) / 1024 + m[4];
 			float vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
-			float tx = texture_coord[j*2+0];
-			float ty = texture_coord[j*2+1];
-
 
 			screen_trans(&vx,&vy);
 			vb[j].vx = vx;
 			vb[j].vy = vy;
-			vb[j].tx = tx;
-			vb[j].ty = ty;
+			vb[j].tx = texture_coord[j*2+0];
+			vb[j].ty = texture_coord[j*2+1];
 
             if (draw_scene) {
                 drawscene_vb[j].vx = vx * scalex + transx;
@@ -101,10 +79,96 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 
         struct vertex_pack *tmp_vb = draw_scene ? drawscene_vb : vb;
         if (!enable_visible_test || !screen_is_poly_invisible(tmp_vb, 4)) {
+#ifdef USE_DTEX
+            if (cur_dtex_id >= 0 && (glid == 0 || dtex_enable_scale(viewport_srt.scalex))) {
+                int dtex_glid = texture_glid(dtex_texid(cur_dtex_id));
+                if (dtex_glid != 0 ) {
+                    const uv_type* dtex_coord = dtex_lookup(cur_dtex_id, q->texture_coord, q->texid);
+                    if (dtex_coord) {
+                        glid = dtex_glid;
+                        for (j=0;j<4;j++) {
+                            vb[j].tx = dtex_coord[j*2+0];
+                            vb[j].ty = dtex_coord[j*2+1];
+                        }
+                    }
+                }
+            }
+#endif
+            shader_texture(glid, 0);
             shader_draw(vb, arg->color, arg->additive);
-            draw = 1;
         }
 	}
+}
+
+int
+sprite_drawquad_ex(struct pack_picture *picture, const struct srt *srt,  const struct sprite_trans *arg, struct vertex_pack* vb, int tex_glid) {
+    if (tex_glid < 0) {
+        struct matrix tmp;
+        int i,j;
+        if (arg->mat == NULL) {
+            matrix_identity(&tmp);
+        } else {
+            tmp = *arg->mat;
+        }
+        if (!draw_scene) {
+            matrix_srt(&tmp, srt);
+        }
+        
+        int *m = tmp.m;
+        for (i=0;i<picture->n;i++) {
+            struct pack_quad *q = &picture->rect[i];
+            int glid = texture_glid(q->texid);
+            if (glid == 0 && cur_dtex_id < 0)
+                continue;
+            
+            const uv_type* texture_coord = q->texture_coord;
+            for (j=0;j<4;j++) {
+                int xx = q->screen_coord[j*2+0];
+                int yy = q->screen_coord[j*2+1];
+                float vx = (xx * m[0] + yy * m[2]) / 1024 + m[4];
+                float vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
+                float tx = texture_coord[j*2+0];
+                float ty = texture_coord[j*2+1];
+                
+                screen_trans(&vx,&vy);
+                vb[j].vx = vx;
+                vb[j].vy = vy;
+                vb[j].tx = tx;
+                vb[j].ty = ty;
+                
+                if (draw_scene) {
+                    drawscene_vb[j].vx = vx * scalex + transx;
+                    drawscene_vb[j].vy = vy * scaley + transy;
+                }
+            }
+            
+            struct vertex_pack *tmp_vb = draw_scene ? drawscene_vb : vb;
+            if (!enable_visible_test || !screen_is_poly_invisible(tmp_vb, 4)) {
+#ifdef USE_DTEX
+                if (cur_dtex_id >= 0 && (glid == 0 || dtex_enable_scale(viewport_srt.scalex))) {
+                    int dtex_glid = texture_glid(dtex_texid(cur_dtex_id));
+                    if (dtex_glid != 0 ) {
+                        const uv_type* dtex_coord = dtex_lookup(cur_dtex_id, q->texture_coord, q->texid);
+                        if (dtex_coord) {
+                            glid = dtex_glid;
+                            for (j=0;j<4;j++) {
+                                vb[j].tx = dtex_coord[j*2+0];
+                                vb[j].ty = dtex_coord[j*2+1];
+                            }
+                        }
+                    }
+                }
+#endif
+                shader_texture(glid, 0);
+                shader_draw(vb, arg->color, arg->additive);
+                return glid;
+            }
+        }
+    } else {
+        shader_texture(tex_glid, 0);
+        shader_draw(vb, arg->color, arg->additive);
+    }
+    return -1;
 }
 
 void
@@ -216,6 +280,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
 	s->t.program = PROGRAM_DEFAULT;
+    s->cache_dirty = true;
 	s->message = false;
 	s->visible = true;
 	s->multimount = false;
@@ -244,7 +309,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 		if (s->type == TYPE_PANNEL) {
 			struct pack_pannel * pp = (struct pack_pannel *)pack->data[id];
 			s->data.scissor = pp->scissor;
-		}
+        }
 	}
 }
 
@@ -533,12 +598,25 @@ sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, s
 		material = s->material;
 	}
     
+    bool dirty = s->cache_dirty;
+    s->cache_dirty = false;
+    
     //  global_lable_only    0-全画    1-只画sprite    2-只画label
 	switch (s->type) {
 	case TYPE_PICTURE:
 		if (global_lable_only != 2) {
 			switch_program(t, PROGRAM_PICTURE, material);
-			sprite_drawquad(s->s.pic, srt, t);
+            if (s->data.vp_cache == NULL) {
+                sprite_drawquad(s->s.pic, srt, t);
+            } else {
+                struct cache_vp * cache = s->data.vp_cache;
+                if (dirty) {
+                    cache->texglid = -1;
+                    cache->texglid = sprite_drawquad_ex(s->s.pic, srt, t, cache->vb, cache->texglid);
+                } else {
+                    sprite_drawquad_ex(s->s.pic, srt, t, cache->vb, cache->texglid);
+                }
+            }
 		}
 		return 0;
 	case TYPE_POLYGON:
@@ -585,6 +663,7 @@ sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, s
 		// todo : invalid type
 		return 0;
 	}
+    
 	// draw animation
 	struct pack_animation *ani = s->s.ani;
 	int frame = real_frame(s) + s->start_frame;
@@ -601,6 +680,7 @@ sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, s
 		struct sprite_trans temp2;
 		struct matrix temp_matrix2;
 		struct sprite_trans *ct = sprite_trans_mul(&pp->t, t, &temp2, &temp_matrix2);
+        child->cache_dirty = dirty || child->cache_dirty;
 		scissor += sprite_draw_child(child, srt, ct, material);
 	}
 	for (i=0;i<scissor;i++) {
@@ -645,7 +725,7 @@ sprite_set_child_visible(struct sprite *s, const char * childname, bool visible)
 void
 sprite_draw(struct sprite *s, struct srt *srt) {
 	if (s->visible) {
-		sprite_draw_child(s, srt, NULL, NULL);
+        sprite_draw_child(s, srt, NULL, NULL);
 	}
 }
 
@@ -1094,8 +1174,10 @@ sprite_test(struct sprite *s, struct srt *srt, int x, int y) {
 
 int
 sprite_setframe(struct sprite *s, int frame, bool force_child) {
-	if (s == NULL || s->type != TYPE_ANIMATION)
+	if (s == NULL || s->type != TYPE_ANIMATION || s->frame == frame)
 		return 0;
+    
+    s->cache_dirty = true;
 	s->frame = frame;
 	int total_frame = s->total_frame;
 	int i;
@@ -1161,9 +1243,11 @@ screen_draw_scene_end() {
     draw_scene = false;
 }
 
-void
+int 
 set_viewport_srt(struct srt *s) {
+    int change = s->scalex != viewport_srt.scalex || s->offx != viewport_srt.offx || s->offy != viewport_srt.offy;
     viewport_srt = *s;
+    return change;
 }
 
 void
