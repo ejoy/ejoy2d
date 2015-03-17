@@ -811,7 +811,7 @@ static int
 lfetch(lua_State *L) {
 	struct sprite *s = self(L);
 	const char * name = luaL_checkstring(L,2);
-	int index = sprite_child(s, name);
+	int index = sprite_child(s, name, 0);
 	if (index < 0)
 		return 0;
 	if (!s->multimount)	{ // multimount has no parent
@@ -861,7 +861,9 @@ static int
 lmount(lua_State *L) {
 	struct sprite *s = self(L);
 	const char * name = luaL_checkstring(L,2);
-	int index = sprite_child(s, name);
+    int start_idx = (int)lua_tointeger(L, 4);
+    
+	int index = sprite_child(s, name, start_idx);
 	if (index < 0) {
 		return luaL_error(L, "No child name %s", name);
 	}
@@ -1462,6 +1464,29 @@ lhas_action(lua_State *L) {
     return 1;
 }
 
+static int
+lget_name_index(lua_State *L) {
+    struct sprite * s = self(L);
+    if (s->type != TYPE_ANIMATION) {
+        return 0;
+    }
+    const char* name = luaL_checkstring(L, 2);
+    
+    lua_newtable(L);
+    int start_idx = 0;
+    int count = 1;
+    do {
+        start_idx = sprite_child(s, name, start_idx);
+        if (start_idx >= 0) {
+            lua_pushinteger(L, start_idx);
+            lua_rawseti(L, -2, count++);
+            start_idx = start_idx + 1;
+        }
+    } while (start_idx >= 0);
+    
+    return 1;
+}
+
 
 static void
 lmethod(lua_State *L) {
@@ -1499,6 +1524,7 @@ lmethod(lua_State *L) {
 		{ "pic_tex_coord", lget_pic_tex_coord },
         { "has_action", lhas_action },
         { "set_wrap_mode", lset_wrap_mode },
+        { "get_name_index", lget_name_index },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);

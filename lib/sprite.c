@@ -348,13 +348,13 @@ real_frame(struct sprite *s) {
 }
 
 int
-sprite_child(struct sprite *s, const char * childname) {
+sprite_child(struct sprite *s, const char * childname, int start_idx) {
 	assert(childname);
 	if (s->type != TYPE_ANIMATION)
 		return -1;
 	struct pack_animation *ani = s->s.ani;
 	int i;
-	for (i=0;i<ani->component_number;i++) {
+	for (i=start_idx;i<ani->component_number;i++) {
 		const char *name = ani->component[i].name;
 		if (name) {
 			if (strcmp(name, childname)==0) {
