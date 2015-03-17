@@ -89,13 +89,16 @@ bool screen_is_visible(float x,float y)
 
 bool screen_is_poly_invisible(const struct vertex_pack* points, int len)
 {
-	int i =0;
+    int i =0;
 	// test left of x
 	bool invisible = true;
 	for(i =0; i < len && invisible;++i)
 	{
-		if(points[i].vx >= 0.0f)
+		if(points[i].vx >= 0.0f) 
+        {
 			invisible = false;
+            break; 
+        }
 	}
 	if(invisible)
 		return true;
@@ -105,7 +108,10 @@ bool screen_is_poly_invisible(const struct vertex_pack* points, int len)
 	for(i =0; i < len && invisible;++i)
 	{
 		if(points[i].vx <= 2.0f)
+        {
 			invisible = false;
+            break; 
+        }
 	}
 	if(invisible)
 		return true;
@@ -115,7 +121,10 @@ bool screen_is_poly_invisible(const struct vertex_pack* points, int len)
 	for(i =0; i < len && invisible;++i)
 	{
 		if(points[i].vy >= -2.0f)
+        {
 			invisible = false;
+            break; 
+        }
 	}
 	if(invisible)
 		return true;
@@ -125,7 +134,10 @@ bool screen_is_poly_invisible(const struct vertex_pack* points, int len)
 	for(i =0; i < len && invisible;++i)
 	{
 		if(points[i].vy <= 0.0f)
+        {
 			invisible = false;
+            break; 
+        }
 	}
 	return invisible;
 }

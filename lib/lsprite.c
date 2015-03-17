@@ -619,10 +619,6 @@ lsettext(lua_State *L) {
 
 	s->data.rich_text = rich;
     
-//    if (sc > 0) {
-//        sprite_draw(s, NULL);
-//    }
-    
 	return 0;
 }
 
