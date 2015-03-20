@@ -15,7 +15,7 @@
 
 struct label_sprite {
 	struct sprite *s;
-	int w, h, mat;
+	int w, h, mat, dy;
 };
 
 struct label_field {

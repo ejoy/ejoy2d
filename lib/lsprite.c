@@ -568,17 +568,26 @@ lsettext(lua_State *L) {
 			}
 
 			struct sprite *s = (struct sprite *)lua_touserdata(L, -1);
-			lua_pushvalue(L, -1);
 			lua_rawseti(L, 4, sc * 2 + 1);
 
 			struct label_sprite *ls = (struct label_sprite *)lua_newuserdata(L, sizeof(struct label_sprite));
-			ls->w = 0; ls->h = 0; ls->mat = 0;
-			ls->s = s;
+			ls->mat = 0; ls->s = s;
 
 			lua_pushvalue(L, -1);
 			lua_rawseti(L, 4, sc * 2 + 2);
 
 			lua_pop(L, 1);
+
+            lua_rawgeti(L, -1, 5);
+            ls->w = (int)luaL_checkinteger(L, -1);
+            lua_pop(L, 1);
+
+            lua_rawgeti(L, -1, 6);
+            ls->h = (int)luaL_checkinteger(L, -1);
+            lua_pop(L, 1);
+
+            lua_rawgeti(L, -1, 7);
+            ls->dy = (int)luaL_checkinteger(L, -1);
 
 			((struct label_field*)(fields+i))->ls = ls;
 
