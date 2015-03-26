@@ -431,7 +431,7 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
         cy = cy + (l->size - size) / 2;
         w = l->width;
     }
-
+    
     switch (l->align) {
         case LABEL_ALIGN_LEFT:
             cx = 0.0;
@@ -444,7 +444,6 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
             break;
     }
 
-    cx = cx - sw;
     if (cx < 0.0) {
         cx = 0.0;
     }
@@ -580,7 +579,7 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
             } else {
                 ty = 0;
             }
-            draw_line(rich, l, srt, arg, color, cy, ch, w, sw, pre, i, &char_cnt, space_scale);
+            draw_line(rich, l, srt, arg, color, cy, ch, w + sw, 0, pre, i, &char_cnt, space_scale);
             cy += (ch + ty);
             pre = i;
             w = 0; ch = 0; ls = 0; sw = 0;
@@ -592,7 +591,7 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
     if (ls > ch) {
         cy += (ls - ch) / 2;
     }
-	draw_line(rich, l, srt, arg, color, cy, ch, w, sw, pre, i, &char_cnt, 1.0);
+	draw_line(rich, l, srt, arg, color, cy, ch, w + sw, 0, pre, i, &char_cnt, 1.0);
 }
 
 
