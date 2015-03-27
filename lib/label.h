@@ -32,6 +32,7 @@ struct label_field {
 };
 
 struct rich_text {
+    short label_color_enable;
 	int count;
 	int width;
 	int height;

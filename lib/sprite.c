@@ -636,6 +636,8 @@ sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, s
                 global_lable_only = 0;
                 
                 switch_program(t, PROGRAM_PICTURE, material);
+                if (s->data.rich_text->label_color_enable)
+                    t->color = label_get_color(s->s.label, t);
                 label_draw_sprite(s->data.rich_text, srt, t);
                 
                 global_lable_only = pre_value;

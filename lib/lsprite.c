@@ -486,10 +486,11 @@ lsettext(lua_State *L) {
 		lua_setfield(L, -2, "richtext");
 		return 0;
 	}
-/*  if (lua_isstring(L, 2)) {
-    s->data.rich_text = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
-    s->data.rich_text->text = lua_tostring(L, 2);
-    s->data.rich_text->count = 0;
+/*
+    if (lua_isstring(L, 2)) {
+        s->data.rich_text = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
+        s->data.rich_text->text = lua_tostring(L, 2);
+        s->data.rich_text->count = 0;
 		s->data.rich_text->width = 0;
 		s->data.rich_text->height = 0;
 		s->data.rich_text->fields = NULL;
@@ -500,37 +501,42 @@ lsettext(lua_State *L) {
 		lua_pushvalue(L, 3);
 		lua_rawseti(L, -2, 2);
 		lua_setuservalue(L, 1);
-    return 0;
-  }*/
+        return 0;
+    }
+*/
 
-  s->data.rich_text = NULL;
-  if (!lua_istable(L, 2) || lua_rawlen(L, 2) != 5) {
-    return luaL_error(L, "rich text must has a table with two items");
-  }
+    s->data.rich_text = NULL;
+    if (!lua_istable(L, 2) || lua_rawlen(L, 2) != 6) {
+        return luaL_error(L, "rich text must has a table with two items");
+    }
 
-  lua_rawgeti(L, 2, 1);
-  const char *txt = luaL_checkstring(L, -1);
-  lua_pop(L, 1);
+    lua_rawgeti(L, 2, 1);
+    const char *txt = luaL_checkstring(L, -1);
+    lua_pop(L, 1);
 
-  lua_rawgeti(L, 2, 2);
-	int cnt = lua_rawlen(L, -1);
-  lua_pop(L, 1);
+    lua_rawgeti(L, 2, 2);
+    int cnt = lua_rawlen(L, -1);
+    lua_pop(L, 1);
 
 	struct rich_text *rich = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
 
 	rich->text = txt;
     rich->count = cnt;
 	lua_rawgeti(L, 2, 3);
-	rich->width = luaL_checkinteger(L, -1);
+	rich->width = (int)luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
 	
 	lua_rawgeti(L, 2, 4);
-	rich->height = luaL_checkinteger(L, -1);
+	rich->height = (int)luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
 
 	lua_rawgeti(L, 2, 5);
-	int sprite_count = luaL_checkinteger(L, -1);
+	int sprite_count = (int)luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
+    
+    lua_rawgeti(L, 2, 6);
+    rich->label_color_enable = lua_toboolean(L, -1);
+    lua_pop(L, 1);
 
 	lua_createtable(L, 3 + sprite_count * 2, 0); //sprite, table, userdata, table
 
