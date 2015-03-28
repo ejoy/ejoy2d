@@ -9,9 +9,10 @@
 
 #define PROGRAM_DEFAULT -1
 #define PROGRAM_PICTURE 0
-#define PROGRAM_RENDERBUFFER 1
-#define PROGRAM_TEXT 2
-#define PROGRAM_TEXT_EDGE 3
+#define PROGRAM_TEXT 1
+#define PROGRAM_TEXT_EDGE 2
+#define SIMPLESPRITE 3
+#define PROGRAM_RENDERBUFFER 4
 
 struct material;
 
