@@ -326,6 +326,21 @@ shader_drawpolygon(int n, const struct vertex_pack *vb, uint32_t color, uint32_t
 	} while (i<n-1);
 }
 
+void
+shader_drawtriangles(int n, const struct vertex_pack *vbp, uint32_t color, uint32_t additive) {
+    struct vertex_pack vb[4];
+    int i, j;
+    for (i = 0; i < n; ++i) {
+        int idx = i * 3;
+        for (j = 0; j < 3; ++j) {
+            vb[j] = vbp[idx + j];
+        }
+
+        vb[3] = vbp[idx + 2];
+        shader_draw(vb, color, additive);
+    }
+}
+
 void 
 shader_flush() {
 	rs_commit();
