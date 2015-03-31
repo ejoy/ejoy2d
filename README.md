@@ -1,3 +1,6 @@
+This repository was moved to https://github.com/ejoy/ejoy2d .
+========
+
 EJOY 2D
 =======
 

@@ -109,7 +109,7 @@ function spack.export(outdir, tbl)
 		local meta = assert(pack.pack(dofile(filename .. ".lua")))
 		local output = pack.export(meta)
 
-		local file = io.open(filename .. ".raw", "w+")
+		local file = io.open(filename .. ".raw", "w+b")
 		file:write(output)
 		file:close()
 	end
