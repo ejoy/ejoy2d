@@ -132,7 +132,7 @@ dfont_lookup(struct dfont *df, int c, int font, int edge) {
 	struct hash_rect *hr = df->hash[h];
 	while (hr) {
 		if (hr->c == c && hr->font == font && hr->edge == edge) {
-			list_move(&hr->time, &df->time);
+			list_move_tail(&hr->time, &df->time);
 			hr->version = df->version;
 			return &(hr->rect);
 		}
