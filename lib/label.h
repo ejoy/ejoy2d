@@ -4,9 +4,26 @@
 #include "spritepack.h"
 #include "matrix.h"
 
-#define LABEL_ALIGN_LEFT 0
-#define LABEL_ALIGN_RIGHT 1
-#define LABEL_ALIGN_CENTER 2
+/*
+ label align:
+ --------------------------------------
+ |         |top(v)|center(v)|bottom(v)|
+ --------------------------------------
+ |left(h)  |  0   |    1    |    2    |
+ --------------------------------------
+ |center(h)|  8   |    9    |    10   |
+ --------------------------------------
+ |right(h) |  16  |    17   |    18   |
+  -------------------------------------
+ */
+
+#define LABEL_ALIGN_H_LEFT_MASK 0
+#define LABEL_ALIGN_H_CENTER_MASK 8
+#define LABEL_ALIGN_H_RIGHT_MASK 16
+#define LABEL_ALIGN_V_TOP_MASK 0
+#define LABEL_ALIGN_V_CENTER_MASK 1
+#define LABEL_ALIGN_V_BOTTOM_MASK 2
+#define LABEL_ALIGN_DEFAULT ( LABEL_ALIGN_H_LEFT_MASK | LABEL_ALIGN_V_TOP_MASK )
 
 #define RL_COLOR 1
 #define RL_LINEFEED 2

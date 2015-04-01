@@ -629,12 +629,7 @@ sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, s
 		if (s->data.rich_text && global_lable_only != 1) {
 			t->program = PROGRAM_DEFAULT;	// label never set user defined program
 			switch_program(t, s->s.label->edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT, material);
-            if (draw_scene) {
-                label_draw(s->data.rich_text, s->s.label, &viewport_srt, t);
-            } else {
-                label_draw(s->data.rich_text, s->s.label, srt, t);
-            }
-
+            label_draw(s->data.rich_text, s->s.label, draw_scene ? &viewport_srt : srt, t);
             if (s->data.rich_text->sprite_count > 0) {
                 int pre_value = global_lable_only;
                 global_lable_only = 0;

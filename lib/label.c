@@ -432,14 +432,14 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
         w = l->width;
     }
     
-    switch (l->align) {
-        case LABEL_ALIGN_LEFT:
+    switch (l->align & 0x38) {
+        case LABEL_ALIGN_H_LEFT_MASK:
             cx = 0.0;
             break;
-        case LABEL_ALIGN_RIGHT:
+        case LABEL_ALIGN_H_RIGHT_MASK:
             cx = l->width - w;
             break;
-        case LABEL_ALIGN_CENTER:
+        case LABEL_ALIGN_H_CENTER_MASK:
             cx = (l->width - w)/2;
             break;
     }
@@ -545,6 +545,33 @@ label_draw_sprite(const struct rich_text *rich, struct srt *srt, const struct sp
     }
 }
 
+int
+get_init_cy(const struct rich_text *rich, struct pack_label * l){
+    const char *str = rich->text;
+    char utf8[7];
+    int cy = 0, ch = 0, last_ch = 0, idx = 0;
+    for (int i=0; str && str[i];) {
+        int unicode;
+        int len = unicode_len(str[i]);
+        unicode = copystr(utf8, str+i, len);
+        i+=len;
+        float space_scale=1.0;
+        if (ch == 0 && unicode != ESC){
+            ch = draw_height(unicode, utf8, l->size, l->edge) + l->space_h;
+        }
+        if (unicode == '\n' || (l->auto_scale == 0 && get_rich_filed_lf(rich, idx, &space_scale))) {
+            cy += ch;
+            last_ch = ch;
+            ch = 0;
+        }
+        idx++;
+    }
+    if (l->align & LABEL_ALIGN_V_BOTTOM_MASK){
+        cy = l->height - cy - last_ch;
+    }
+    return cy;
+}
+
 void
 label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg) {
 	shader_texture(Tex, 0);
@@ -554,7 +581,9 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 	char utf8[7];
 	int i;
 	int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0, idx = 0, ls = 0, sw = 0, ty;
-
+    if (l->align & 0x07 && !l->auto_scale){
+        cy = get_init_cy(rich, l);
+    }
 	for (i=0; str && str[i];) {
 		int unicode;
 		int len = unicode_len(str[i]);
@@ -593,5 +622,3 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
     }
 	draw_line(rich, l, srt, arg, color, cy, ch, w + sw, 0, pre, i, &char_cnt, 1.0);
 }
-
-
