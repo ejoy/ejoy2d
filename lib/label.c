@@ -549,7 +549,7 @@ int
 get_init_cy(const struct rich_text *rich, struct pack_label * l){
     const char *str = rich->text;
     char utf8[7];
-    int cy = 0, ch = 0, last_ch = 0, idx = 0;
+    int cy = 0, ch = 0, idx = 0;
     for (int i=0; str && str[i];) {
         int unicode;
         int len = unicode_len(str[i]);
@@ -561,13 +561,15 @@ get_init_cy(const struct rich_text *rich, struct pack_label * l){
         }
         if (unicode == '\n' || (l->auto_scale == 0 && get_rich_filed_lf(rich, idx, &space_scale))) {
             cy += ch;
-            last_ch = ch;
             ch = 0;
         }
         idx++;
     }
+    cy += ch;
     if (l->align & LABEL_ALIGN_V_BOTTOM_MASK){
-        cy = l->height - cy - last_ch;
+        cy = l->height - cy;
+    }else if(l->align & LABEL_ALIGN_V_CENTER_MASK){
+        cy = l->height/2  - cy /2;
     }
     return cy;
 }
