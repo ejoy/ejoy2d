@@ -432,7 +432,7 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
         w = l->width;
     }
     
-    switch (l->align & 0x38) {
+    switch (l->align & 0x7) {
         case LABEL_ALIGN_H_LEFT_MASK:
             cx = 0.0;
             break;
@@ -583,7 +583,7 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 	char utf8[7];
 	int i;
 	int ch = 0, w = 0, cy = 0, pre = 0, char_cnt = 0, idx = 0, ls = 0, sw = 0, ty;
-    if (l->align & 0x07 && !l->auto_scale){
+    if (l->align & 0x38 && !l->auto_scale){
         cy = get_init_cy(rich, l);
     }
 	for (i=0; str && str[i];) {
