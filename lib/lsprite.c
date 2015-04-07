@@ -87,24 +87,40 @@ lnewlabel(lua_State *L) {
 	label.edge = (int)lua_tointeger(L, 8);
 	const char * align = lua_tostring(L,5);
 	if (align == NULL) {
-		label.align = LABEL_ALIGN_LEFT;
+        label.align = LABEL_ALIGN_DEFAULT;
 	} else {
 		switch(align[0]) {
 		case 'l':
 		case 'L':
-			label.align = LABEL_ALIGN_LEFT;
+			label.align = LABEL_ALIGN_H_LEFT_MASK;
 			break;
 		case 'r':
 		case 'R':
-			label.align = LABEL_ALIGN_RIGHT;
+			label.align = LABEL_ALIGN_H_RIGHT_MASK;
 			break;
 		case 'c':
 		case 'C':
-			label.align = LABEL_ALIGN_CENTER;
+			label.align = LABEL_ALIGN_H_CENTER_MASK;
 			break;
 		default:
-			return luaL_error(L, "Align must be left/right/center");
+			return luaL_error(L, "HAlign must be l/r/c");
 		}
+        switch(align[1]) {
+            case 't':
+            case 'T':
+                label.align |= LABEL_ALIGN_V_TOP_MASK;
+                break;
+            case 'c':
+            case 'C':
+                label.align |= LABEL_ALIGN_V_CENTER_MASK;
+                break;
+            case 'B':
+            case 'b':
+                label.align |= LABEL_ALIGN_V_BOTTOM_MASK;
+                break;
+            default:
+                return luaL_error(L, "VAlign must be t/c/b");
+        }
 	}
 	newlabel(L, &label);
 	return 1;
