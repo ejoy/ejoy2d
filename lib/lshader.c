@@ -221,6 +221,15 @@ lshader_texture(lua_State *L) {
 	return 0;
 }
 
+static int
+lshader_texture_wrapmode(lua_State *L) {
+    int texid = (int)luaL_checkinteger(L, 1);
+    int mode = (int)luaL_checkinteger(L, 2);
+    shader_texture_wrapmode(texid, mode);
+    
+    return 0;
+}
+
 int 
 ejoy2d_shader(lua_State *L) {
 	luaL_Reg l[] = {
@@ -235,6 +244,7 @@ ejoy2d_shader(lua_State *L) {
 		{"material_setuniform", lmaterial_setuniform },
 		{"material_settexture", lmaterial_settexture },
 		{"shader_texture", lshader_texture },
+        {"shader_texture_wrapmode", lshader_texture_wrapmode },
 		{NULL,NULL},
 	};
 	luaL_newlib(L,l);
