@@ -1481,7 +1481,7 @@ lget_pic_tex_coord(lua_State *L) {
 }
 
 static int
-lhas_action(lua_State *L) {
+lhas_anim(lua_State *L) {
     struct sprite * s = self(L);
     if (s->type != TYPE_ANIMATION) {
         return luaL_error(L, "Only anim has action info");
@@ -1549,7 +1549,7 @@ lmethod(lua_State *L) {
 		{ "anchor_particle", lset_anchor_particle },
 		{ "calc_matrix", lcalc_matrix },
 		{ "pic_tex_coord", lget_pic_tex_coord },
-        { "has_action", lhas_action },
+        { "has_anim", lhas_anim },
         { "set_wrap_mode", lset_wrap_mode },
         { "get_name_index", lget_name_index },
 		{ NULL, NULL, },
