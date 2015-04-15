@@ -1487,7 +1487,7 @@ lhas_anim(lua_State *L) {
         return luaL_error(L, "Only anim has action info");
     }
     const char* act = luaL_checkstring(L, 2);
-    lua_pushinteger(L, sprite_has_action(s, act));
+    lua_pushboolean(L, sprite_has_action(s, act) != -1);
     return 1;
 }
 
