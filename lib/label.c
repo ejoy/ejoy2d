@@ -229,6 +229,8 @@ draw_rect(const struct dfont_rect *rect, int size, struct matrix *mat, uint32_t 
 	set_point(&vb[1], mat->m, w*SCREEN_SCALE,0, rect->x+rect->w-1, rect->y);
 	set_point(&vb[2], mat->m, w*SCREEN_SCALE,h*SCREEN_SCALE, rect->x+rect->w-1, rect->y+rect->h-1);
 	set_point(&vb[3], mat->m, 0,h*SCREEN_SCALE, rect->x, rect->y+rect->h-1);
+    
+    shader_texture(Tex, 0);
 	shader_draw(vb, color, additive);
 }
 
@@ -418,7 +420,16 @@ unicode_len(const char chr) {
 }
 
 static void
-draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg,
+switch_program(struct sprite_trans *t, int def, struct material *m) {
+    int prog = t->program;
+    if (prog == PROGRAM_DEFAULT) {
+        prog = def;
+    }
+    shader_program(prog, m);
+}
+
+static void
+draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, struct sprite_trans *arg,
           uint32_t color, int cy, int ch, int w, int sw, int start, int end, int *pre_char_cnt, float space_scale) {
     const char *str = rich->text;
 		float cx;
@@ -465,6 +476,8 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
                 } else {
                     field_color = color_mul(field_color,  color | 0xffffff);
                 }
+
+                switch_program(arg, l->edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT, NULL);
                 cx+=(draw_utf8(unicode, cx, cy, size, srt, field_color, arg, l->edge) + l->space_w)*space_scale;
             }
 
@@ -575,8 +588,7 @@ get_init_cy(const struct rich_text *rich, struct pack_label * l){
 }
 
 void
-label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg) {
-	shader_texture(Tex, 0);
+label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt, struct sprite_trans *arg) {
 	uint32_t color = label_get_color(l, arg);
 	const char *str = rich->text;
 
@@ -617,7 +629,6 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 		}
 		idx++;
 	}
-    
 
     if (ls > ch) {
         cy += (ls - ch) / 2;
