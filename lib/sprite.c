@@ -629,25 +629,31 @@ sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, s
 		if (s->data.rich_text && global_lable_only != 1) {
             t->program = PROGRAM_DEFAULT;	// label never set user defined program
 //            switch_program(t, s->s.label->edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT, material);
-            label_draw(s->data.rich_text, s->s.label, draw_scene ? &viewport_srt : srt, t);
+            
+            int pre_value = global_lable_only;
+            bool pre_draw_scene = draw_scene;
+            
+            global_lable_only = 0; draw_scene = false;
+            label_draw(s->data.rich_text, s->s.label, pre_draw_scene ? &viewport_srt : srt, t);
+            draw_scene = pre_draw_scene; global_lable_only = pre_value;
 
-            if (s->data.rich_text->sprite_count > 0) {
-                int pre_value = global_lable_only;
-                global_lable_only = 0;
-                
-                switch_program(t, PROGRAM_PICTURE, material);
-                if (s->data.rich_text->label_color_enable)
-                    t->color = label_get_color(s->s.label, t);
-                if (draw_scene) {
-                    draw_scene = false;
-                    label_draw_sprite(s->data.rich_text, &viewport_srt, t);
-                    draw_scene = true;
-                } else {
-                    label_draw_sprite(s->data.rich_text, srt, t);
-                }
-                
-                global_lable_only = pre_value;
-            }
+//            if (s->data.rich_text->sprite_count > 0) {
+//                int pre_value = global_lable_only;
+//                global_lable_only = 0;
+//                
+//                switch_program(t, PROGRAM_PICTURE, material);
+//                if (s->data.rich_text->label_color_enable)
+//                    t->color = label_get_color(s->s.label, t);
+//                if (draw_scene) {
+//                    draw_scene = false;
+//                    label_draw_sprite(s->data.rich_text, &viewport_srt, t);
+//                    draw_scene = true;
+//                } else {
+//                    label_draw_sprite(s->data.rich_text, srt, t);
+//                }
+//                
+//                global_lable_only = pre_value;
+//            }
 		}
 		return 0;
 	case TYPE_ANCHOR:

@@ -377,14 +377,14 @@ pre_draw_label_sprite(const struct rich_text *rich, int start, int *sw, int *ls)
 }
 
 static void
-set_label_sprite_mat(const struct rich_text *rich, int start, float *cx, int cy) {
+set_label_sprite_mat(const struct rich_text *rich, int start, float *cx, int cy, struct srt *srt, struct sprite_trans *arg, uint32_t color) {
 	struct label_sprite *ls = get_rich_field_sprite(rich, start);
     if (!ls) {
         return ;
     }
 
     struct sprite *s = ls->s;
-    if (ls->mat== 0) {
+//    if (ls->mat== 0) {
         struct matrix *m = &s->mat;
         if (s->t.mat == NULL) {
             matrix_identity(m);
@@ -395,8 +395,14 @@ set_label_sprite_mat(const struct rich_text *rich, int start, float *cx, int cy)
         mat[4] = (*cx + ls->w / 2) * SCREEN_SCALE;
         mat[5] = cy * SCREEN_SCALE + ls->dy * SCREEN_SCALE;
 
-        ls->mat = 1;
-    }
+//        ls->mat = 1;
+//    }
+    
+    uint32_t org_color = arg->color;
+    if (rich->label_color_enable)
+        arg->color = color;
+    sprite_draw_child(ls->s, srt, (struct sprite_trans *)arg, NULL);
+    arg->color = org_color;
 
     *cx += ls->w;
 }
@@ -469,19 +475,19 @@ draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, 
         j+=len;
 			
         if(unicode != '\n') {
+            uint32_t field_color = get_rich_field_color(rich, *pre_char_cnt+char_cnt);
+            if (field_color == 0) {
+                field_color = color;
+            } else {
+                field_color = color_mul(field_color,  color | 0xffffff);
+            }
+            
             if (unicode != ESC) {
-                uint32_t field_color = get_rich_field_color(rich, *pre_char_cnt+char_cnt);
-                if (field_color == 0) {
-                    field_color = color;
-                } else {
-                    field_color = color_mul(field_color,  color | 0xffffff);
-                }
-
                 switch_program(arg, l->edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT, NULL);
                 cx+=(draw_utf8(unicode, cx, cy, size, srt, field_color, arg, l->edge) + l->space_w)*space_scale;
             }
 
-			set_label_sprite_mat(rich, j - len, &cx, cy + ch / 2);
+			set_label_sprite_mat(rich, j - len, &cx, cy + ch / 2, srt, arg, field_color);
         }
     }
 
