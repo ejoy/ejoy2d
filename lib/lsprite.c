@@ -1091,13 +1091,14 @@ lchildren_name(lua_State *L) {
 	int i;
 	int cnt=0;
 	struct pack_animation * ani = s->s.ani;
+    lua_createtable(L, 0, 0);
 	for (i=0;i<ani->component_number;i++) {
 		if (ani->component[i].name != NULL) {
 			lua_pushstring(L, ani->component[i].name);
-			cnt++;
+            lua_rawseti(L, -2, ++cnt);
 		}
 	}
-	return cnt;
+	return 1;
 }
 
 static int
