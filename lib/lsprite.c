@@ -1359,6 +1359,7 @@ lps(lua_State *L) {
 static int
 lsr(lua_State *L) {
 	struct sprite *s = self(L);
+    s->cache_dirty = true;
 	struct matrix *m = &s->mat;
 	if (s->t.mat == NULL) {
 		matrix_identity(m);
