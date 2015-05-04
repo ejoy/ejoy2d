@@ -31,6 +31,6 @@ void ejoy2d_game_resume(struct game* G);
 void
 ejoy2d_call_lua(lua_State *L, int n, int r);
 
-
+void ejoy2d_init(lua_State *L);
 
 #endif

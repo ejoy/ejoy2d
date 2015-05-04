@@ -99,23 +99,18 @@ checkluaversion(lua_State *L) {
 lua_State *
 ejoy2d_lua_init() {
 	lua_State *L = luaL_newstate();
-	checkluaversion(L);
-	lua_pushliteral(L, OS_STRING);
-	lua_setglobal(L , "OS");
 	
 	lua_atpanic(L, _panic);
 	luaL_openlibs(L);
 	return L;
 }
 
-struct game *
-ejoy2d_game() {
-	struct game *G = (struct game *)malloc(sizeof(*G));
-	lua_State *L = ejoy2d_lua_init();
+void
+ejoy2d_init(lua_State *L) {
+	checkluaversion(L);
+	lua_pushliteral(L, OS_STRING);
+	lua_setglobal(L , "OS");
 
-	G->L = L;
-	G->real_time = 0;
-	G->logic_time = 0;
 	luaL_requiref(L, "ejoy2d.shader.c", ejoy2d_shader, 0);
 	luaL_requiref(L, "ejoy2d.framework", ejoy2d_framework, 0);
 	luaL_requiref(L, "ejoy2d.ppm", ejoy2d_ppm, 0);
@@ -129,6 +124,18 @@ ejoy2d_game() {
 
 	shader_init();
 	label_load();
+}
+
+struct game *
+ejoy2d_game() {
+	struct game *G = (struct game *)malloc(sizeof(*G));
+	lua_State *L = ejoy2d_lua_init();
+
+	G->L = L;
+	G->real_time = 0;
+	G->logic_time = 0;
+
+	ejoy2d_init(L);
 
 	return G;
 }
