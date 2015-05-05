@@ -189,11 +189,17 @@ texture_unload(int id) {
 	struct texture *tex = &POOL.tex[id];
 	if (tex->id == 0)
 		return;
+    
 	render_release(R, TEXTURE, tex->id);
 	if (tex->fb != 0)
 		render_release(R, TARGET, tex->fb);
+    
 	tex->id = 0;
 	tex->fb = 0;
+    tex->width = 0;
+    tex->height = 0;
+    tex->invh = 0;
+    tex->invw = 0;
 }
 
 RID
