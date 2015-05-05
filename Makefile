@@ -27,7 +27,8 @@ lib/particle.c \
 lib/lparticle.c \
 lib/scissor.c \
 lib/renderbuffer.c \
-lib/lrenderbuffer.c
+lib/lrenderbuffer.c \
+lib/lgeometry.c
 
 SRC := $(EJOY2D) $(RENDER)
 

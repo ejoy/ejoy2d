@@ -15,6 +15,7 @@
 #include "label.h"
 #include "particle.h"
 #include "lrenderbuffer.h"
+#include "lgeometry.h"
 
 //#define LOGIC_FRAME 30
 
@@ -119,6 +120,7 @@ ejoy2d_init(lua_State *L) {
 	luaL_requiref(L, "ejoy2d.renderbuffer", ejoy2d_renderbuffer, 0);
 	luaL_requiref(L, "ejoy2d.matrix.c", ejoy2d_matrix, 0);
 	luaL_requiref(L, "ejoy2d.particle.c", ejoy2d_particle, 0);
+	luaL_requiref(L, "ejoy2d.geometry.c", ejoy2d_geometry, 0);
 
 	lua_settop(L,0);
 
