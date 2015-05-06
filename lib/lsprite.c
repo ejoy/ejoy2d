@@ -457,6 +457,19 @@ lsetautoscale(lua_State *L) {
 }
 
 static int
+lsetedge(lua_State *L) {
+    struct sprite *s = self(L);
+    if (s->type != TYPE_LABEL) {
+        return luaL_error(L, "Only label can set edge");
+    }
+    
+    bool edge = lua_toboolean(L, 2);
+    s->s.label->edge = edge;
+    
+    return 0;
+}
+
+static int
 lgetname(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->name == NULL)
@@ -811,6 +824,7 @@ lsetter(lua_State *L) {
 		{"program", lsetprogram },
 		{"scissor", lsetscissor },
         {"auto_scale", lsetautoscale},
+        {"edge", lsetedge},
 		{NULL, NULL},
 	};
 	luaL_newlib(L,l);
