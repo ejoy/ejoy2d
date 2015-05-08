@@ -515,7 +515,7 @@ lsettext(lua_State *L) {
 		lua_setfield(L, -2, "richtext");
 		return 0;
 	}
-/*
+
     if (lua_isstring(L, 2)) {
         s->data.rich_text = (struct rich_text*)lua_newuserdata(L, sizeof(struct rich_text));
         s->data.rich_text->text = lua_tostring(L, 2);
@@ -532,7 +532,6 @@ lsettext(lua_State *L) {
 		lua_setuservalue(L, 1);
         return 0;
     }
-*/
 
     s->data.rich_text = NULL;
     if (!lua_istable(L, 2) || lua_rawlen(L, 2) != 6) {
