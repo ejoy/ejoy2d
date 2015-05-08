@@ -584,9 +584,9 @@ lsettext(lua_State *L) {
 		((struct label_field*)(fields+i))->start = luaL_checkinteger(L, -1);
 		lua_pop(L, 1);
 
-    lua_rawgeti(L, -1, 2);  //end
+        lua_rawgeti(L, -1, 2);  //end
 		((struct label_field*)(fields+i))->end = luaL_checkinteger(L, -1);
-    lua_pop(L, 1);
+        lua_pop(L, 1);
 
 		lua_rawgeti(L, -1, 3);  //type
 		uint32_t type = luaL_checkinteger(L, -1);
@@ -605,7 +605,7 @@ lsettext(lua_State *L) {
 			lua_rawseti(L, 4, sc * 2 + 1);
 
 			struct label_sprite *ls = (struct label_sprite *)lua_newuserdata(L, sizeof(struct label_sprite));
-			ls->mat = 0; ls->s = s;
+			ls->s = s;
 
 			lua_pushvalue(L, -1);
 			lua_rawseti(L, 4, sc * 2 + 2);
@@ -1071,6 +1071,9 @@ ltext_size(lua_State *L) {
 	}
 	int width = 0, height = 0;
 	if (s->data.rich_text != NULL) {
+        if (s->data.rich_text->width == 0) {
+            label_size(s->data.rich_text, s->s.label);
+        }
 		width = s->data.rich_text->width;
 		height = s->data.rich_text->height;
 	}

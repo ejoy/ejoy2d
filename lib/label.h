@@ -36,7 +36,7 @@
 
 struct label_sprite {
 	struct sprite *s;
-	int w, h, mat, dy;
+	int w, h, dy;
 };
 
 struct label_field {
@@ -68,11 +68,12 @@ void label_load();
 void label_unload();
 void label_flush();
 
-void label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt, struct sprite_trans *arg);
+void label_draw(struct rich_text *rich, const struct pack_label * l, struct srt *srt,
+                struct sprite_trans *arg);
 void label_draw_sprite(const struct rich_text *rich, struct srt *srt, const struct sprite_trans *arg);
-void label_size(const char * str, struct pack_label * l, int* width, int* height);
+void label_size(struct rich_text *rich, const struct pack_label * l);
 int label_char_size(struct pack_label* l, const char* chr, int* width, int* height, int* unicode);
-uint32_t label_get_color(struct pack_label * l, const struct sprite_trans *arg);
+uint32_t label_get_color(const struct pack_label * l, const struct sprite_trans *arg);
 
 struct font_context {
 	int w;

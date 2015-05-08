@@ -384,19 +384,15 @@ set_label_sprite_mat(const struct rich_text *rich, int start, float *cx, int cy,
     }
 
     struct sprite *s = ls->s;
-//    if (ls->mat== 0) {
-        struct matrix *m = &s->mat;
-        if (s->t.mat == NULL) {
-            matrix_identity(m);
-            s->t.mat = m;
-        }
+    struct matrix *m = &s->mat;
+    if (s->t.mat == NULL) {
+        matrix_identity(m);
+        s->t.mat = m;
+    }
 
-        int *mat = m->m;
-        mat[4] = (*cx + ls->w / 2) * SCREEN_SCALE;
-        mat[5] = cy * SCREEN_SCALE + ls->dy * SCREEN_SCALE;
-
-//        ls->mat = 1;
-//    }
+    int *mat = m->m;
+    mat[4] = (*cx + ls->w / 2) * SCREEN_SCALE;
+    mat[5] = cy * SCREEN_SCALE + ls->dy * SCREEN_SCALE;
     
     uint32_t org_color = arg->color;
     if (rich->label_color_enable)
@@ -435,7 +431,7 @@ switch_program(struct sprite_trans *t, int def, struct material *m) {
 }
 
 static void
-draw_line(const struct rich_text *rich, struct pack_label * l, struct srt *srt, struct sprite_trans *arg,
+draw_line(const struct rich_text *rich, const struct pack_label * l, struct srt *srt, struct sprite_trans *arg,
           uint32_t color, int cy, int ch, int w, int sw, int start, int end, int *pre_char_cnt, float space_scale) {
     const char *str = rich->text;
 		float cx;
@@ -506,40 +502,8 @@ label_char_size(struct pack_label* l, const char* chr, int* width, int* height, 
 	return len;
 }
 
-void
-label_size(const char *str, struct pack_label * l, int* width, int* height) {
-	char utf8[7];
-	int i;
-	int w=0, max_w=0, h=0, max_h=0;
-	for (i=0; str[i];) {
-		int unicode;
-		int len = unicode_len(str[i]);
-		unicode = copystr(utf8, str+i, len);
-		i+=len;
-		struct font_context ct = char_size(unicode, utf8, l->size, l->edge);
-		w += ct.w + l->space_w;
-		if (h==0) {
-			h = ct.h + l->space_h;
-		}
-		if((l->auto_scale == 0 && w > l->width) || unicode == '\n') {
-			max_h += h;
-			h = 0;
-			if (w > max_w) max_w = w;
-			w = 0;
-		}
-	}
-
-	max_h += h;
-	if (w > max_w) max_w = w;
-    if (l->auto_scale > 0 && max_w > l->width)
-        max_w = l->width;
-   
-	*width = max_w;
-	*height = max_h;
-}
-
 uint32_t
-label_get_color(struct pack_label * l, const struct sprite_trans *arg) {
+label_get_color(const struct pack_label * l, const struct sprite_trans *arg) {
     uint32_t color;
 	if (arg->color == 0xffffffff) {
 		color = l->color;
@@ -565,26 +529,17 @@ label_draw_sprite(const struct rich_text *rich, struct srt *srt, const struct sp
 }
 
 int
-get_init_cy(const struct rich_text *rich, struct pack_label * l){
-    const char *str = rich->text;
-    char utf8[7];
-    int cy = 0, ch = 0, idx = 0;
-    for (int i=0; str && str[i];) {
-        int unicode;
-        int len = unicode_len(str[i]);
-        unicode = copystr(utf8, str+i, len);
-        i+=len;
-        float space_scale=1.0;
-        if (ch == 0 && unicode != ESC){
-            ch = draw_height(unicode, utf8, l->size, l->edge) + l->space_h;
-        }
-        if (unicode == '\n' || (l->auto_scale == 0 && get_rich_filed_lf(rich, idx, &space_scale))) {
-            cy += ch;
-            ch = 0;
-        }
-        idx++;
+get_init_cy(struct rich_text *rich, const struct pack_label * l){
+    if (l->align & LABEL_ALIGN_V_TOP_MASK){
+        return 0;
     }
-    cy += ch;
+    int cy = 0;
+    if (rich->height == 0) {
+        label_size(rich, l);
+    }
+
+    cy = rich->height;
+    
     if (l->align & LABEL_ALIGN_V_BOTTOM_MASK){
         cy = l->height - cy;
     }else if(l->align & LABEL_ALIGN_V_CENTER_MASK){
@@ -594,7 +549,8 @@ get_init_cy(const struct rich_text *rich, struct pack_label * l){
 }
 
 void
-label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt, struct sprite_trans *arg) {
+label_draw(struct rich_text *rich, const struct pack_label * l, struct srt *srt,
+           struct sprite_trans *arg) {
 	uint32_t color = label_get_color(l, arg);
 	const char *str = rich->text;
 
@@ -604,6 +560,8 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
     if (l->align & 0x38 && !l->auto_scale){
         cy = get_init_cy(rich, l);
     }
+    
+    float space_scale = 1.0f;
 	for (i=0; str && str[i];) {
 		int unicode;
 		int len = unicode_len(str[i]);
@@ -618,10 +576,8 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 		
 		pre_draw_label_sprite(rich, i - len, &sw, &ls);
 
-		float space_scale=1.0;
 //		uint32_t lf = get_rich_filed_lf(rich, idx, &space_scale);
-
-		if((l->auto_scale == 0 && (w > (l->width - l->size / 2))) || unicode == '\n' ) {
+		if((l->auto_scale == 0 && ((w + sw) > (l->width - l->size / 2))) || unicode == '\n' ) {
             if (ls > ch) {
                 ty = (ls - ch) / 2;
                 cy += ty;
@@ -639,5 +595,49 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
     if (ls > ch) {
         cy += (ls - ch) / 2;
     }
-	draw_line(rich, l, srt, arg, color, cy, ch, w + sw, 0, pre, i, &char_cnt, 1.0);
+	draw_line(rich, l, srt, arg, color, cy, ch, w + sw, 0, pre, i, &char_cnt, space_scale);
+}
+
+void
+label_size(struct rich_text *rich, const struct pack_label * l) {
+    if (rich->width == 0) {
+        const char *str = rich->text;
+        char utf8[7];
+        int cy = 0, cx = 0, ch = 0, idx = 0, w = 0, sw = 0, ls = 0, ty = 0;
+        for (int i=0; str && str[i];) {
+            int unicode;
+            int len = unicode_len(str[i]);
+            unicode = copystr(utf8, str+i, len);
+            i+=len;
+            if (unicode != ESC) {
+                w += draw_size(unicode, utf8, l->size, l->edge) + l->space_w;
+                if (ch == 0) {
+                    ch = draw_height(unicode, utf8, l->size, l->edge) + l->space_h;
+                }
+            }
+            
+            pre_draw_label_sprite(rich, i - len, &sw, &ls);
+            
+            if (sw + w > cx)
+                cx = sw + w;
+            
+            if((l->auto_scale == 0 && ((sw+w) > (l->width - l->size / 2))) || unicode == '\n' ) {
+                if (ls > ch) {
+                    ty = (ls - ch) / 2;
+                    cy += ty;
+                } else {
+                    ty = 0;
+                }
+                cy += (ch + ty);
+                
+                w = 0; ch = 0; ls = 0; sw = 0;
+            }
+            idx++;
+        }
+        rich->height = cy + ch;
+        if (l->auto_scale > 0 && cx > l->width)
+            rich->width = l->width;
+        else
+            rich->width = cx;
+    }
 }
