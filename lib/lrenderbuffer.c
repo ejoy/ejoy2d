@@ -13,6 +13,7 @@ ldelbuffer(lua_State *L) {
 	struct render_buffer *rb = (struct render_buffer *)lua_touserdata(L, 1);
     if (rb->vb) {
         free(rb->vb);
+        rb->vb = 0;
     }
 
 	renderbuffer_unload(rb);
