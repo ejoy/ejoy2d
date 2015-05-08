@@ -619,9 +619,9 @@ label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt,
 		pre_draw_label_sprite(rich, i - len, &sw, &ls);
 
 		float space_scale=1.0;
-		uint32_t lf = get_rich_filed_lf(rich, idx, &space_scale);
+//		uint32_t lf = get_rich_filed_lf(rich, idx, &space_scale);
 
-		if((l->auto_scale == 0 && lf) || unicode == '\n' || w > (l->width - l->size)) {
+		if((l->auto_scale == 0 && (w > (l->width - l->size / 2))) || unicode == '\n' ) {
             if (ls > ch) {
                 ty = (ls - ch) / 2;
                 cy += ty;
