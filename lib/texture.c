@@ -58,7 +58,7 @@ texture_reduce(enum TEXTURE_FORMAT type, int *width, int *height, void *buffer) 
 	char *dst = (char*)buffer;
     uint32_t average;
     int count = 0;
-	int i,j, fi, fj;
+	int i,j;
 	for (i=0;i+1<h;i+=2) {
 		for (j=0;j+1<w;j+=2) {
             uint32_t c[4] = { src[j], src[j + 1], src[j + w], src[j + w + 1]};

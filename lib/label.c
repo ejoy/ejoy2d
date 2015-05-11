@@ -393,7 +393,7 @@ set_label_sprite_mat(const struct rich_text *rich, int start, float *cx, int cy,
     int *mat = m->m;
     mat[4] = (*cx + ls->w / 2) * SCREEN_SCALE;
     mat[5] = cy * SCREEN_SCALE + ls->dy * SCREEN_SCALE;
-    
+
     uint32_t org_color = arg->color;
     if (rich->label_color_enable)
         arg->color = color;
@@ -539,7 +539,7 @@ get_init_cy(struct rich_text *rich, const struct pack_label * l){
     }
 
     cy = rich->height;
-    
+
     if (l->align & LABEL_ALIGN_V_BOTTOM_MASK){
         cy = l->height - cy;
     }else if(l->align & LABEL_ALIGN_V_CENTER_MASK){
@@ -621,7 +621,7 @@ label_size(struct rich_text *rich, const struct pack_label * l) {
             if (sw + w > cx)
                 cx = sw + w;
             
-            if((l->auto_scale == 0 && ((sw+w) > (l->width - l->size / 2))) || unicode == '\n' ) {
+            if((l->auto_scale == 0 && ((sw+w) > (l->width - l->size / 2)) && str[i]) || unicode == '\n' ) {
                 if (ls > ch) {
                     ty = (ls - ch) / 2;
                     cy += ty;
