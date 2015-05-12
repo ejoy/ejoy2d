@@ -567,7 +567,7 @@ label_draw(struct rich_text *rich, const struct pack_label * l, struct srt *srt,
 		int len = unicode_len(str[i]);
 		unicode = copystr(utf8, str+i, len);
 		i+=len;
-        if (unicode != ESC) {
+        if (unicode != ESC && unicode != '\n') {
             w += draw_size(unicode, utf8, l->size, l->edge) + l->space_w;
             if (ch == 0) {
                 ch = draw_height(unicode, utf8, l->size, l->edge) + l->space_h;
