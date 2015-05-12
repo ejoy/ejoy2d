@@ -10,6 +10,7 @@
 
 #include <lua.h>
 #include <lauxlib.h>
+#include <string.h>
 
 #define SRT_X 1
 #define SRT_Y 2
@@ -1100,6 +1101,24 @@ lset_child_visible(lua_State *L) {
 }
 
 static int
+lset_children_visible(lua_State *L) {
+    struct sprite *s = self(L);
+    if (s->type != TYPE_ANIMATION)
+        return 0;
+    const char *name = luaL_checkstring(L,2);
+    bool visible = lua_toboolean(L, 3);
+    int i;
+    struct pack_animation *ani = s->s.ani;
+    for (i=0; i<ani->component_number;i++) {
+        if (ani->component[i].name && strcmp(ani->component[i].name, name) == 0) {
+            struct sprite *child = s->data.children[i];
+            child->visible = visible;
+        }
+    }
+    return 0;
+}
+
+static int
 lchildren_name(lua_State *L) {
 	struct sprite *s = self(L);
 	if (s->type != TYPE_ANIMATION)
@@ -1562,6 +1581,7 @@ lmethod(lua_State *L) {
 		{ "char_size", lchar_size},
 		{ "child_visible", lchild_visible },
         { "set_child_visible", lset_child_visible },
+        { "set_children_visible", lset_children_visible },
 		{ "children_name", lchildren_name },
 		{ "world_pos", lgetwpos },
 		{ "anchor_particle", lset_anchor_particle },

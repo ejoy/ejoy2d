@@ -730,7 +730,7 @@ sprite_set_child_visible(struct sprite *s, const char * childname, bool visible)
         struct pack_part *pp = &pf->part[i];
         int index = pp->component_id;
         struct sprite * child = s->data.children[index];
-        if (child->name && strcmp(childname, child->name) == 1) {
+        if (child->name && strcmp(childname, child->name) == 0) {
             child->visible = visible;
         }
     }
