@@ -269,6 +269,8 @@ char_size(int unicode, const char *utf8, int size, int edge) {
 		ctx.w = (rect->w -1) * size / FONT_SIZE;
 		ctx.h = rect->h * size / FONT_SIZE;
 	}
+	// font_release should not reset ctx.w/ctx.h
+	font_release(&ctx);
 	return ctx;
 }
 
