@@ -59,7 +59,7 @@ ejoy2d_win_init(int orix, int oriy, int width, int height, float scale, const ch
 	}
 
   lua_pushstring(L, folder);
-  lua_pushstring(L, "examples/ex04.lua");
+  lua_pushstring(L, "examples/ex09.lua");
 
 	err = lua_pcall(L, 2, 0, tb);
 	if (err) {
