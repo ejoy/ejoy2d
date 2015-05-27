@@ -1,6 +1,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "shader.h"
 #include "screen.h"

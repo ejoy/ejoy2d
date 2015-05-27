@@ -101,6 +101,9 @@
     <ClCompile Include="..\..\..\lib\render\render.c">
       <Filter>lib\src\render</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\lib\lgeometry.c">
+      <Filter>lib\src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\stdbool.h">
