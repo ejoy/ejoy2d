@@ -1,8 +1,13 @@
 #include "spritepack.h"
 #include "matrix.h"
-#include "shader.h"
 #include "array.h"
+
+#ifndef EXPORT_EP
+
+#include "shader.h"
 #include "texture.h"
+
+#endif // EXPORT_EP
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -16,6 +21,8 @@
 #define TAG_MATRIX 8
 #define TAG_TOUCH 16
 #define TAG_MATRIXREF 32
+
+#ifndef EXPORT_EP
 
 struct import_alloc {
 	lua_State *L;
@@ -415,6 +422,8 @@ limport(lua_State *L) {
 	return 1;
 }
 
+#endif // EXPORT_EP
+
 static int32_t
 readinteger(lua_State *L, int idx) {
 	if (lua_isinteger(L, idx)) {
@@ -627,6 +636,8 @@ lpannel_size(lua_State *L) {
 	return 1;
 }
 
+#ifndef EXPORT_EP
+
 void
 dump_pack(struct sprite_pack *pack) {
 	if (pack == NULL)
@@ -710,6 +721,8 @@ limport_value(lua_State *L) {
 	return 2;
 }
 
+#endif // EXPORT_EP
+
 int
 ejoy2d_spritepack(lua_State *L) {
 	luaL_Reg l[] = {
@@ -727,9 +740,11 @@ ejoy2d_spritepack(lua_State *L) {
 		{ "string_size" , lstring_size },
 		{ "label_size", llabel_size },
 		{ "pannel_size", lpannel_size },
+#ifndef EXPORT_EP
 		{ "import", limport },
 		{ "import_value", limport_value },
 		{ "dump", ldumppack },
+#endif // EXPORT_EP
 		{ NULL, NULL },
 	};
 
