@@ -532,7 +532,7 @@ lsettext(lua_State *L) {
 		lua_rawseti(L, -2, 2);
 		lua_setuservalue(L, 1);
         
-        sprite_draw(s, NULL);
+        label_size(s->data.rich_text, s->s.label);
         
         return 0;
     }
@@ -666,7 +666,7 @@ lsettext(lua_State *L) {
 
 	s->data.rich_text = rich;
     
-    sprite_draw(s, NULL);
+    label_size(s->data.rich_text, s->s.label);
     
 	return 0;
 }
