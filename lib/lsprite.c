@@ -612,7 +612,7 @@ static int
 lsetalpha(lua_State *L) {
 	struct sprite *s = self(L);
 	uint8_t alpha = luaL_checkinteger(L, 2);
-	s->t.color = (s->t.color >> 8) | (alpha << 24);
+	s->t.color = (s->t.color & 0x00ffffff) | (alpha << 24);
 	return 0;
 }
 
