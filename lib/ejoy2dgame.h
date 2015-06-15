@@ -7,6 +7,8 @@ struct game {
 	lua_State *L;
 	float real_time;
 	float logic_time;
+    float vp_logic_time;
+    float vp_real_time;
     long update_count;
     int last_draw_call;
     int last_obj_count;
@@ -21,6 +23,7 @@ void ejoy2d_close_lua(struct game *);
 lua_State *  ejoy2d_game_lua(struct game *);
 void ejoy2d_handle_error(lua_State *L, const char *err_type, const char *msg);
 void ejoy2d_game_logicframe(int);
+void ejoy2d_game_vpframe(int);
 void ejoy2d_game_start(struct game *);
 void ejoy2d_game_update(struct game *, float dt);
 void ejoy2d_game_drawframe(struct game *);

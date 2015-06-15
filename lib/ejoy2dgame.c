@@ -27,13 +27,16 @@
 #define EJOY_HANDLE_ERROR "EJOY2D_HANDLE_ERROR"
 #define EJOY_RESUME "EJOY2D_RESUME"
 #define EJOY_PAUSE "EJOY2D_PAUSE"
+#define EJOY_VPUPDATE "EJOY2D_VPUPDATE"
 
 #define TRACEBACK_FUNCTION 1
 #define UPDATE_FUNCTION 2
 #define DRAWFRAME_FUNCTION 3
-#define TOP_FUNCTION 3
+#define VP_UPDATE_FUNCTION 4
+#define TOP_FUNCTION 4
 
 static int LOGIC_FRAME = 30;
+static int VIEWPORT_FRAME = 30;
 
 static int
 _panic(lua_State *L) {
@@ -48,6 +51,7 @@ linject(lua_State *L) {
 		EJOY_INIT,
 		EJOY_UPDATE,
 		EJOY_DRAWFRAME,
+        EJOY_VPUPDATE,
 		EJOY_TOUCH,
 		EJOY_GESTURE,
 		EJOY_MESSAGE,
@@ -116,6 +120,8 @@ ejoy2d_game() {
 	G->L = L;
 	G->real_time = 0;
 	G->logic_time = 0;
+    G->vp_real_time = 0;
+    G->vp_logic_time = 0;
     G->update_count = 0;
 	luaL_requiref(L, "ejoy2d.shader.c", ejoy2d_shader, 0);
 	luaL_requiref(L, "ejoy2d.framework", ejoy2d_framework, 0);
@@ -171,9 +177,13 @@ traceback (lua_State *L) {
 }
 
 void
-ejoy2d_game_logicframe(int frame)
-{
+ejoy2d_game_logicframe(int frame) {
 	LOGIC_FRAME = frame;
+}
+
+void
+ejoy2d_game_vpframe(int frame) {
+    VIEWPORT_FRAME = frame;
 }
 
 void
@@ -185,6 +195,7 @@ ejoy2d_game_start(struct game *G) {
 	lua_pushcfunction(L, traceback);
 	lua_getfield(L,LUA_REGISTRYINDEX, EJOY_UPDATE);
 	lua_getfield(L,LUA_REGISTRYINDEX, EJOY_DRAWFRAME);
+	lua_getfield(L,LUA_REGISTRYINDEX, EJOY_VPUPDATE);
 	lua_getfield(L,LUA_REGISTRYINDEX, EJOY_MESSAGE);
   lua_getfield(L,LUA_REGISTRYINDEX, EJOY_RESUME);
 	lua_getfield(L, LUA_REGISTRYINDEX, EJOY_PAUSE);
@@ -261,6 +272,29 @@ logic_frame(lua_State *L) {
 	lua_settop(L, TOP_FUNCTION);
 }
 
+static void
+viewport_frame(lua_State *L, float time) {
+    lua_pushvalue(L, VP_UPDATE_FUNCTION);
+    lua_pushnumber(L, time);
+    call(L, 1, 0);
+    lua_settop(L, TOP_FUNCTION);
+}
+
+static void 
+ejoy2d_viewport_frame(struct game *G, float time) {
+    float dt = 1.0f/VIEWPORT_FRAME;
+    if (G->vp_logic_time == 0) {
+        G->vp_real_time = dt;
+    } else {
+        G->vp_real_time += time;
+    }
+    
+    while (G->vp_logic_time < G->vp_real_time) {
+        G->vp_logic_time += dt;
+        viewport_frame(G->L, dt);
+    }
+}
+
 void
 ejoy2d_game_update(struct game *G, float time) {
 	if (G->logic_time == 0) {
@@ -273,9 +307,11 @@ ejoy2d_game_update(struct game *G, float time) {
 	}
 
 	while (G->logic_time < G->real_time) {
-		logic_frame(G->L);
 		G->logic_time += 1.0f/LOGIC_FRAME;
+        logic_frame(G->L);
 	}
+
+    ejoy2d_viewport_frame(G, time);
 }
 
 void
@@ -347,4 +383,3 @@ ejoy2d_game_pause(struct game* G) {
 	call(L, 0, 0);
 	lua_settop(L, TOP_FUNCTION);
 }
-
