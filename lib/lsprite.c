@@ -531,6 +531,9 @@ lsettext(lua_State *L) {
 		lua_pushvalue(L, 3);
 		lua_rawseti(L, -2, 2);
 		lua_setuservalue(L, 1);
+        
+        label_size(s->data.rich_text, s->s.label);
+        
         return 0;
     }
 
@@ -662,6 +665,8 @@ lsettext(lua_State *L) {
 	lua_setfield(L, -2, "richtext");
 
 	s->data.rich_text = rich;
+    
+    label_size(s->data.rich_text, s->s.label);
     
 	return 0;
 }
