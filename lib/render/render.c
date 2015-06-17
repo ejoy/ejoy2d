@@ -14,14 +14,13 @@
 #define MAX_VB_SLOT 8
 #define MAX_ATTRIB 16
 #define MAX_TEXTURE 8
-#define CHANGE_INDEXBUFFER 0x1
-#define CHANGE_VERTEXBUFFER 0x2
-#define CHANGE_TEXTURE 0x4
-#define CHANGE_BLEND 0x8
-#define CHANGE_DEPTH 0x10
-#define CHANGE_CULL 0x20
-#define CHANGE_TARGET 0x40
-#define CHANGE_SCISSOR 0x80
+#define CHANGE_VERTEXARRAY 0x1
+#define CHANGE_TEXTURE 0x2
+#define CHANGE_BLEND 0x4
+#define CHANGE_DEPTH 0x8
+#define CHANGE_CULL 0x10
+#define CHANGE_TARGET 0x20
+#define CHANGE_SCISSOR 0x40
 
 //#define CHECK_GL_ERROR
 //#define CHECK_GL_ERROR assert(check_opengl_error());
@@ -66,6 +65,7 @@ struct shader {
 	GLuint glid;
 	GLuint glvao;
 	RID vbslot[MAX_VB_SLOT];
+	RID ib;
 	int n;
 	struct attrib_layout a[MAX_ATTRIB];
 	int texture_n;
@@ -73,7 +73,6 @@ struct shader {
 };
 
 struct rstate {
-	RID indexbuffer;
 	RID target;
 	enum BLEND_FORMAT blend_src;
 	enum BLEND_FORMAT blend_dst;
@@ -88,6 +87,7 @@ struct render {
 	uint32_t changeflag;
 	RID attrib_layout;
 	RID vbslot[MAX_VB_SLOT];
+	RID indexbuffer;
 	RID program;
 	GLint default_framebuffer;
 	struct rstate current;
@@ -153,7 +153,7 @@ void
 render_buffer_update(struct render *R, RID id, const void * data, int n) {
 	struct buffer * buf = (struct buffer *)array_ref(&R->buffer, id);
 	glBindVertexArray(0);
-	R->changeflag |= CHANGE_VERTEXBUFFER;
+	R->changeflag |= CHANGE_VERTEXARRAY;
 	glBindBuffer(buf->gltype, buf->glid);
 	buf->n = n;
 	glBufferData(buf->gltype, n * buf->stride, data, GL_DYNAMIC_DRAW);
@@ -308,6 +308,7 @@ render_shader_create(struct render *R, struct shader_init_args *args) {
 	for (i=0;i<MAX_VB_SLOT;i++) {
 		s->vbslot[i] = 0;
 	}
+	s->ib = 0;
 
 	CHECK_GL_ERROR
 
@@ -387,11 +388,11 @@ render_set(struct render *R, enum RENDER_OBJ what, RID id, int slot) {
 	case VERTEXBUFFER:
 		assert(slot >= 0 && slot < MAX_VB_SLOT);
 		R->vbslot[slot] = id;
-		R->changeflag |= CHANGE_VERTEXBUFFER;
+		R->changeflag |= CHANGE_VERTEXARRAY;
 		break;
 	case INDEXBUFFER:
-		R->current.indexbuffer = id;
-		R->changeflag |= CHANGE_INDEXBUFFER;
+		R->indexbuffer = id;
+		R->changeflag |= CHANGE_VERTEXARRAY;
 		break;
 	case VERTEXLAYOUT:
 		R->attrib_layout = id;
@@ -425,7 +426,7 @@ apply_texture_uniform(struct shader *s) {
 void
 render_shader_bind(struct render *R, RID id) {
 	R->program = id;
-	R->changeflag |= CHANGE_VERTEXBUFFER;
+	R->changeflag |= CHANGE_VERTEXARRAY;
 	struct shader * s = (struct shader *)array_ref(&R->shader, id);
 	if (s) {
 		glUseProgram(s->glid);
@@ -500,7 +501,7 @@ change_vb(struct render *R, struct shader * s) {
 }
 
 static void
-apply_vb(struct render *R) {
+apply_va(struct render *R) {
 	RID prog = R->program;
 	struct shader * s = (struct shader *)array_ref(&R->shader, prog);
 	if (s) {
@@ -526,9 +527,18 @@ apply_vb(struct render *R) {
 				glVertexAttribPointer(i, al->size, al->type, al->normalized, stride, (const GLvoid *)(ptrdiff_t)(al->offset));
 			}
 		}
-	}
 
-	CHECK_GL_ERROR
+		RID ib = R->indexbuffer;
+		if (ib != s->ib) {
+			s->ib = R->indexbuffer;
+			struct buffer * b = (struct buffer *)array_ref(&R->buffer, ib);
+			if (b) {
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->glid);
+			}
+		}
+
+		CHECK_GL_ERROR
+	}
 }
 
 // texture
@@ -800,20 +810,8 @@ render_target_texture(struct render *R, RID rt) {
 
 static void
 render_state_commit(struct render *R) {
-	if (R->changeflag & CHANGE_INDEXBUFFER) {
-		RID ib = R->current.indexbuffer;
-		if (ib != R->last.indexbuffer) {
-			R->last.indexbuffer = ib;
-			struct buffer * b = (struct buffer *)array_ref(&R->buffer, ib);
-			if (b) {
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->glid);
-				CHECK_GL_ERROR
-			}
-		}
-	}
-
-	if (R->changeflag & CHANGE_VERTEXBUFFER) {
-		apply_vb(R);
+	if (R->changeflag & CHANGE_VERTEXARRAY) {
+		apply_va(R);
 	}
 
 	if (R->changeflag & CHANGE_TEXTURE) {
@@ -966,7 +964,7 @@ render_draw(struct render *R, enum DRAW_MODE mode, int fromidx, int ni) {
 	};
 	assert(mode < sizeof(draw_mode)/sizeof(int));
 	render_state_commit(R);
-	RID ib = R->current.indexbuffer;
+	RID ib = R->indexbuffer;
 	struct buffer * buf = (struct buffer *)array_ref(&R->buffer, ib);
 	if (buf) {
 		assert(fromidx + ni <= buf->n);
