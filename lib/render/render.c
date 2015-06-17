@@ -64,6 +64,8 @@ struct attrib_layout {
 
 struct shader {
 	GLuint glid;
+	GLuint glvao;
+	RID vbslot[MAX_VB_SLOT];
 	int n;
 	struct attrib_layout a[MAX_ATTRIB];
 	int texture_n;
@@ -150,6 +152,8 @@ render_buffer_create(struct render *R, enum RENDER_OBJ what, const void *data, i
 void 
 render_buffer_update(struct render *R, RID id, const void * data, int n) {
 	struct buffer * buf = (struct buffer *)array_ref(&R->buffer, id);
+	glBindVertexArray(0);
+	R->changeflag |= CHANGE_VERTEXBUFFER;
 	glBindBuffer(buf->gltype, buf->glid);
 	buf->n = n;
 	glBufferData(buf->gltype, n * buf->stride, data, GL_DYNAMIC_DRAW);
@@ -300,6 +304,11 @@ render_shader_create(struct render *R, struct shader_init_args *args) {
 		s->texture_uniform[i] = glGetUniformLocation(s->glid, args->texture_uniform[i]);
 	}
 
+	glGenVertexArrays(1, &s->glvao);
+	for (i=0;i<MAX_VB_SLOT;i++) {
+		s->vbslot[i] = 0;
+	}
+
 	CHECK_GL_ERROR
 
 	return array_id(&R->shader, s);
@@ -309,6 +318,7 @@ static void
 close_shader(void *p, void *R) {
 	struct shader * shader = (struct shader *)p;
 	glDeleteProgram(shader->glid);
+	glDeleteVertexArrays(1, &shader->glvao);
 
 	CHECK_GL_ERROR
 }
@@ -482,29 +492,39 @@ render_setscissor(struct render *R, int x, int y, int width, int height ) {
 	glScissor(x,y,width,height);
 }
 
+static int
+change_vb(struct render *R, struct shader * s) {
+	int change = memcmp(R->vbslot, s->vbslot, sizeof(R->vbslot));
+	memcpy(s->vbslot, R->vbslot, sizeof(R->vbslot));
+	return change;
+}
+
 static void
 apply_vb(struct render *R) {
 	RID prog = R->program;
 	struct shader * s = (struct shader *)array_ref(&R->shader, prog);
 	if (s) {
-		int i;
-		RID last_vb = 0;
-		int stride = 0;
-		for (i=0;i<s->n;i++) {
-			struct attrib_layout *al = &s->a[i];
-			int vbidx = al->vbslot;
-			RID vb = R->vbslot[vbidx];
-			if (last_vb != vb) {
-				struct buffer * buf = (struct buffer *)array_ref(&R->buffer, vb);
-				if (buf == NULL) {
-					continue;
+		glBindVertexArray(s->glvao);
+		if (change_vb(R,s)) {
+			int i;
+			RID last_vb = 0;
+			int stride = 0;
+			for (i=0;i<s->n;i++) {
+				struct attrib_layout *al = &s->a[i];
+				int vbidx = al->vbslot;
+				RID vb = R->vbslot[vbidx];
+				if (last_vb != vb) {
+					struct buffer * buf = (struct buffer *)array_ref(&R->buffer, vb);
+					if (buf == NULL) {
+						continue;
+					}
+					glBindBuffer(GL_ARRAY_BUFFER, buf->glid);
+					last_vb = vb;
+					stride = buf->stride;
 				}
-				glBindBuffer(GL_ARRAY_BUFFER, buf->glid);
-				last_vb = vb;
-				stride = buf->stride;
+				glEnableVertexAttribArray(i);
+				glVertexAttribPointer(i, al->size, al->type, al->normalized, stride, (const GLvoid *)(ptrdiff_t)(al->offset));
 			}
-			glEnableVertexAttribArray(i);
-			glVertexAttribPointer(i, al->size, al->type, al->normalized, stride, (const GLvoid *)(ptrdiff_t)(al->offset));
 		}
 	}
 
