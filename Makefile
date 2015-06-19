@@ -67,7 +67,7 @@ lua/lutf8lib.c \
 lua/lvm.c \
 lua/lzio.c
 
-
+CC=gcc
 UNAME=$(shell uname)
 SYS=$(if $(filter Linux%,$(UNAME)),linux,\
 	    $(if $(filter MINGW%,$(UNAME)),mingw,\
@@ -99,7 +99,7 @@ winlib : SRC += mingw/winfont.c lib/lejoy2dcore.c
 winlib : $(SRC) ej2dlib
 
 ej2dlib :
-	gcc $(CFLAGS) -o $(TARGET) $(SRC) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRC) $(LDFLAGS)
 
 linux : OS := LINUX
 linux : TARGET := ej2d
@@ -109,16 +109,17 @@ linux : SRC += posix/window.c posix/winfw.c posix/winfont.c
 
 linux : $(SRC) ej2d
 
+macosx : CC := clang
 macosx : OS := MACOSX
 macosx : TARGET := ej2d
-macosx : CFLAGS += -I/usr/X11R6/include -I/usr/include $(shell freetype-config --cflags) -D __MACOSX
-macosx : LDFLAGS += -L/usr/X11R6/lib  -lGLEW -lGL -lX11 -lfreetype -lm -ldl
-macosx : SRC += posix/window.c posix/winfw.c posix/winfont.c
+macosx : CFLAGS += -I/usr/include $(shell freetype-config --cflags) -D __MACOSX
+macosx : LDFLAGS += -lglfw3  -framework OpenGL -lfreetype -lm -ldl
+macosx : SRC += mac/example/example/window.c posix/winfw.c mac/example/example/winfont.c
 
 macosx : $(SRC) ej2d
 
 ej2d :
-	gcc $(CFLAGS) -o $(TARGET) $(SRC) $(LUASRC) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRC) $(LUASRC) $(LDFLAGS)
 
 clean :
 	-rm -f ej2d.exe
