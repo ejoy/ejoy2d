@@ -632,7 +632,7 @@ texture_format(struct texture * tex, GLint *pf, GLenum *pt) {
 		break;
 	case TEXTURE_A8 :
 	case TEXTURE_DEPTH :
-		format = GL_ALPHA;
+		format = GL_RED;
 		itype = GL_UNSIGNED_BYTE;
 		break;
 #ifdef GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG 

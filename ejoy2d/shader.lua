@@ -50,7 +50,7 @@ varying vec4 v_additive;
 uniform sampler2D texture0;
 
 void main() {
-	float c = texture2D(texture0, v_texcoord).w;
+	float c = texture2D(texture0, v_texcoord).r;
 	float alpha = clamp(c, 0.0, 0.5) * 2.0;
 
 	gl_FragColor.xyz = (v_color.xyz + v_additive.xyz) * alpha;
@@ -67,7 +67,7 @@ varying vec4 v_additive;
 uniform sampler2D texture0;
 
 void main() {
-	float c = texture2D(texture0, v_texcoord).w;
+	float c = texture2D(texture0, v_texcoord).r;
 	float alpha = clamp(c, 0.0, 0.5) * 2.0;
 	float color = (clamp(c, 0.5, 1.0) - 0.5) * 2.0;
 
