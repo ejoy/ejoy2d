@@ -11,6 +11,14 @@
 #include <stdlib.h>
 #include <stddef.h>
 
+
+#ifndef VAO_DISABLE
+// If your platform doesn't support VAO, comment it out.
+// Or define VAO_DISABLE first
+#define VAO_ENABLE
+
+#endif
+
 #define MAX_VB_SLOT 8
 #define MAX_ATTRIB 16
 #define MAX_TEXTURE 8
@@ -63,9 +71,11 @@ struct attrib_layout {
 
 struct shader {
 	GLuint glid;
+#ifdef VAO_ENABLE
 	GLuint glvao;
 	RID vbslot[MAX_VB_SLOT];
 	RID ib;
+#endif
 	int n;
 	struct attrib_layout a[MAX_ATTRIB];
 	int texture_n;
@@ -304,11 +314,13 @@ render_shader_create(struct render *R, struct shader_init_args *args) {
 		s->texture_uniform[i] = glGetUniformLocation(s->glid, args->texture_uniform[i]);
 	}
 
+#ifdef VAO_ENABLE
 	glGenVertexArrays(1, &s->glvao);
 	for (i=0;i<MAX_VB_SLOT;i++) {
 		s->vbslot[i] = 0;
 	}
 	s->ib = 0;
+#endif
 
 	CHECK_GL_ERROR
 
@@ -319,7 +331,9 @@ static void
 close_shader(void *p, void *R) {
 	struct shader * shader = (struct shader *)p;
 	glDeleteProgram(shader->glid);
+#ifdef VAO_ENABLE
 	glDeleteVertexArrays(1, &shader->glvao);
+#endif
 
 	CHECK_GL_ERROR
 }
@@ -495,9 +509,24 @@ render_setscissor(struct render *R, int x, int y, int width, int height ) {
 
 static int
 change_vb(struct render *R, struct shader * s) {
+#ifdef VAO_ENABLE
 	int change = memcmp(R->vbslot, s->vbslot, sizeof(R->vbslot));
 	memcpy(s->vbslot, R->vbslot, sizeof(R->vbslot));
 	return change;
+#else
+	return 1;
+#endif
+}
+
+static int
+change_ib(struct render *R, struct shader *s) {
+#ifdef VAO_ENABLE
+	RID ib = s->ib;
+	s->ib = R->indexbuffer;
+	return (R->indexbuffer != ib);
+#else
+	return 1;
+#endif
 }
 
 static void
@@ -505,7 +534,9 @@ apply_va(struct render *R) {
 	RID prog = R->program;
 	struct shader * s = (struct shader *)array_ref(&R->shader, prog);
 	if (s) {
+#ifdef VAO_ENABLE
 		glBindVertexArray(s->glvao);
+#endif
 		if (change_vb(R,s)) {
 			int i;
 			RID last_vb = 0;
@@ -528,10 +559,8 @@ apply_va(struct render *R) {
 			}
 		}
 
-		RID ib = R->indexbuffer;
-		if (ib != s->ib) {
-			s->ib = R->indexbuffer;
-			struct buffer * b = (struct buffer *)array_ref(&R->buffer, ib);
+		if (change_ib(R,s)) {
+			struct buffer * b = (struct buffer *)array_ref(&R->buffer, R->indexbuffer);
 			if (b) {
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->glid);
 			}
