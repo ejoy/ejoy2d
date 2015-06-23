@@ -12,7 +12,8 @@
 #include <stddef.h>
 
 
-#ifndef VAO_DISABLE
+
+#if !defined (VAO_DISABLE) && !defined (__ANDROID__)
 // If your platform doesn't support VAO, comment it out.
 // Or define VAO_DISABLE first
 #define VAO_ENABLE
