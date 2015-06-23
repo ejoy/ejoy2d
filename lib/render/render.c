@@ -992,7 +992,7 @@ render_draw(struct render *R, enum DRAW_MODE mode, int fromidx, int ni) {
 		GL_TRIANGLES,
 		GL_LINES,
 	};
-	assert(mode < sizeof(draw_mode)/sizeof(int));
+	assert((int)mode < sizeof(draw_mode)/sizeof(int));
 	render_state_commit(R);
 	RID ib = R->indexbuffer;
 	struct buffer * buf = (struct buffer *)array_ref(&R->buffer, ib);
