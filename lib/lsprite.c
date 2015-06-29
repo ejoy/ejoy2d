@@ -1090,6 +1090,18 @@ ltext_size(lua_State *L) {
 }
 
 static int
+ltext_org_size(lua_State *L) {
+    struct sprite *s = self(L);
+    if (s->type != TYPE_LABEL) {
+        return luaL_error(L, "Ony label can get label_size");
+    }
+    lua_pushinteger(L, s->s.label->width);
+    lua_pushinteger(L, s->s.label->height);
+    lua_pushinteger(L, s->s.label->size);
+    return 3;
+}
+
+static int
 lchild_visible(lua_State *L) {
 	struct sprite *s = self(L);
 	const char * name = luaL_checkstring(L,2);
@@ -1583,6 +1595,7 @@ lmethod(lua_State *L) {
 		{ "test", ltest },
 		{ "aabb", laabb },
 		{ "text_size", ltext_size},
+        { "text_src_size", ltext_org_size},
 		{ "char_size", lchar_size},
 		{ "child_visible", lchild_visible },
         { "set_child_visible", lset_child_visible },
