@@ -305,7 +305,7 @@ lgetframe(lua_State *L) {
 static int
 lsetframe(lua_State *L) {
 	struct sprite * s = self(L);
-	int frame = (int)luaL_checkinteger(L,2);
+	int frame = (int)luaL_checknumber(L,2);
 	sprite_setframe(s, frame, false);
 	return 0;
 }
