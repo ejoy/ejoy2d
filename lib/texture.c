@@ -98,7 +98,18 @@ texture_load(int id, enum TEXTURE_FORMAT pixel_format, int pixel_width, int pixe
 		return NULL;
 	}
 
-	if (reduce) {
+    int compressed = 0;
+    switch (pixel_format) {
+        case TEXTURE_PVR2 :
+        case TEXTURE_PVR4 :
+        case TEXTURE_ETC1 :
+            compressed = 1;
+            break;
+        default:
+            compressed = 0;
+    }
+    
+	if (reduce && !compressed) {
 		texture_reduce(pixel_format, &pixel_width, &pixel_height, data);
 	}
 	render_texture_update(R, tex->id, pixel_width, pixel_height, data, 0, 0);
