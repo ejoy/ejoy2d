@@ -34,6 +34,9 @@ struct import_alloc {
 
 static void *
 ialloc_dbg(struct import_alloc *alloc, int size, int line) {
+	if (size <= 0) {
+		return NULL;
+	}
 	if (alloc->cap < size) {
 		luaL_error(alloc->L, "import invalid stream, alloc failed on line %d. cap = %d, size = %d", line, alloc->cap, size);
 	}
