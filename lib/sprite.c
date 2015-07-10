@@ -114,6 +114,9 @@ sprite_action(struct sprite *s, const char * action) {
 	}
 	struct pack_animation *ani = s->s.ani;
 	if (action == NULL) {
+		if (ani->action == NULL) {
+			return -1;
+		}
 		s->start_frame = ani->action[0].start_frame;
 		s->total_frame = ani->action[0].number;
 		s->frame = 0;
@@ -155,6 +158,8 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 		struct pack_animation * ani = (struct pack_animation *)pack->data[id];
 		s->s.ani = ani;
 		s->frame = 0;
+		s->start_frame = 0;
+		s->total_frame = 0;
 		sprite_action(s, NULL);
 		int i;
 		int n = ani->component_number;
@@ -198,16 +203,19 @@ sprite_mount(struct sprite *parent, int index, struct sprite *child) {
 	}
 }
 
-static int
-real_frame(struct sprite *s) {
+static inline int
+get_frame(struct sprite *s) {
 	if (s->type != TYPE_ANIMATION) {
-		return 0;
+		return s->start_frame;
+	}
+	if (s->total_frame <= 0) {
+		return -1;
 	}
 	int f = s->frame % s->total_frame;
 	if (f < 0) {
 		f += s->total_frame;
 	}
-	return f;
+	return f + s->start_frame;
 }
 
 int
@@ -498,8 +506,11 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct m
 		return 0;
 	}
 	// draw animation
+	int frame = get_frame(s);
+	if (frame < 0) {
+		return 0;
+	}
 	struct pack_animation *ani = s->s.ani;
-	int frame = real_frame(s) + s->start_frame;
 	struct pack_frame * pf = &ani->frame[frame];
 	int i;
 	int scissor = 0;
@@ -524,7 +535,10 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct m
 bool
 sprite_child_visible(struct sprite *s, const char * childname) {
 	struct pack_animation *ani = s->s.ani;
-	int frame = real_frame(s) + s->start_frame;
+	int frame = get_frame(s);
+	if (frame < 0) {
+		return false;
+	}
 	struct pack_frame * pf = &ani->frame[frame];
 	int i;
 	for (i=0;i<pf->n;i++) {
@@ -591,7 +605,10 @@ sprite_matrix(struct sprite * self, struct matrix *mat) {
 
 		struct matrix * child_mat = NULL;
 		struct pack_animation *ani = parent->s.ani;
-		int frame = real_frame(parent) + parent->start_frame;
+		int frame = get_frame(parent);
+		if (frame < 0) {
+			return;
+		}
 		struct pack_frame * pf = &ani->frame[frame];
 		int i;
 		for (i=0;i<pf->n;i++) {
@@ -719,7 +736,10 @@ child_aabb(struct sprite *s, struct srt *srt, struct matrix * mat, int aabb[4]) 
 	}
 	// draw animation
 	struct pack_animation *ani = s->s.ani;
-	int frame = real_frame(s) + s->start_frame;
+	int frame = get_frame(s);
+	if (frame < 0) {
+		return 0;
+	}
 	struct pack_frame * pf = &ani->frame[frame];
 	int i;
 	for (i=0;i<pf->n;i++) {
@@ -864,7 +884,10 @@ check_child(struct sprite *s, struct srt *srt, struct matrix * t, struct pack_fr
 static int
 test_animation(struct sprite *s, struct srt *srt, struct matrix * t, int x, int y, struct sprite ** touch) {
 	struct pack_animation *ani = s->s.ani;
-	int frame = real_frame(s) + s->start_frame;
+	int frame = get_frame(s);
+	if (frame < 0) {
+		return 0;
+	}
 	struct pack_frame * pf = &ani->frame[frame];
 	int start = pf->n-1;
 	do {
