@@ -18,6 +18,17 @@
 // Or define VAO_DISABLE first
 #define VAO_ENABLE
 
+
+#if defined (GL_OES_vertex_array_object)
+	#define glBindVertexArray glBindVertexArrayOES
+	#define glGenVertexArrays glGenVertexArraysOES
+	#define glDeleteVertexArrays glDeleteVertexArraysOES
+#endif
+
+#endif
+
+#ifndef  GL_RED
+    #define GL_RED 0x1903
 #endif
 
 #define MAX_VB_SLOT 8
@@ -163,7 +174,9 @@ render_buffer_create(struct render *R, enum RENDER_OBJ what, const void *data, i
 void 
 render_buffer_update(struct render *R, RID id, const void * data, int n) {
 	struct buffer * buf = (struct buffer *)array_ref(&R->buffer, id);
+#ifdef VAO_ENABLE
 	glBindVertexArray(0);
+#endif
 	R->changeflag |= CHANGE_VERTEXARRAY;
 	glBindBuffer(buf->gltype, buf->glid);
 	buf->n = n;
