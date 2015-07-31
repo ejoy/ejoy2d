@@ -8,6 +8,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define SPRFLAG_INVISIBLE           (1)
+#define SPRFLAG_MESSAGE             (2)
+#define SPRFLAG_MULTIMOUNT          (4)
+#define SPRFLAG_FORCE_INHERIT_FRAME (8)
+
 struct material;
 
 struct anchor_data {
@@ -33,9 +38,7 @@ struct sprite {
 	int start_frame;
 	int total_frame;
 	int frame;
-	bool visible;
-	bool message;
-	bool multimount;
+	int flags;
 	const char *name;	// name for parent
 	struct material *material;
 	union {

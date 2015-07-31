@@ -182,7 +182,7 @@ drawsprite(struct render_buffer *rb, struct sprite *s, struct sprite_trans * ts)
 			struct pack_part *pp = &pf->part[i];
 			int index = pp->component_id;
 			struct sprite * child = s->data.children[index];
-			if (child == NULL || child->visible == false) {
+			if (child == NULL || (child->flags & SPRFLAG_INVISIBLE)) {
 				continue;
 			}
 			struct sprite_trans temp2;
@@ -218,7 +218,7 @@ drawsprite(struct render_buffer *rb, struct sprite *s, struct sprite_trans * ts)
 
 int 
 renderbuffer_drawsprite(struct render_buffer *rb, struct sprite *s) {
-	if (s->visible) {
+	if ((s->flags & SPRFLAG_INVISIBLE) == 0) {
 		return drawsprite(rb, s, NULL);
 	}
 	return 0;
