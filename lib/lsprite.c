@@ -38,9 +38,7 @@ newlabel(lua_State *L, struct pack_label *label) {
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
 	s->t.program = PROGRAM_DEFAULT;
-	s->message = false;
-	s->visible = true;
-	s->multimount = false;
+	s->flags = 0;
 	s->name = NULL;
 	s->id = 0;
 	s->type = TYPE_LABEL;
@@ -156,7 +154,7 @@ update_message(struct sprite * s, struct sprite_pack * pack, int parentid, int c
 	int i = 0;
 	for (; i < pframe.n; i++) {
 		if (pframe.part[i].component_id == componentid && pframe.part[i].touchable) {
-			s->message = true;
+			s->flags |= SPRFLAG_MESSAGE;
 			return;
 		}
 	}
@@ -171,9 +169,7 @@ newanchor(lua_State *L) {
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
 	s->t.program = PROGRAM_DEFAULT;
-	s->message = false;
-	s->visible = false;	// anchor is invisible by default
-	s->multimount = false;
+	s->flags = SPRFLAG_INVISIBLE;  // anchor is invisible by default
 	s->name = NULL;
 	s->id = ANCHOR_ID;
 	s->type = TYPE_ANCHOR;
@@ -299,28 +295,54 @@ lgettotalframe(lua_State *L) {
 static int
 lgetvisible(lua_State *L) {
 	struct sprite *s = self(L);
-	lua_pushboolean(L, s->visible);
+	lua_pushboolean(L, (s->flags & SPRFLAG_INVISIBLE) == 0);
 	return 1;
 }
 
 static int
 lsetvisible(lua_State *L) {
 	struct sprite *s = self(L);
-	s->visible = lua_toboolean(L, 2);
+	if (lua_toboolean(L, 2)) {
+		s->flags &= ~SPRFLAG_INVISIBLE;
+	} else {
+		s->flags |= SPRFLAG_INVISIBLE;
+	}
 	return 0;
 }
 
 static int
 lgetmessage(lua_State *L) {
 	struct sprite *s = self(L);
-	lua_pushboolean(L, s->message);
+	lua_pushboolean(L, s->flags & SPRFLAG_MESSAGE);
 	return 1;
 }
 
 static int
 lsetmessage(lua_State *L) {
 	struct sprite *s = self(L);
-	s->message = lua_toboolean(L, 2);
+	if(lua_toboolean(L, 2)) {
+		s->flags |= SPRFLAG_MESSAGE;
+	} else {
+		s->flags &= ~SPRFLAG_MESSAGE;
+	}
+	return 0;
+}
+
+static int
+lget_force_inherit_frame(lua_State *L) {
+	struct sprite *s = self(L);
+	lua_pushboolean(L, s->flags & SPRFLAG_FORCE_INHERIT_FRAME);
+	return 1;
+}
+
+static int
+lset_force_inherit_frame(lua_State *L) {
+	struct sprite *s = self(L);
+	if(lua_toboolean(L, 2)) {
+		s->flags |= SPRFLAG_FORCE_INHERIT_FRAME;
+	} else {
+		s->flags &= ~SPRFLAG_FORCE_INHERIT_FRAME;
+	}
 	return 0;
 }
 
@@ -702,6 +724,7 @@ lgetter(lua_State *L) {
 		{"alpha", lgetalpha },
 		{"additive", lgetadditive },
 		{"message", lgetmessage },
+		{"force_inherit_frame", lget_force_inherit_frame },
 		{"matrix", lgetmat },
 		{"world_matrix", lgetwmat },
 		{"parent_name", lgetparentname },	// todo: maybe unused , use parent instead
@@ -728,6 +751,7 @@ lsetter(lua_State *L) {
 		{"alpha", lsetalpha},
 		{"additive", lsetadditive },
 		{"message", lsetmessage },
+		{"force_inherit_frame", lset_force_inherit_frame },
 		{"program", lsetprogram },
 		{"scissor", lsetscissor },
         {"auto_scale", lsetautoscale},
@@ -761,7 +785,7 @@ lfetch(lua_State *L) {
 	int index = sprite_child(s, name);
 	if (index < 0)
 		return 0;
-	if (!s->multimount)	{ // multimount has no parent
+	if ((s->flags & SPRFLAG_MULTIMOUNT) == 0)	{ // multimount has no parent
 		fetch_parent(L, index);
 	}
 
@@ -825,7 +849,7 @@ lmount(lua_State *L) {
 			// mount not change
 			return 0;
 		}
-		if (!c->multimount) {
+		if ((c->flags & SPRFLAG_MULTIMOUNT) == 0) {
 			// try to remove parent ref
 			lua_getuservalue(L, -1);
 			if (lua_istable(L, -1)) {
@@ -850,7 +874,7 @@ lmount(lua_State *L) {
 		lua_pushvalue(L, 3);
 		lua_rawseti(L, -2, index+1);
 
-		if (!child->multimount)	{ // multimount has no parent
+		if ((child->flags & SPRFLAG_MULTIMOUNT) == 0)	{ // multimount has no parent
 			// set child's new parent
 			ref_parent(L, 3, 1);
 		}
@@ -1399,9 +1423,7 @@ lnewproxy(lua_State *L) {
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
 	s->t.program = PROGRAM_DEFAULT;
-	s->message = false;
-	s->visible = true;
-	s->multimount = true;
+	s->flags = SPRFLAG_MULTIMOUNT;
 	s->name = NULL;
 	s->id = 0;
 	s->type = TYPE_ANIMATION;
