@@ -9,6 +9,7 @@ struct texture {
 	float invw;
 	float invh;
 	RID id;
+    RID alphaid;
 	RID fb; /// rt 's frame buffer
 };
 
@@ -113,9 +114,55 @@ texture_load(int id, enum TEXTURE_FORMAT pixel_format, int pixel_width, int pixe
 		texture_reduce(pixel_format, &pixel_width, &pixel_height, data);
 	}
 	render_texture_update(R, tex->id, pixel_width, pixel_height, data, 0, 0);
+    
+    // 还需继续创建alpha贴图
+    if (pixel_format == TEXTURE_ETC1) {
+        if (tex->alphaid == 0) {
+            tex->alphaid = render_texture_create(R, pixel_width, pixel_height, TEXTURE_A8, TEXTURE_2D, 0);
+        }
+        int offset = pixel_width * pixel_height >> 1;
+        render_texture_update(R, tex->alphaid, pixel_width, pixel_height, data + offset, 0, 0);
+    }
 
 	return NULL;
 }
+
+const char *
+texture_load_alpha(int id, enum TEXTURE_FORMAT pixel_format, int pixel_width, int pixel_height, void *data, void *alphadata, int reduce) {
+    if (id >= MAX_TEXTURE) {
+        return "Too many texture";
+    }
+    struct texture * tex = &POOL.tex[id];
+    if (id >= POOL.count) {
+        POOL.count = id + 1;
+    }
+    tex->fb = 0;
+    tex->width = pixel_width;
+    tex->height = pixel_height;
+    tex->invw = 1.0f / (float)pixel_width;
+    tex->invh = 1.0f / (float)pixel_height;
+    if (tex->id == 0) {
+        tex->id = render_texture_create(R, pixel_width, pixel_height, pixel_format, TEXTURE_2D, 0);
+    }
+    if (data == NULL) {
+        // empty texture
+        return NULL;
+    }
+    
+    if (reduce) {
+        texture_reduce(pixel_format, &pixel_width, &pixel_height, data);
+        texture_reduce(pixel_format, &pixel_width, &pixel_height, alphadata);
+    }
+    render_texture_update(R, tex->id, pixel_width, pixel_height, data, 0, 0);
+    
+    if (tex->alphaid == 0) {
+        tex->alphaid = render_texture_create(R, pixel_width, pixel_height, TEXTURE_A8, TEXTURE_2D, 0);
+    }
+    render_texture_update(R, tex->alphaid, pixel_width, pixel_height, alphadata, 0, 0);
+    
+    return NULL;
+}
+
 
 const char*
 texture_new_rt(int id, int w, int h){
@@ -204,8 +251,11 @@ texture_unload(int id) {
 	render_release(R, TEXTURE, tex->id);
 	if (tex->fb != 0)
 		render_release(R, TARGET, tex->fb);
+    if (tex->alphaid != 0)
+        render_release(R, TARGET, tex->alphaid);
     
 	tex->id = 0;
+    tex->alphaid = 0;
 	tex->fb = 0;
     tex->width = 0;
     tex->height = 0;
@@ -219,6 +269,14 @@ texture_glid(int id) {
 		return 0;
 	struct texture *tex = &POOL.tex[id];
 	return tex->id;
+}
+
+RID
+texture_glalphaid(int id) {
+    if (id < 0 || id >= POOL.count)
+        return 0;
+    struct texture *tex = &POOL.tex[id];
+    return tex->alphaid;
 }
 
 void 
@@ -296,5 +354,18 @@ texture_update(int id, int pixel_width, int pixel_height, void *data) {
 	render_texture_update(R, tex->id, pixel_width, pixel_height, data, 0, 0);
 
 	return NULL;
+}
+
+enum TEXTURE_FORMAT texture_format(int id) {
+    if (id >= MAX_TEXTURE) {
+        return TEXTURE_INVALID;
+    }
+    
+    struct texture * tex = &POOL.tex[id];
+    if(tex->id == 0){
+        return TEXTURE_INVALID;
+    }
+    
+    return render_texture_format(R, tex->id);
 }
 

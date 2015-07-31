@@ -731,7 +731,14 @@ void render_texture_wrapmode(struct render *R, RID id, int mode) {
         default:
             break;
     }
+}
 
+enum TEXTURE_FORMAT render_texture_format(struct render *R, RID id) {
+    struct texture * tex = (struct texture *)array_ref(&R->texture, id);
+    if (tex == NULL)
+        return TEXTURE_INVALID;
+    
+    return tex->format;
 }
 
 // blend mode

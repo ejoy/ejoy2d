@@ -6,8 +6,11 @@
 
 void texture_initrender(struct render *R);
 const char * texture_load(int id, enum TEXTURE_FORMAT type, int width, int height, void *buffer, int reduce);
+const char * texture_load_alpha(int id, enum TEXTURE_FORMAT type, int width, int height, void *buffer, void *alpha, int reduce);
 void texture_unload(int id);
 RID texture_glid(int id);
+RID texture_glalphaid(int id);
+enum TEXTURE_FORMAT texture_format(int id);
 int texture_coord(int id, float x, float y, uv_type *u, uv_type *v);
 void texture_clearall();
 void texture_exit();

@@ -89,7 +89,8 @@ struct sprite_trans {
 	uint32_t color;
 	uint32_t additive;
 	int program;
-	int _dummy;		// unused: dummy for align to 64bit
+    int program_offset;         // switch program for alphamap shader 
+//	int _dummy;		// unused: dummy for align to 64bit
 };
 
 #define SIZEOF_TRANS (sizeof(struct sprite_trans) + PTR_SIZE_DIFF)

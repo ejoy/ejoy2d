@@ -14,6 +14,8 @@
 #define SIMPLESPRITE 3
 #define PROGRAM_RENDERBUFFER 4
 
+#define PROGRAM_ALPHAMAP_OFFSET 10
+
 struct material;
 
 void shader_init();

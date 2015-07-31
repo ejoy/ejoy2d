@@ -79,8 +79,9 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 
         struct vertex_pack *tmp_vb = draw_scene ? drawscene_vb : vb;
         if (!enable_visible_test || !screen_is_poly_invisible(tmp_vb, 4)) {
+            int glalphaid = texture_glalphaid(q->texid);
 #ifdef USE_DTEX
-            if (cur_dtex_id >= 0 && (glid == 0 || dtex_enable_scale(viewport_srt.scalex))) {
+            if (cur_dtex_id >= 0 && glalphaid == 0 && (glid == 0 || dtex_enable_scale(viewport_srt.scalex))) {
                 int dtex_glid = texture_glid(dtex_texid(cur_dtex_id));
                 if (dtex_glid != 0 ) {
                     const uv_type* dtex_coord = dtex_lookup(cur_dtex_id, q->texture_coord, q->texid);
@@ -95,6 +96,8 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
             }
 #endif
             shader_texture(glid, 0);
+            if (glalphaid != 0)
+                shader_texture(glalphaid, 1);
             shader_draw(vb, arg->color, arg->additive);
         }
 	}
@@ -310,6 +313,15 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 			struct pack_pannel * pp = (struct pack_pannel *)pack->data[id];
 			s->data.scissor = pp->scissor;
         }
+        else if (s->type == TYPE_PICTURE) {
+            int i;
+            for (i = 0; i < s->s.pic->n; i++) {
+                struct pack_quad *q = &s->s.pic->rect[i];
+                if (texture_glalphaid(q->texid) > 0) {
+                    s->t.program_offset = PROGRAM_ALPHAMAP_OFFSET;
+                }
+            }
+        }
 	}
 }
 
@@ -480,6 +492,7 @@ switch_program(struct sprite_trans *t, int def, struct material *m) {
 	if (prog == PROGRAM_DEFAULT) {
 		prog = def;
 	}
+    prog = prog + t->program_offset;
 	shader_program(prog, m);
 }
 
