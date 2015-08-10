@@ -66,11 +66,11 @@ lnewlabel(lua_State *L) {
 	label.height = (int)luaL_checkinteger(L,2);
 	label.size = (int)luaL_checkinteger(L,3);
 	label.color = (uint32_t)luaL_optinteger(L,4,0xffffffff);
-	label.space_w = (int)lua_tointeger(L, 5);
-	label.space_h = (int)lua_tointeger(L, 6);
-	label.auto_scale = (int)lua_tointeger(L, 7);
-	label.edge = (int)lua_tointeger(L, 8);
 	const char * align = lua_tostring(L,5);
+	label.space_w = (int)lua_tointeger(L, 6);
+	label.space_h = (int)lua_tointeger(L, 7);
+	label.auto_scale = (int)lua_tointeger(L, 8);
+	label.edge = (int)lua_tointeger(L, 9);
 	if (align == NULL) {
 		label.align = LABEL_ALIGN_LEFT;
 	} else {
