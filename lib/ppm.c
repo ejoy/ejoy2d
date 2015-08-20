@@ -535,7 +535,7 @@ unload_tex(struct lua_State* L)
 int 
 ejoy2d_ppm(lua_State *L) {
 	luaL_Reg l[] = {
-		{ "texture", loadtexture },
+		{ "texture", loadtexture_test },
 		{ "load", loadppm },
 		{ "save", saveppm },
 		{ "unload",unload_tex},
