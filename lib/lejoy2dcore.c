@@ -1,3 +1,5 @@
+#ifdef EJOY2D_CORE
+
 #include <GL/glew.h>
 #include <lua.h>
 #include <lauxlib.h>
@@ -45,3 +47,4 @@ luaopen_ejoy2d_core(lua_State *L) {
 
 	return 1;
 }
+#endif
