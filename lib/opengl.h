@@ -7,6 +7,11 @@
 #include <OpenGLES/ES2/gl.h>
 #import <OpenGLES/ES2/glext.h>
 
+#elif defined(__MACOSX)
+#define OPENGLES 2
+#include <OpenGL/gl3.h>
+#include <OpenGL/glext.h>
+
 #elif defined(linux) || defined(__linux) || defined(__linux__)
 
 #define OPENGLES 2

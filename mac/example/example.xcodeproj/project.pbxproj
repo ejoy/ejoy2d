@@ -9,8 +9,15 @@
 /* Begin PBXBuildFile section */
 		3F8A328719C16FCD00DD18FA /* lrenderbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F8A328219C16FCD00DD18FA /* lrenderbuffer.c */; };
 		3F8A328819C16FCD00DD18FA /* renderbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F8A328519C16FCD00DD18FA /* renderbuffer.c */; };
-		3F9C3AD319C17B360081BC5F /* ejoy2d in Resources */ = {isa = PBXBuildFile; fileRef = 3F9C3AD119C17B210081BC5F /* ejoy2d */; };
-		3F9C3AD419C17B3B0081BC5F /* examples in Resources */ = {isa = PBXBuildFile; fileRef = 3F9C3AD019C17A470081BC5F /* examples */; };
+		CD66E7A31B340F5B003CFB5A /* ejoy2d in Resources */ = {isa = PBXBuildFile; fileRef = 3F9C3AD119C17B210081BC5F /* ejoy2d */; };
+		CD66E7A41B340F60003CFB5A /* examples in Resources */ = {isa = PBXBuildFile; fileRef = 3F9C3AD019C17A470081BC5F /* examples */; };
+		CDFC3AB91B34094A0095671C /* lgeometry.c in Sources */ = {isa = PBXBuildFile; fileRef = CDFC3AAD1B34094A0095671C /* lgeometry.c */; };
+		CDFC3ABA1B34094A0095671C /* screenshot.c in Sources */ = {isa = PBXBuildFile; fileRef = CDFC3AAE1B34094A0095671C /* screenshot.c */; };
+		CDFC3ABB1B34094A0095671C /* carray.c in Sources */ = {isa = PBXBuildFile; fileRef = CDFC3AB21B34094A0095671C /* carray.c */; };
+		CDFC3ABC1B34094A0095671C /* log.c in Sources */ = {isa = PBXBuildFile; fileRef = CDFC3AB41B34094A0095671C /* log.c */; };
+		CDFC3ABD1B34094A0095671C /* render.c in Sources */ = {isa = PBXBuildFile; fileRef = CDFC3AB61B34094A0095671C /* render.c */; };
+		CDFC3AC01B34095F0095671C /* lutf8lib.c in Sources */ = {isa = PBXBuildFile; fileRef = CDFC3ABF1B34095F0095671C /* lutf8lib.c */; };
+		CDFC3AC21B3409950095671C /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CDFC3AC11B3409950095671C /* OpenGL.framework */; };
 		F4E6FA2118D2B142005A8D23 /* window.c in Sources */ = {isa = PBXBuildFile; fileRef = F4E6FA1D18D2B142005A8D23 /* window.c */; };
 		F4E6FA2218D2B142005A8D23 /* winfont.c in Sources */ = {isa = PBXBuildFile; fileRef = F4E6FA1E18D2B142005A8D23 /* winfont.c */; };
 		F4E6FA2318D2B142005A8D23 /* winfw.c in Sources */ = {isa = PBXBuildFile; fileRef = F4E6FA1F18D2B142005A8D23 /* winfw.c */; };
@@ -73,6 +80,22 @@
 		3F8A328619C16FCD00DD18FA /* renderbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = renderbuffer.h; sourceTree = "<group>"; };
 		3F9C3AD019C17A470081BC5F /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; name = examples; path = ../../examples; sourceTree = "<group>"; };
 		3F9C3AD119C17B210081BC5F /* ejoy2d */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ejoy2d; path = ../../ejoy2d; sourceTree = "<group>"; };
+		CDFC3AA91B34094A0095671C /* lgeometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lgeometry.h; sourceTree = "<group>"; };
+		CDFC3AAA1B34094A0095671C /* material.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = material.h; sourceTree = "<group>"; };
+		CDFC3AAB1B34094A0095671C /* screenshot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = screenshot.h; sourceTree = "<group>"; };
+		CDFC3AAD1B34094A0095671C /* lgeometry.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lgeometry.c; sourceTree = "<group>"; };
+		CDFC3AAE1B34094A0095671C /* screenshot.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = screenshot.c; sourceTree = "<group>"; };
+		CDFC3AB01B34094A0095671C /* blendmode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = blendmode.h; sourceTree = "<group>"; };
+		CDFC3AB11B34094A0095671C /* block.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = block.h; sourceTree = "<group>"; };
+		CDFC3AB21B34094A0095671C /* carray.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = carray.c; sourceTree = "<group>"; };
+		CDFC3AB31B34094A0095671C /* carray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = carray.h; sourceTree = "<group>"; };
+		CDFC3AB41B34094A0095671C /* log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = log.c; sourceTree = "<group>"; };
+		CDFC3AB51B34094A0095671C /* log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
+		CDFC3AB61B34094A0095671C /* render.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = render.c; sourceTree = "<group>"; };
+		CDFC3AB71B34094A0095671C /* render.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = render.h; sourceTree = "<group>"; };
+		CDFC3ABE1B34095F0095671C /* lprefix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lprefix.h; sourceTree = "<group>"; };
+		CDFC3ABF1B34095F0095671C /* lutf8lib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lutf8lib.c; sourceTree = "<group>"; };
+		CDFC3AC11B3409950095671C /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		F44EF71618CF2816005EFAC1 /* example */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = example; sourceTree = BUILT_PRODUCTS_DIR; };
 		F4816EFA18CF3C9400A0199B /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		F4816EFD18CF3C9400A0199B /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -182,12 +205,28 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CDFC3AC21B3409950095671C /* OpenGL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CDFC3AAF1B34094A0095671C /* render */ = {
+			isa = PBXGroup;
+			children = (
+				CDFC3AB01B34094A0095671C /* blendmode.h */,
+				CDFC3AB11B34094A0095671C /* block.h */,
+				CDFC3AB21B34094A0095671C /* carray.c */,
+				CDFC3AB31B34094A0095671C /* carray.h */,
+				CDFC3AB41B34094A0095671C /* log.c */,
+				CDFC3AB51B34094A0095671C /* log.h */,
+				CDFC3AB61B34094A0095671C /* render.c */,
+				CDFC3AB71B34094A0095671C /* render.h */,
+			);
+			path = render;
+			sourceTree = "<group>";
+		};
 		F44EF70B18CF2805005EFAC1 = {
 			isa = PBXGroup;
 			children = (
@@ -212,6 +251,7 @@
 		F4816EF918CF3C9400A0199B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				CDFC3AC11B3409950095671C /* OpenGL.framework */,
 				F4816FFA18CF4AC200A0199B /* GLUT.framework */,
 				F4816EFA18CF3C9400A0199B /* Cocoa.framework */,
 				F4816F1918CF3C9400A0199B /* XCTest.framework */,
@@ -245,6 +285,8 @@
 		F4E6FAB618D2D361005A8D23 /* lua */ = {
 			isa = PBXGroup;
 			children = (
+				CDFC3ABE1B34095F0095671C /* lprefix.h */,
+				CDFC3ABF1B34095F0095671C /* lutf8lib.c */,
 				F4E6FAB718D2D361005A8D23 /* lapi.c */,
 				F4E6FAB818D2D361005A8D23 /* lapi.h */,
 				F4E6FAB918D2D361005A8D23 /* lauxlib.c */,
@@ -309,6 +351,12 @@
 		F4EA759618CF6CEA00C37D31 /* lib */ = {
 			isa = PBXGroup;
 			children = (
+				CDFC3AA91B34094A0095671C /* lgeometry.h */,
+				CDFC3AAA1B34094A0095671C /* material.h */,
+				CDFC3AAB1B34094A0095671C /* screenshot.h */,
+				CDFC3AAD1B34094A0095671C /* lgeometry.c */,
+				CDFC3AAE1B34094A0095671C /* screenshot.c */,
+				CDFC3AAF1B34094A0095671C /* render */,
 				3F8A328219C16FCD00DD18FA /* lrenderbuffer.c */,
 				3F8A328319C16FCD00DD18FA /* lrenderbuffer.h */,
 				3F8A328419C16FCD00DD18FA /* platform_print.h */,
@@ -363,6 +411,7 @@
 				F44EF71218CF2816005EFAC1 /* Sources */,
 				F44EF71318CF2816005EFAC1 /* Frameworks */,
 				3F9C3AD219C17B320081BC5F /* Resources */,
+				CD6F2EA21B34121E00181DF1 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -404,12 +453,28 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3F9C3AD419C17B3B0081BC5F /* examples in Resources */,
-				3F9C3AD319C17B360081BC5F /* ejoy2d in Resources */,
+				CD66E7A41B340F60003CFB5A /* examples in Resources */,
+				CD66E7A31B340F5B003CFB5A /* ejoy2d in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		CD6F2EA21B34121E00181DF1 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cp -rf ../../ejoy2d ../../examples  ${CONFIGURATION_BUILD_DIR}";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		F44EF71218CF2816005EFAC1 /* Sources */ = {
@@ -429,6 +494,7 @@
 				F4EA75CD18CF6CEA00C37D31 /* ppm.c in Sources */,
 				F4E6FAF618D2D361005A8D23 /* ldblib.c in Sources */,
 				F4EA75CB18CF6CEA00C37D31 /* particle.c in Sources */,
+				CDFC3ABD1B34094A0095671C /* render.c in Sources */,
 				F4E6FB0E18D2D361005A8D23 /* lzio.c in Sources */,
 				F4E6FB0918D2D361005A8D23 /* ltable.c in Sources */,
 				F4E6FAF918D2D361005A8D23 /* ldump.c in Sources */,
@@ -452,13 +518,17 @@
 				F4E6FB0818D2D361005A8D23 /* lstrlib.c in Sources */,
 				F4E6FB0518D2D361005A8D23 /* lparser.c in Sources */,
 				F4E6FB0C18D2D361005A8D23 /* lundump.c in Sources */,
+				CDFC3AB91B34094A0095671C /* lgeometry.c in Sources */,
 				F4EA75D918CF6CEA00C37D31 /* texture.c in Sources */,
+				CDFC3ABA1B34094A0095671C /* screenshot.c in Sources */,
 				F4EA75B918CF6CEA00C37D31 /* dfont.c in Sources */,
 				F4E6FB0D18D2D361005A8D23 /* lvm.c in Sources */,
 				3F8A328819C16FCD00DD18FA /* renderbuffer.c in Sources */,
+				CDFC3ABC1B34094A0095671C /* log.c in Sources */,
 				F4EA75C718CF6CEA00C37D31 /* lsprite.c in Sources */,
 				F4E6FAFD18D2D361005A8D23 /* liolib.c in Sources */,
 				F4EA75BB18CF6CEA00C37D31 /* ejoy2dgame.c in Sources */,
+				CDFC3AC01B34095F0095671C /* lutf8lib.c in Sources */,
 				F4E6FAF118D2D361005A8D23 /* lbaselib.c in Sources */,
 				F4E6FAFF18D2D361005A8D23 /* lmathlib.c in Sources */,
 				F4E6FAEF18D2D361005A8D23 /* lapi.c in Sources */,
@@ -470,6 +540,7 @@
 				F4EA75D118CF6CEA00C37D31 /* screen.c in Sources */,
 				F4EA75C918CF6CEA00C37D31 /* matrix.c in Sources */,
 				F4E6FAF418D2D361005A8D23 /* lcorolib.c in Sources */,
+				CDFC3ABB1B34094A0095671C /* carray.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -535,16 +606,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				LIBRARY_SEARCH_PATHS = (
-					/usr/X11R6/lib,
-					/usr/local/lib,
-				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
-					"-lGLEW",
-					"-lGL",
-					"-lX11",
+					"-lglfw3",
 					"-lfreetype",
 					"-lm",
 					"-Wl,",
@@ -582,15 +648,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				LIBRARY_SEARCH_PATHS = (
-					/usr/X11R6/lib,
-					/usr/local/lib,
-				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OTHER_LDFLAGS = (
-					"-lGLEW",
-					"-lGL",
-					"-lX11",
+					"-lglfw3",
 					"-lfreetype",
 					"-lm",
 					"-Wl,",

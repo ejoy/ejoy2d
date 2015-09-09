@@ -12,17 +12,36 @@
 #include <stdlib.h>
 #include <stddef.h>
 
+
+
+#if !defined (VAO_DISABLE) && !defined (__ANDROID__)
+// If your platform doesn't support VAO, comment it out.
+// Or define VAO_DISABLE first
+#define VAO_ENABLE
+
+
+#if defined (GL_OES_vertex_array_object)
+	#define glBindVertexArray glBindVertexArrayOES
+	#define glGenVertexArrays glGenVertexArraysOES
+	#define glDeleteVertexArrays glDeleteVertexArraysOES
+#endif
+
+#endif
+
+#ifndef  GL_RED
+    #define GL_RED 0x1903
+#endif
+
 #define MAX_VB_SLOT 8
 #define MAX_ATTRIB 16
 #define MAX_TEXTURE 8
-#define CHANGE_INDEXBUFFER 0x1
-#define CHANGE_VERTEXBUFFER 0x2
-#define CHANGE_TEXTURE 0x4
-#define CHANGE_BLEND 0x8
-#define CHANGE_DEPTH 0x10
-#define CHANGE_CULL 0x20
-#define CHANGE_TARGET 0x40
-#define CHANGE_SCISSOR 0x80
+#define CHANGE_VERTEXARRAY 0x1
+#define CHANGE_TEXTURE 0x2
+#define CHANGE_BLEND 0x4
+#define CHANGE_DEPTH 0x8
+#define CHANGE_CULL 0x10
+#define CHANGE_TARGET 0x20
+#define CHANGE_SCISSOR 0x40
 
 #ifndef DISABLE_GL_ERROR_CHECK
 #define CHECK_GL_ERROR check_opengl_error_debug((struct render *)R, __FILE__, __LINE__);
@@ -67,6 +86,11 @@ struct attrib_layout {
 
 struct shader {
 	GLuint glid;
+#ifdef VAO_ENABLE
+	GLuint glvao;
+	RID vbslot[MAX_VB_SLOT];
+	RID ib;
+#endif
 	int n;
 	struct attrib_layout a[MAX_ATTRIB];
 	int texture_n;
@@ -74,7 +98,6 @@ struct shader {
 };
 
 struct rstate {
-	RID indexbuffer;
 	RID target;
 	enum BLEND_FORMAT blend_src;
 	enum BLEND_FORMAT blend_dst;
@@ -89,6 +112,7 @@ struct render {
 	uint32_t changeflag;
 	RID attrib_layout;
 	RID vbslot[MAX_VB_SLOT];
+	RID indexbuffer;
 	RID program;
 	GLint default_framebuffer;
 	struct rstate current;
@@ -160,6 +184,10 @@ render_buffer_create(struct render *R, enum RENDER_OBJ what, const void *data, i
 void 
 render_buffer_update(struct render *R, RID id, const void * data, int n) {
 	struct buffer * buf = (struct buffer *)array_ref(&R->buffer, id);
+#ifdef VAO_ENABLE
+	glBindVertexArray(0);
+#endif
+	R->changeflag |= CHANGE_VERTEXARRAY;
 	glBindBuffer(buf->gltype, buf->glid);
 	buf->n = n;
 	glBufferData(buf->gltype, n * buf->stride, data, GL_DYNAMIC_DRAW);
@@ -310,6 +338,14 @@ render_shader_create(struct render *R, struct shader_init_args *args) {
 		s->texture_uniform[i] = glGetUniformLocation(s->glid, args->texture_uniform[i]);
 	}
 
+#ifdef VAO_ENABLE
+	glGenVertexArrays(1, &s->glvao);
+	for (i=0;i<MAX_VB_SLOT;i++) {
+		s->vbslot[i] = 0;
+	}
+	s->ib = 0;
+#endif
+
 	CHECK_GL_ERROR
 
 	return array_id(&R->shader, s);
@@ -319,6 +355,9 @@ static void
 close_shader(void *p, void *R) {
 	struct shader * shader = (struct shader *)p;
 	glDeleteProgram(shader->glid);
+#ifdef VAO_ENABLE
+	glDeleteVertexArrays(1, &shader->glvao);
+#endif
 
 	CHECK_GL_ERROR
 }
@@ -387,11 +426,11 @@ render_set(struct render *R, enum RENDER_OBJ what, RID id, int slot) {
 	case VERTEXBUFFER:
 		assert(slot >= 0 && slot < MAX_VB_SLOT);
 		R->vbslot[slot] = id;
-		R->changeflag |= CHANGE_VERTEXBUFFER;
+		R->changeflag |= CHANGE_VERTEXARRAY;
 		break;
 	case INDEXBUFFER:
-		R->current.indexbuffer = id;
-		R->changeflag |= CHANGE_INDEXBUFFER;
+		R->indexbuffer = id;
+		R->changeflag |= CHANGE_VERTEXARRAY;
 		break;
 	case VERTEXLAYOUT:
 		R->attrib_layout = id;
@@ -425,7 +464,7 @@ apply_texture_uniform(struct shader *s) {
 void
 render_shader_bind(struct render *R, RID id) {
 	R->program = id;
-	R->changeflag |= CHANGE_VERTEXBUFFER;
+	R->changeflag |= CHANGE_VERTEXARRAY;
 	struct shader * s = (struct shader *)array_ref(&R->shader, id);
 	if (s) {
 		glUseProgram(s->glid);
@@ -492,33 +531,67 @@ render_setscissor(struct render *R, int x, int y, int width, int height ) {
 	glScissor(x,y,width,height);
 }
 
+static int
+change_vb(struct render *R, struct shader * s) {
+#ifdef VAO_ENABLE
+	int change = memcmp(R->vbslot, s->vbslot, sizeof(R->vbslot));
+	memcpy(s->vbslot, R->vbslot, sizeof(R->vbslot));
+	return change;
+#else
+	return 1;
+#endif
+}
+
+static int
+change_ib(struct render *R, struct shader *s) {
+#ifdef VAO_ENABLE
+	RID ib = s->ib;
+	s->ib = R->indexbuffer;
+	return (R->indexbuffer != ib);
+#else
+	return 1;
+#endif
+}
+
 static void
-apply_vb(struct render *R) {
+apply_va(struct render *R) {
 	RID prog = R->program;
 	struct shader * s = (struct shader *)array_ref(&R->shader, prog);
 	if (s) {
-		int i;
-		RID last_vb = 0;
-		int stride = 0;
-		for (i=0;i<s->n;i++) {
-			struct attrib_layout *al = &s->a[i];
-			int vbidx = al->vbslot;
-			RID vb = R->vbslot[vbidx];
-			if (last_vb != vb) {
-				struct buffer * buf = (struct buffer *)array_ref(&R->buffer, vb);
-				if (buf == NULL) {
-					continue;
+#ifdef VAO_ENABLE
+		glBindVertexArray(s->glvao);
+#endif
+		if (change_vb(R,s)) {
+			int i;
+			RID last_vb = 0;
+			int stride = 0;
+			for (i=0;i<s->n;i++) {
+				struct attrib_layout *al = &s->a[i];
+				int vbidx = al->vbslot;
+				RID vb = R->vbslot[vbidx];
+				if (last_vb != vb) {
+					struct buffer * buf = (struct buffer *)array_ref(&R->buffer, vb);
+					if (buf == NULL) {
+						continue;
+					}
+					glBindBuffer(GL_ARRAY_BUFFER, buf->glid);
+					last_vb = vb;
+					stride = buf->stride;
 				}
-				glBindBuffer(GL_ARRAY_BUFFER, buf->glid);
-				last_vb = vb;
-				stride = buf->stride;
+				glEnableVertexAttribArray(i);
+				glVertexAttribPointer(i, al->size, al->type, al->normalized, stride, (const GLvoid *)(ptrdiff_t)(al->offset));
 			}
-			glEnableVertexAttribArray(i);
-			glVertexAttribPointer(i, al->size, al->type, al->normalized, stride, (const GLvoid *)(ptrdiff_t)(al->offset));
 		}
-	}
 
-	CHECK_GL_ERROR
+		if (change_ib(R,s)) {
+			struct buffer * b = (struct buffer *)array_ref(&R->buffer, R->indexbuffer);
+			if (b) {
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->glid);
+			}
+		}
+
+		CHECK_GL_ERROR
+	}
 }
 
 // texture
@@ -614,7 +687,7 @@ texture_format(struct texture * tex, GLint *pf, GLenum *pt) {
 		break;
 	case TEXTURE_A8 :
 	case TEXTURE_DEPTH :
-		format = GL_ALPHA;
+		format = GL_RED;
 		itype = GL_UNSIGNED_BYTE;
 		break;
 #ifdef GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG 
@@ -826,20 +899,8 @@ render_target_texture(struct render *R, RID rt) {
 
 void
 render_state_commit(struct render *R) {
-	if (R->changeflag & CHANGE_INDEXBUFFER) {
-		RID ib = R->current.indexbuffer;
-		if (ib != R->last.indexbuffer) {
-			R->last.indexbuffer = ib;
-			struct buffer * b = (struct buffer *)array_ref(&R->buffer, ib);
-			if (b) {
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->glid);
-				CHECK_GL_ERROR
-			}
-		}
-	}
-
-	if (R->changeflag & CHANGE_VERTEXBUFFER) {
-		apply_vb(R);
+	if (R->changeflag & CHANGE_VERTEXARRAY) {
+		apply_va(R);
 	}
 
 	if (R->changeflag & CHANGE_TEXTURE) {
@@ -991,9 +1052,9 @@ render_draw(struct render *R, enum DRAW_MODE mode, int fromidx, int ni) {
 		GL_TRIANGLES,
 		GL_LINES,
 	};
-	assert(mode < sizeof(draw_mode)/sizeof(int));
+	assert((int)mode < sizeof(draw_mode)/sizeof(int));
 	render_state_commit(R);
-	RID ib = R->current.indexbuffer;
+	RID ib = R->indexbuffer;
 	struct buffer * buf = (struct buffer *)array_ref(&R->buffer, ib);
 	if (buf) {
 		assert(fromidx + ni <= buf->n);
