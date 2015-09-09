@@ -27,7 +27,8 @@ lib/particle.c \
 lib/lparticle.c \
 lib/scissor.c \
 lib/renderbuffer.c \
-lib/lrenderbuffer.c
+lib/lrenderbuffer.c \
+lib/lgeometry.c
 
 SRC := $(EJOY2D) $(RENDER)
 
@@ -88,6 +89,17 @@ mingw : LDFLAGS += -L/usr/bin -lgdi32 -lglew32 -lopengl32
 mingw : SRC += mingw/window.c mingw/winfw.c mingw/winfont.c
 
 mingw : $(SRC) ej2d
+
+winlib : OS := WINDOWS
+winlib : TARGET := ejoy2d.dll
+winlib : CFLAGS += -I/usr/include -I/usr/local/include --shared
+winlib : LDFLAGS += -L/usr/bin -lgdi32 -lglew32 -lopengl32 -L/usr/local/bin -llua53
+winlib : SRC += mingw/winfont.c lib/lejoy2dcore.c
+
+winlib : $(SRC) ej2dlib
+
+ej2dlib :
+	gcc $(CFLAGS) -o $(TARGET) $(SRC) $(LDFLAGS)
 
 linux : OS := LINUX
 linux : TARGET := ej2d

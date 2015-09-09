@@ -10,6 +10,7 @@
 		5E344A8B1A011ADA00FC33BD /* carray.c in Sources */ = {isa = PBXBuildFile; fileRef = 5E344A851A011ADA00FC33BD /* carray.c */; };
 		5E344A8C1A011ADA00FC33BD /* log.c in Sources */ = {isa = PBXBuildFile; fileRef = 5E344A871A011ADA00FC33BD /* log.c */; };
 		5E344A8D1A011ADA00FC33BD /* render.c in Sources */ = {isa = PBXBuildFile; fileRef = 5E344A891A011ADA00FC33BD /* render.c */; };
+		AE10DEEE1B156D9F00D9047F /* lgeometry.c in Sources */ = {isa = PBXBuildFile; fileRef = AE10DEEC1B156D9F00D9047F /* lgeometry.c */; };
 		AE45D96B1A7F288500B2C552 /* lutf8lib.c in Sources */ = {isa = PBXBuildFile; fileRef = AE45D96A1A7F288500B2C552 /* lutf8lib.c */; };
 		AE7789AF19C161E300AFCC14 /* lrenderbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = AE7789AD19C161E300AFCC14 /* lrenderbuffer.c */; };
 		AE7789B019C161E300AFCC14 /* renderbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = AE7789AE19C161E300AFCC14 /* renderbuffer.c */; };
@@ -91,6 +92,7 @@
 		5E344A881A011ADA00FC33BD /* log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
 		5E344A891A011ADA00FC33BD /* render.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = render.c; sourceTree = "<group>"; };
 		5E344A8A1A011ADA00FC33BD /* render.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = render.h; sourceTree = "<group>"; };
+		AE10DEEC1B156D9F00D9047F /* lgeometry.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = lgeometry.c; path = ../../lib/lgeometry.c; sourceTree = "<group>"; };
 		AE45D9681A7F288500B2C552 /* lprefix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lprefix.h; sourceTree = "<group>"; };
 		AE45D9691A7F288500B2C552 /* lua.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = lua.hpp; sourceTree = "<group>"; };
 		AE45D96A1A7F288500B2C552 /* lutf8lib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lutf8lib.c; sourceTree = "<group>"; };
@@ -328,6 +330,7 @@
 		E6C264021872AD22008035E3 /* lib */ = {
 			isa = PBXGroup;
 			children = (
+				AE10DEEC1B156D9F00D9047F /* lgeometry.c */,
 				5E344A821A011ADA00FC33BD /* render */,
 				5E344A7C1A0119F800FC33BD /* array.h */,
 				5E344A7D1A0119F800FC33BD /* lrenderbuffer.h */,
@@ -551,6 +554,7 @@
 				E6EF880C18D2CE0800F01E49 /* ldump.c in Sources */,
 				E6EF880B18D2CE0800F01E49 /* ldo.c in Sources */,
 				E6C264001872ACEC008035E3 /* texture.c in Sources */,
+				AE10DEEE1B156D9F00D9047F /* lgeometry.c in Sources */,
 				E6EF880718D2CE0800F01E49 /* lcorolib.c in Sources */,
 				E6C2318E187288C50029D57B /* EJViewController.m in Sources */,
 				E6EF880E18D2CE0800F01E49 /* lgc.c in Sources */,

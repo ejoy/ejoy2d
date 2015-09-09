@@ -15,6 +15,7 @@
 #include "label.h"
 #include "particle.h"
 #include "lrenderbuffer.h"
+#include "lgeometry.h"
 
 //#define LOGIC_FRAME 30
 
@@ -103,13 +104,32 @@ checkluaversion(lua_State *L) {
 lua_State *
 ejoy2d_lua_init() {
 	lua_State *L = luaL_newstate();
-	checkluaversion(L);
-	lua_pushliteral(L, OS_STRING);
-	lua_setglobal(L , "OS");
 	
 	lua_atpanic(L, _panic);
 	luaL_openlibs(L);
 	return L;
+}
+
+void
+ejoy2d_init(lua_State *L) {
+	checkluaversion(L);
+	lua_pushliteral(L, OS_STRING);
+	lua_setglobal(L , "OS");
+
+	luaL_requiref(L, "ejoy2d.shader.c", ejoy2d_shader, 0);
+	luaL_requiref(L, "ejoy2d.framework", ejoy2d_framework, 0);
+	luaL_requiref(L, "ejoy2d.ppm", ejoy2d_ppm, 0);
+	luaL_requiref(L, "ejoy2d.spritepack.c", ejoy2d_spritepack, 0);
+	luaL_requiref(L, "ejoy2d.sprite.c", ejoy2d_sprite, 0);
+	luaL_requiref(L, "ejoy2d.renderbuffer", ejoy2d_renderbuffer, 0);
+	luaL_requiref(L, "ejoy2d.matrix.c", ejoy2d_matrix, 0);
+	luaL_requiref(L, "ejoy2d.particle.c", ejoy2d_particle, 0);
+//	luaL_requiref(L, "ejoy2d.geometry.c", ejoy2d_geometry, 0);
+
+	lua_settop(L,0);
+
+	shader_init();
+	label_load();
 }
 
 struct game *
@@ -123,19 +143,8 @@ ejoy2d_game() {
     G->vp_real_time = 0;
     G->vp_logic_time = 0;
     G->update_count = 0;
-	luaL_requiref(L, "ejoy2d.shader.c", ejoy2d_shader, 0);
-	luaL_requiref(L, "ejoy2d.framework", ejoy2d_framework, 0);
-	luaL_requiref(L, "ejoy2d.ppm", ejoy2d_ppm, 0);
-	luaL_requiref(L, "ejoy2d.spritepack.c", ejoy2d_spritepack, 0);
-	luaL_requiref(L, "ejoy2d.sprite.c", ejoy2d_sprite, 0);
-	luaL_requiref(L, "ejoy2d.renderbuffer", ejoy2d_renderbuffer, 0);
-	luaL_requiref(L, "ejoy2d.matrix.c", ejoy2d_matrix, 0);
-	luaL_requiref(L, "ejoy2d.particle.c", ejoy2d_particle, 0);
-
-	lua_settop(L,0);
-
-	shader_init();
-	label_load();
+    
+	ejoy2d_init(L);
 
 	return G;
 }

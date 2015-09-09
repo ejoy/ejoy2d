@@ -42,7 +42,7 @@ average4(uint32_t c[4]) {
 }
 
 static void 
-texture_reduce(enum TEXTURE_FORMAT type, int *width, int *height, void *buffer) {
+texture_downsample(enum TEXTURE_FORMAT type, int *width, int *height, void *buffer) {
 	int w = *width;
 	int h = *height;
 //    if (w%2 == 1 || h%2 == 1) {
@@ -77,7 +77,7 @@ texture_reduce(enum TEXTURE_FORMAT type, int *width, int *height, void *buffer) 
 }
 
 const char * 
-texture_load(int id, enum TEXTURE_FORMAT pixel_format, int pixel_width, int pixel_height, void *data, int reduce) {
+texture_load(int id, enum TEXTURE_FORMAT pixel_format, int pixel_width, int pixel_height, void *data, int downsample) {
 	if (id >= MAX_TEXTURE) {
 		return "Too many texture";
 	}
@@ -109,8 +109,8 @@ texture_load(int id, enum TEXTURE_FORMAT pixel_format, int pixel_width, int pixe
             compressed = 0;
     }
     
-	if (reduce && !compressed) {
-		texture_reduce(pixel_format, &pixel_width, &pixel_height, data);
+	if (downsample && !compressed) {
+		texture_downsample(pixel_format, &pixel_width, &pixel_height, data);
 	}
 	render_texture_update(R, tex->id, pixel_width, pixel_height, data, 0, 0);
 

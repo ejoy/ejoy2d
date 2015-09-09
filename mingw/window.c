@@ -68,7 +68,7 @@ get_xy(LPARAM lParam, int *x, int *y) {
 	*y = (short)((lParam>>16) & 0xffff); 
 }
 
-LRESULT CALLBACK 
+static LRESULT CALLBACK
 WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) {

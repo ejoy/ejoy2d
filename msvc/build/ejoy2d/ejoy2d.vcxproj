@@ -15,6 +15,7 @@
     <ClCompile Include="..\..\..\lib\ejoy2dgame.c" />
     <ClCompile Include="..\..\..\lib\fault.c" />
     <ClCompile Include="..\..\..\lib\label.c" />
+    <ClCompile Include="..\..\..\lib\lgeometry.c" />
     <ClCompile Include="..\..\..\lib\lmatrix.c" />
     <ClCompile Include="..\..\..\lib\lparticle.c" />
     <ClCompile Include="..\..\..\lib\lrenderbuffer.c" />
