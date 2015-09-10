@@ -163,6 +163,7 @@ render_buffer_update(struct render *R, RID id, const void * data, int n) {
 	glBindBuffer(buf->gltype, buf->glid);
 	buf->n = n;
 	glBufferData(buf->gltype, n * buf->stride, data, GL_DYNAMIC_DRAW);
+    R->changeflag |= CHANGE_VERTEXBUFFER;
 	CHECK_GL_ERROR
 }
 
