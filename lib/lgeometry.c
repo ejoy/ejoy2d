@@ -52,7 +52,7 @@ lline(lua_State *L) {
 	vp[0].vy = y1;
 	vp[1].vx = x2;
 	vp[1].vy = y2;
-	if (abs(x1-x2) > abs(y1-y2)) {
+	if (fabs(x1-x2) > fabs(y1-y2)) {
 		vp[2].vx = x2;
 		vp[2].vy = y2+SCREEN_SCALE;
 		vp[3].vx = x1;
