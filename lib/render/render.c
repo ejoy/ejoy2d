@@ -27,9 +27,6 @@
 
 #endif
 
-#ifndef  GL_RED
-    #define GL_RED 0x1903
-#endif
 
 #define MAX_VB_SLOT 8
 #define MAX_ATTRIB 16
@@ -675,7 +672,11 @@ texture_format(struct texture * tex, GLint *pf, GLenum *pt) {
 		break;
 	case TEXTURE_A8 :
 	case TEXTURE_DEPTH :
+	#if OPENGLES == 3
 		format = GL_RED;
+	#else
+		format = GL_ALPHA;
+	#endif
 		itype = GL_UNSIGNED_BYTE;
 		break;
 #ifdef GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG 

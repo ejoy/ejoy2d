@@ -2,8 +2,9 @@ local s = require "ejoy2d.shader.c"
 
 local PRECISION = ""
 local PRECISION_HIGH = ""
+local OPENGLES_VERSION = s.version()
 
-if s.version() == 2 then
+if OPENGLES_VERSION >= 2 then
 	-- Opengl ES 2.0 need float precision specifiers
 	PRECISION = "#version 100\nprecision lowp float;\n"
 	PRECISION_HIGH = "#version 100\nprecision highp float;\n"
@@ -42,40 +43,80 @@ void main() {
 }
 ]]
 
-local text_fs = [[
-varying vec2 v_texcoord;
-varying vec4 v_color;
-varying vec4 v_additive;
 
-uniform sampler2D texture0;
+local text_fs = {
+	[2] = [[
+		varying vec2 v_texcoord;
+		varying vec4 v_color;
+		varying vec4 v_additive;
 
-void main() {
-	float c = texture2D(texture0, v_texcoord).r;
-	float alpha = clamp(c, 0.0, 0.5) * 2.0;
+		uniform sampler2D texture0;
 
-	gl_FragColor.xyz = (v_color.xyz + v_additive.xyz) * alpha;
-	gl_FragColor.w = alpha;
-	gl_FragColor *= v_color.w;
+		void main() {
+			float c = texture2D(texture0, v_texcoord).w;
+			float alpha = clamp(c, 0.0, 0.5) * 2.0;
+
+			gl_FragColor.xyz = (v_color.xyz + v_additive.xyz) * alpha;
+			gl_FragColor.w = alpha;
+			gl_FragColor *= v_color.w;
+		}
+	]],
+
+	[3] = [[
+		varying vec2 v_texcoord;
+		varying vec4 v_color;
+		varying vec4 v_additive;
+
+		uniform sampler2D texture0;
+
+		void main() {
+			float c = texture2D(texture0, v_texcoord).r;
+			float alpha = clamp(c, 0.0, 0.5) * 2.0;
+
+			gl_FragColor.xyz = (v_color.xyz + v_additive.xyz) * alpha;
+			gl_FragColor.w = alpha;
+			gl_FragColor *= v_color.w;
+		}
+	]]
 }
-]]
 
-local text_edge_fs = [[
-varying vec2 v_texcoord;
-varying vec4 v_color;
-varying vec4 v_additive;
+local text_edge_fs = {
+	[2] = [[
+		varying vec2 v_texcoord;
+		varying vec4 v_color;
+		varying vec4 v_additive;
 
-uniform sampler2D texture0;
+		uniform sampler2D texture0;
 
-void main() {
-	float c = texture2D(texture0, v_texcoord).r;
-	float alpha = clamp(c, 0.0, 0.5) * 2.0;
-	float color = (clamp(c, 0.5, 1.0) - 0.5) * 2.0;
+		void main() {
+			float c = texture2D(texture0, v_texcoord).w;
+			float alpha = clamp(c, 0.0, 0.5) * 2.0;
+			float color = (clamp(c, 0.5, 1.0) - 0.5) * 2.0;
 
-	gl_FragColor.xyz = (v_color.xyz + v_additive.xyz) * color;
-	gl_FragColor.w = alpha;
-	gl_FragColor *= v_color.w;
+			gl_FragColor.xyz = (v_color.xyz + v_additive.xyz) * color;
+			gl_FragColor.w = alpha;
+			gl_FragColor *= v_color.w;
+		}
+	]],
+	[3] = [[
+		varying vec2 v_texcoord;
+		varying vec4 v_color;
+		varying vec4 v_additive;
+
+		uniform sampler2D texture0;
+
+		void main() {
+			float c = texture2D(texture0, v_texcoord).r;
+			float alpha = clamp(c, 0.0, 0.5) * 2.0;
+			float color = (clamp(c, 0.5, 1.0) - 0.5) * 2.0;
+
+			gl_FragColor.xyz = (v_color.xyz + v_additive.xyz) * color;
+			gl_FragColor.w = alpha;
+			gl_FragColor *= v_color.w;
+		}
+	]],
 }
-]]
+
 
 local gray_fs = [[
 varying vec2 v_texcoord;
@@ -206,8 +247,8 @@ local shader_material = {}
 
 function shader.init()
 	s.load(shader_name.NORMAL, PRECISION .. sprite_fs, PRECISION .. sprite_vs)
-	s.load(shader_name.TEXT, PRECISION .. text_fs, PRECISION .. sprite_vs)
-	s.load(shader_name.EDGE, PRECISION .. text_edge_fs, PRECISION .. sprite_vs)
+	s.load(shader_name.TEXT, PRECISION .. (text_fs[OPENGLES_VERSION] or text_fs[2]), PRECISION .. sprite_vs)
+	s.load(shader_name.EDGE, PRECISION .. (text_edge_fs[OPENGLES_VERSION] or text_edge_fs[2]), PRECISION .. sprite_vs)
 	s.load(shader_name.GRAY, PRECISION .. gray_fs, PRECISION .. sprite_vs)
 	s.load(shader_name.COLOR, PRECISION .. color_fs, PRECISION .. sprite_vs)
 	s.load(shader_name.BLEND, PRECISION .. blend_fs, PRECISION .. blend_vs)

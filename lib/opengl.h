@@ -8,7 +8,7 @@
 #import <OpenGLES/ES2/glext.h>
 
 #elif defined(__MACOSX)
-#define OPENGLES 2
+#define OPENGLES 3
 #include <OpenGL/gl3.h>
 #include <OpenGL/glext.h>
 
