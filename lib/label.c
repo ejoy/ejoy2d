@@ -464,6 +464,79 @@ label_get_color(struct pack_label * l, const struct sprite_trans *arg) {
     return color;
 }
 
+int
+label_rawline(const char * str, struct pack_label *l) {
+	char utf8[7];
+	int i;
+	int w=0;
+	for (i=0; str[i];) {
+		int len = unicode_len(str[i]);
+		int unicode = copystr(utf8, str+i, len);
+		struct font_context ct = char_size(unicode, utf8, l->size, l->edge);
+		if (w+ct.w > l->width) {
+			break;
+		}
+		i+=len;
+		w += ct.w + l->space_w;
+	}
+	return i;
+}
+
+static int
+raw_width(const char * str,  struct pack_label * l) {
+	char utf8[7];
+	int i;
+	int w=0;
+	for (i=0; str[i];) {
+		int len = unicode_len(str[i]);
+		int unicode = copystr(utf8, str+i, len);
+		i+=len;
+		struct font_context ct = char_size(unicode, utf8, l->size, l->edge);
+		w += ct.w + l->space_w;
+	}
+	return w;
+}
+
+void
+label_rawdraw(const char * str, float fx, float y, struct pack_label * l) {
+	shader_texture(Tex, 0);
+	uint32_t color = l->color;
+	int edge = l->edge;
+	int size = l->size;
+	int width = raw_width(str, l);
+	int x = (int)fx;
+
+	switch (l->align) {
+	case LABEL_ALIGN_LEFT:
+		break;
+	case LABEL_ALIGN_RIGHT:
+		x += l->width - width;
+		break;
+	case LABEL_ALIGN_CENTER:
+		x += (l->width - width)/2;
+		break;
+	}
+
+	char utf8[7];
+	int i;
+	struct matrix mat = {{ 1024,0,0,1024,0,y * SCREEN_SCALE}};
+	for (i=0; str[i];) {
+		int len = unicode_len(str[i]);
+		int unicode = copystr(utf8, str+i, len);
+		i+=len;
+		const struct dfont_rect * rect = dfont_lookup(Dfont, unicode, FONT_SIZE, edge);
+		if (rect == NULL) {
+			rect = gen_char(unicode,utf8,FONT_SIZE,edge);
+			if (rect == NULL)
+				continue;
+		}
+		mat.m[4]=x*SCREEN_SCALE;
+		draw_rect(rect,size,&mat,color,0);
+
+		x += (rect->w-1) * size / FONT_SIZE + l->space_w;
+	}
+}
+
 void
 label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg) {
 	shader_texture(Tex, 0);

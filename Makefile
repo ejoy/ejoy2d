@@ -1,6 +1,6 @@
 .PHONY : mingw ej2d linux undefined
 
-CFLAGS = -g -Wall -Ilib -Ilib/render -Ilua -D EJOY2D_OS=$(OS)
+CFLAGS = -g -Wall -Ilib -Ilib/render -Ilua -D EJOY2D_OS=$(OS) -D FONT_EDGE_HASH
 LDFLAGS :=
 
 RENDER := \

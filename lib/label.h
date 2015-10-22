@@ -37,6 +37,8 @@ void label_load();
 void label_unload();
 void label_flush();
 
+void label_rawdraw(const char * str, float x, float y, struct pack_label * l);
+int label_rawline(const char * str, struct pack_label *l);
 void label_draw(const struct rich_text *rich, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg);
 void label_size(const char * str, struct pack_label * l, int* width, int* height);
 int label_char_size(struct pack_label* l, const char* chr, int* width, int* height, int* unicode);

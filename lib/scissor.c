@@ -20,7 +20,7 @@ struct scissor {
 
 static struct scissor S;
 
-void
+static void
 intersection(struct box * b, int * x, int * y, int * w, int * h) {
 	int newx = b->x > *x ? b->x : *x;
 	int newy = b->y > *y ? b->y : *y;

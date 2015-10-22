@@ -1605,11 +1605,80 @@ ldfont_mothod(lua_State *L) {
 	luaL_newlib(L, l);
 }
 
+/*
+	string text
+	number x
+	number y
+	integer w
+	integer size
+	uinteger color
+	boolean edge
+	string align
+ */
+static int
+ldrawtext(lua_State *L) {
+	const char * str = luaL_checkstring(L, 1);
+	float x = luaL_checknumber(L, 2);
+	float y = luaL_checknumber(L, 3);
+	struct pack_label pl;
+	pl.width = luaL_checkinteger(L, 4);
+	pl.size = luaL_checkinteger(L, 5);
+	pl.height = pl.size;
+	pl.color = luaL_optinteger(L, 6, 0xffffffff);
+	pl.space_h = 0;
+	pl.space_w = 0;
+	pl.auto_scale = 0;
+	pl.align = LABEL_ALIGN_CENTER;
+	pl.edge = lua_toboolean(L, 7);
+	const char *align = lua_tostring(L, 8);
+	if (align) {
+		switch(align[0]) {
+		case 'l': case 'L' :
+			pl.align = LABEL_ALIGN_LEFT;
+			break;
+		case 'r': case 'R' :
+			pl.align = LABEL_ALIGN_RIGHT;
+			break;
+		}
+	}
+	shader_program(pl.edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT, NULL);
+	label_rawdraw(str, x,y, &pl);
+	return 0;
+}
+
+/*
+	string text
+	integer width
+	integer size
+	integer from (default 0)
+	boolean edge (default false)
+
+	return
+		integer n
+ */
+static int
+lsplittext(lua_State *L) {
+	size_t sz = 0;
+	const char * str = luaL_checklstring(L, 1, &sz);
+	struct pack_label pl;
+	pl.width = luaL_checkinteger(L, 2);
+	pl.size = luaL_checkinteger(L, 3);
+	int from = luaL_optinteger(L, 4, 0);
+	pl.edge = lua_toboolean(L, 5);
+	if (from < 0 || from >= sz)
+		return luaL_error(L, "invalid offset %d", from);
+	int n = label_rawline(str + from, &pl);
+	lua_pushinteger(L, n);
+	return 1;
+}
+
 int
 ejoy2d_sprite(lua_State *L) {
 	luaL_Reg l[] ={
 		{ "new", lnew },
 		{ "label", lnewlabel },
+		{ "drawtext", ldrawtext },
+		{ "splittext", lsplittext },
 		{ "proxy", lnewproxy },
 		{ "dfont", lnewdfont },
 		{ "delete_dfont", ldeldfont },

@@ -8,6 +8,7 @@
 #include "renderbuffer.h"
 #include "spritepack.h"
 #include "array.h"
+#include "scissor.h"
 
 static int PROGRAM = 0;
 
@@ -112,6 +113,88 @@ lbox(lua_State *L) {
 	return 0;
 }
 
+/*
+	float x,y
+	float w,h
+	uint32_t color
+	float width
+ */
+
+static int
+lframe(lua_State *L) {
+	float x = luaL_checknumber(L, 1) * SCREEN_SCALE;
+	float y = luaL_checknumber(L, 2) * SCREEN_SCALE;
+	float w = luaL_checknumber(L, 3) * SCREEN_SCALE;
+	float h = luaL_checknumber(L, 4) * SCREEN_SCALE;
+	uint32_t color = convert_color(luaL_checkinteger(L, 5));
+	float width = luaL_optnumber(L, 6, 1.0f) * SCREEN_SCALE;
+	struct vertex_pack vp[6];
+	int i;
+	for (i=0;i<6;i++) {
+		vp[i].tx = 0;
+		vp[i].ty = 0;
+	}
+	shader_program(PROGRAM, NULL);
+
+	/*
+		0 (x,y)                      1 (x+w,y)
+		+----------------------------+
+		|\                          /|
+		| +------------------------+ |
+		| |3                      2| |
+		| |                        | |
+		| |                        | |
+		| |                        | |
+		| |4                     3'| |
+		| +------------------------+ |
+		|/                          \|
+		+----------------------------+
+		5                             0'
+	*/
+
+	vp[0].vx = x;
+	vp[0].vy = y;
+	vp[1].vx = x+w;
+	vp[1].vy = y;
+
+	vp[2].vx = x+w-width;
+	vp[2].vy = y+width;
+	vp[3].vx = x+width;
+	vp[3].vy = y+width;
+
+	vp[4].vx = x+width;
+	vp[4].vy = y+h-width;
+	vp[5].vx = x;
+	vp[5].vy = y+h;
+
+	for (i=0;i<6;i++) {
+		screen_trans(&vp[i].vx, &vp[i].vy);
+	}
+	shader_drawpolygon(6, vp, color, 0);
+
+	vp[0].vx = x+w;
+	vp[0].vy = y+h;
+	vp[1].vx = x+w;
+	vp[1].vy = y;
+
+	vp[2].vx = x+w-width;
+	vp[2].vy = y+width;
+	vp[3].vx = x+w-width;
+	vp[3].vy = y+h-width;
+
+	vp[4].vx = x+width;
+	vp[4].vy = y+h-width;
+	vp[5].vx = x;
+	vp[5].vy = y+h;
+
+	for (i=0;i<6;i++) {
+		screen_trans(&vp[i].vx, &vp[i].vy);
+	}
+	shader_drawpolygon(6, vp, color, 0);
+
+	return 0;
+}
+
 
 /*
 	table float[]
@@ -150,13 +233,29 @@ lpolygon(lua_State *L) {
 	return 0;
 }
 
+static int
+lscissor(lua_State *L) {
+	if (lua_gettop(L) == 0) {
+		scissor_pop();
+	} else {
+		int x = luaL_checkinteger(L,1);
+		int y = luaL_checkinteger(L,2);
+		int w = luaL_checkinteger(L,3);
+		int h = luaL_checkinteger(L,4);
+		scissor_push(x,y,w,h);
+	}
+	return 0;
+}
+
 int
 ejoy2d_geometry(lua_State *L) {
 	luaL_Reg l[] = {
 		{"setprogram", lsetprogram},
 		{"line", lline },
 		{"box", lbox },
+		{"frame", lframe },
 		{"polygon", lpolygon },
+		{"scissor", lscissor },
 
 		{NULL,NULL},
 	};

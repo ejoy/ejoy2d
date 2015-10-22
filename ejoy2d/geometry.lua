@@ -31,5 +31,7 @@ local geo = {}
 geo.line = assert(core.line)
 geo.box = assert(core.box)
 geo.polygon = assert(core.polygon)
+geo.frame = assert(core.frame)
+geo.scissor = assert(core.scissor)
 
 return geo
