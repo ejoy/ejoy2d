@@ -75,8 +75,6 @@ end
 
 ----------------ends of helpers-----------------
 
-local M = {}
-
 local gap = 4
 
 local CTL_CODE_POP=0
