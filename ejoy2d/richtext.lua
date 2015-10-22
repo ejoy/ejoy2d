@@ -58,6 +58,21 @@ local function is_alnum(unicode)
 	if not unicode then return false end
 	return is_ascii(unicode) and not is_punct(unicode)
 end
+
+local char_sizes = {}
+local function char_width(idx)
+	return char_sizes[idx]
+end
+local function char_height(idx)
+	return char_sizes[idx+1]
+end
+local function char_unicode_len(idx)
+	return char_sizes[idx+2]
+end
+local function char_unicode(idx)
+	return char_sizes[idx+3]
+end
+
 ----------------ends of helpers-----------------
 
 local M = {}
@@ -68,7 +83,7 @@ local CTL_CODE_POP=0
 local CTL_CODE_COLOR=1
 local CTL_CODE_LINEFEED=2
 
-M.operates = {
+local operates = {
 	yellow	={val=0xFFFFFF00,type="color"},
 	red			={val=0xFFFF0000,type="color"},
 	blue		={val=0xFF0000FF,type="color"},
@@ -76,96 +91,18 @@ M.operates = {
 	stop			={type=CTL_CODE_POP},
 	lf 			={type=CTL_CODE_LINEFEED},
 }
-
-
-function M:init_operates(operates)
-	for k, v in pairs(operates) do
-		self.operates[k] = v
+local function init_operates(ops)
+	for k, v in pairs(ops) do
+		operates[k] = v
 	end
 end
 
-local pos_pieces = {}
-function M.is_rich(txt)
+local function is_rich(txt)
 	local _, cnt = string.plain_format(txt)
 	return cnt > 0
 end
 
-function M:format(label, txt)
-	local fields = {}
-	local tag_cnt = 0
-	for match in string.gmatch(txt, "(#%[%w+%])") do
-		tag_cnt = tag_cnt + 1
-	end
-	if tag_cnt == 0 then
-		return self:_post_format(label, txt, fields)
-	end
-
-	local s=1
-	local e=1
-	local pos_cnt = 0
-	for i=1, tag_cnt do
-		s, e = string.find(txt, "(#%[%w+%])")
-		local tag = string.sub(txt, s+2, e-1)
-		if not self.operates[tag] then
-			txt = string.gsub(txt, "(#%[%w+%])", "", 1)
-		else
-			local pos = string.char_len(string.sub(txt, 1, s))
-			pos_cnt = pos_cnt+1
-			pos_pieces[pos_cnt] = pos
-
-			pos_cnt = pos_cnt+1
-			pos_pieces[pos_cnt] = tag
-
-			txt = string.gsub(txt, "(#%[%w+%])", "", 1)
-		end
-	end
-
-	local count = pos_cnt / 2
-	local last_field = nil
-	for i=1, count do
-		local pos = pos_pieces[2*i-1]
-		local tag = pos_pieces[2*i]
-		local ope = self.operates[tag]
-		if ope.type == "color" then
-			local field = {false, false, false, false}
-			field[1] = pos
-			field[2] = i==count and string.char_len(txt) or pos_pieces[2*(i+1)-1]-1
-			field[3] = CTL_CODE_COLOR
-			field[4] = ope.val
-			table.insert(fields, field)
-
-			last_field = field
-		elseif ope.type == CTL_CODE_POP then
-			last_field = nil
-		elseif ope.type == CTL_CODE_LINEFEED then
-			local field = {false, false, false, false}
-			field[1] = pos
-			field[2] = pos
-			field[3] = ope.type
-			field[4] = ope.val
-			table.insert(fields, field)
-
-			if last_field then
-				local field_restore = {false, false, false}
-				field_restore[1] = pos
-				field_restore[2] = i==count and string.char_len(txt) or pos_pieces[2*(i+1)-1]-1
-				field_restore[3] = last_field[3]
-				field_restore[4] = last_field[4]
-				table.insert(fields, field_restore)
-				last_field = field_restore
-			end
-		end
-	end
-
-	return self:_post_format(label, txt, fields)
-end
-
-function M:_post_format(label, txt, fields)
-	local w, h = self:layout(label, txt, fields)
-	return {txt, fields, w, h}
-end
-
-function M:_locate_alnum(sizes, anchor)
+local function _locate_alnum(sizes, anchor)
 	local start = anchor
 	local forward_len = sizes[start]
 	while sizes[start-gap+3] do
@@ -188,7 +125,7 @@ function M:_locate_alnum(sizes, anchor)
 	return forward_len, start, stop, backward_len
 end
 
-local function add_linefeed(fields, pos, offset)
+local function _add_linefeed(fields, pos, offset)
 	local field = {false, false, false, false}
 	field[1] = pos-1  --zero base index
 	field[2] = pos-1
@@ -198,21 +135,7 @@ local function add_linefeed(fields, pos, offset)
 	table.insert(fields, field)
 end
 
-local char_sizes = {}
-local function char_width(idx)
-	return char_sizes[idx]
-end
-local function char_height(idx)
-	return char_sizes[idx+1]
-end
-local function char_unicode_len(idx)
-	return char_sizes[idx+2]
-end
-local function char_unicode(idx)
-	return char_sizes[idx+3]
-end
-
-function M:layout(label, txt, fields)
+local function _layout(label, txt, fields)
 	-- print(txt)
 	--{label_width, label_height, char_width_1, char_width_1, unicode_len_1, unicode_1...}
 	local size_cnt = label:char_size(char_sizes, txt)
@@ -270,15 +193,15 @@ function M:layout(label, txt, fields)
 
 			if next_unicode and next_unicode ~= 10 then
 				if ignore_next > 0 or not is_alnum(char_unicode(idx)) then
-					add_linefeed(fields, pos)
+					_add_linefeed(fields, pos)
 				else
-					local forward_len, start, stop, backward_len = self:_locate_alnum(char_sizes, idx)
+					local forward_len, start, stop, backward_len = _locate_alnum(char_sizes, idx)
 					if stop == idx+gap and not is_punct(char_unicode(stop+gap)) then
 						ignore_next = ignore_next+1
 						local scale = line_width * 1000 / (line_width + char_width(stop))
 						scale = scale >= 970 and scale or 1000
 						line_width = line_width + char_width(stop)
-						add_linefeed(fields, pos+1, scale)
+						_add_linefeed(fields, pos+1, scale)
 						-- print("shrink:", scale)
 					else
 						local scale = width * 1000 / (line_width - forward_len)
@@ -286,9 +209,9 @@ function M:layout(label, txt, fields)
 						if scale <= 1250 and scale > 0 then
 							extra_len = forward_len
 							line_width = line_width - extra_len
-							add_linefeed(fields, ((start+1) / gap)-1, scale)
+							_add_linefeed(fields, ((start+1) / gap)-1, scale)
 						else
-							add_linefeed(fields, pos)
+							_add_linefeed(fields, pos)
 						end
 						-- print("extend:", scale)
 					end
@@ -306,4 +229,84 @@ function M:layout(label, txt, fields)
 	return max_width, max_height
 end
 
-return M
+local function _post_format(label, txt, fields)
+	local w, h = _layout(label, txt, fields)
+	return {txt, fields, w, h}
+end
+
+local function format(label, txt)
+	local fields = {}
+	local pos_pieces = {}
+	local tag_cnt = 0
+	for match in string.gmatch(txt, "(#%[%w+%])") do
+		tag_cnt = tag_cnt + 1
+	end
+	if tag_cnt == 0 then
+		return _post_format(label, txt, fields)
+	end
+
+	local s=1
+	local e=1
+	local pos_cnt = 0
+	for i=1, tag_cnt do
+		s, e = string.find(txt, "(#%[%w+%])")
+		local tag = string.sub(txt, s+2, e-1)
+		if not operates[tag] then
+			txt = string.gsub(txt, "(#%[%w+%])", "", 1)
+		else
+			local pos = string.char_len(string.sub(txt, 1, s))
+			pos_cnt = pos_cnt+1
+			pos_pieces[pos_cnt] = pos
+
+			pos_cnt = pos_cnt+1
+			pos_pieces[pos_cnt] = tag
+
+			txt = string.gsub(txt, "(#%[%w+%])", "", 1)
+		end
+	end
+
+	local count = pos_cnt / 2
+	local last_field = nil
+	for i=1, count do
+		local pos = pos_pieces[2*i-1]
+		local tag = pos_pieces[2*i]
+		local ope = operates[tag]
+		if ope.type == "color" then
+			local field = {false, false, false, false}
+			field[1] = pos
+			field[2] = i==count and string.char_len(txt) or pos_pieces[2*(i+1)-1]-1
+			field[3] = CTL_CODE_COLOR
+			field[4] = ope.val
+			table.insert(fields, field)
+
+			last_field = field
+		elseif ope.type == CTL_CODE_POP then
+			last_field = nil
+		elseif ope.type == CTL_CODE_LINEFEED then
+			local field = {false, false, false, false}
+			field[1] = pos
+			field[2] = pos
+			field[3] = ope.type
+			field[4] = ope.val
+			table.insert(fields, field)
+
+			if last_field then
+				local field_restore = {false, false, false}
+				field_restore[1] = pos
+				field_restore[2] = i==count and string.char_len(txt) or pos_pieces[2*(i+1)-1]-1
+				field_restore[3] = last_field[3]
+				field_restore[4] = last_field[4]
+				table.insert(fields, field_restore)
+				last_field = field_restore
+			end
+		end
+	end
+
+	return _post_format(label, txt, fields)
+end
+
+return {
+	init_operates=init_operates,
+	is_rich=is_rich,
+	format=format,
+}

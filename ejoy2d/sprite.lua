@@ -48,7 +48,7 @@ function set:text(txt)
 	else
 		local t = type(txt)
 		assert(t=="string" or t=="number")
-		set_text(self, richtext:format(self, tostring(txt)))
+		set_text(self, richtext.format(self, tostring(txt)))
 	end
 end
 
