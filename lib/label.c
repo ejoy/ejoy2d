@@ -550,6 +550,11 @@ get_init_cy(struct rich_text *rich, const struct pack_label * l){
     return cy;
 }
 
+int
+label_is_punctuation(int unicode) {
+    return unicode == '.' || unicode == ',' || unicode == 0x3002 || unicode == 0xFF0C;
+}
+
 void
 label_draw(struct rich_text *rich, const struct pack_label * l, struct srt *srt,
            struct sprite_trans *arg) {
@@ -574,11 +579,20 @@ label_draw(struct rich_text *rich, const struct pack_label * l, struct srt *srt,
             if (ch == 0) {
                 ch = draw_height(unicode, utf8, l->size, l->edge) + l->space_h;
             }
+            
+            const char next_str = str[i];
+            if (next_str) {
+                int next_len = unicode_len(next_str);
+                int next_unicode = copystr(utf8, str+i, next_len);
+                if (label_is_punctuation(next_unicode)) {
+                    w += draw_size(next_unicode, utf8, l->size, l->edge) + l->space_w;
+                    i += next_len;
+                }
+            }
         }
 		
 		pre_draw_label_sprite(rich, i - len, &sw, &ls);
 
-//		uint32_t lf = get_rich_filed_lf(rich, idx, &space_scale);
 		if((l->auto_scale == 0 && ((w + sw) > (l->width - l->size / 2))) || unicode == '\n' ) {
             if (ls > ch) {
                 ty = (ls - ch) / 2;
