@@ -1,7 +1,7 @@
 #include "texture.h"
 #include "shader.h"
 
-#define MAX_TEXTURE 128
+#define MAX_TEXTURE 256
 
 struct texture {
 	int width;
