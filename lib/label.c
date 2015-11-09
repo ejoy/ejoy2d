@@ -552,7 +552,7 @@ get_init_cy(struct rich_text *rich, const struct pack_label * l){
 
 int
 label_is_punctuation(int unicode) {
-    return unicode == '.' || unicode == ',' || unicode == 0x3002 || unicode == 0xFF0C;
+    return unicode == '.' || unicode == ',' || unicode == 0x3002 || unicode == 0xFF0C || unicode == 0xFF1F || unicode == 0xFF01;
 }
 
 void
