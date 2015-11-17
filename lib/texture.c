@@ -150,8 +150,8 @@ texture_load_alpha(int id, enum TEXTURE_FORMAT pixel_format, int pixel_width, in
     }
     
     if (reduce) {
-        texture_reduce(pixel_format, &pixel_width, &pixel_height, data);
-        texture_reduce(pixel_format, &pixel_width, &pixel_height, alphadata);
+        texture_downsample(pixel_format, &pixel_width, &pixel_height, data);
+        texture_downsample(pixel_format, &pixel_width, &pixel_height, alphadata);
     }
     render_texture_update(R, tex->id, pixel_width, pixel_height, data, 0, 0);
     
