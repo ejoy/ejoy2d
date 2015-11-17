@@ -30,9 +30,7 @@ _fill_sprite_with_texure(int tex_id, struct sprite* s, int w, int h) {
 	s->start_frame = 0;
 	s->total_frame = 0;
 	s->frame = 0;
-	s->visible = true;
-	s->message = false;
-	s->multimount = false;
+	s->flags = 0;
 	s->name = NULL;
 	s->material = NULL;
 	memset(&s->data, 0, sizeof(s->data));
