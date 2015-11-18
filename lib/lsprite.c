@@ -131,7 +131,7 @@ fill_srt(lua_State *L, struct srt *srt, int idx) {
 	srt->offy = y*SCREEN_SCALE;
 	srt->scalex = sx*1024;
 	srt->scaley = sy*1024;
-	srt->rot = rot * (1024.0 / 360.0);
+	srt->rot = rot * (EJMAT_R_FACTOR / 360.0);
 }
 
 static const char * srt_key[] = {
@@ -1268,7 +1268,7 @@ lsr(lua_State *L) {
 	switch (n) {
 	case 4:
 		// sx,sy,rot
-		r = luaL_checknumber(L,4) * (1024.0 / 360.0);
+		r = luaL_checknumber(L,4) * (EJMAT_R_FACTOR / 360.0);
 		// go through
 	case 3:
 		// sx, sy
@@ -1277,7 +1277,7 @@ lsr(lua_State *L) {
 		break;
 	case 2:
 		// rot
-		r = luaL_checknumber(L,2) * (1024.0 / 360.0);
+		r = luaL_checknumber(L,2) * (EJMAT_R_FACTOR / 360.0);
 		break;
 	}
 	matrix_sr(m, sx, sy, r);

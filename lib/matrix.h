@@ -1,6 +1,8 @@
 #ifndef EJOY_2D_MATRIX_H
 #define EJOY_2D_MATRIX_H
 
+#define EJMAT_R_FACTOR (4096.0)
+
 struct matrix {
 	/* The matrix format is :
 	 *
