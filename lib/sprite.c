@@ -322,6 +322,8 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
                 struct pack_quad *q = &s->s.pic->rect[i];
                 if (texture_glalphaid(q->texid) > 0) {
                     s->t.program_offset = PROGRAM_ALPHAMAP_OFFSET;
+                } else {
+                    s->t.program_offset = 0;
                 }
             }
         }
