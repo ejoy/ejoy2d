@@ -129,7 +129,7 @@ static int
 lrot(lua_State *L) {
 	struct matrix *m = (struct matrix *)lua_touserdata(L, 1);
 	double r = luaL_checknumber(L,2);
-	matrix_rot(m, r * (1024.0 / 360.0));
+	matrix_rot(m, r * (EJMAT_R_FACTOR / 360.0));
 
 	lua_settop(L,1);
 	return 1;
@@ -144,7 +144,7 @@ lsr(lua_State *L) {
 	switch (n) {
 	case 4:
 		// sx,sy,rot
-		r = luaL_checknumber(L,4) * (1024.0 / 360.0);
+		r = luaL_checknumber(L,4) * (EJMAT_R_FACTOR / 360.0);
 		// go through
 	case 3:
 		// sx, sy
@@ -153,7 +153,7 @@ lsr(lua_State *L) {
 		break;
 	case 2:
 		// rot
-		r = luaL_checknumber(L,2) * (1024.0 / 360.0);
+		r = luaL_checknumber(L,2) * (EJMAT_R_FACTOR / 360.0);
 		break;
 	}
 	matrix_sr(m, sx, sy, r);
@@ -170,7 +170,7 @@ lrs(lua_State *L) {
 	switch (n) {
 	case 4:
 		// sx,sy,rot
-		r = luaL_checknumber(L,4) * (1024.0 / 360.0);
+		r = luaL_checknumber(L,4) * (EJMAT_R_FACTOR / 360.0);
 		// go through
 	case 3:
 		// sx, sy
@@ -179,7 +179,7 @@ lrs(lua_State *L) {
 		break;
 	case 2:
 		// rot
-		r = luaL_checknumber(L,2) * (1024.0 / 360.0);
+		r = luaL_checknumber(L,2) * (EJMAT_R_FACTOR / 360.0);
 		break;
 	}
 	matrix_rs(m, sx, sy, r);
