@@ -234,7 +234,9 @@ shader_drawbuffer(struct render_buffer * rb, float tx, float ty, float scale) {
 	RID glid = texture_glid(rb->texid);
 	if (glid == 0)
 		return;
-	shader_texture(glid, 0);
+    
+    RID glalphaid = texture_glalphaid(rb->texid);
+    
 	render_set(RS->R, VERTEXBUFFER, rb->vbid, 0);
 
 	float sx = scale;
@@ -246,8 +248,14 @@ shader_drawbuffer(struct render_buffer * rb, float tx, float ty, float scale) {
 	// we should call shader_adduniform to add "st" uniform first
 	shader_setuniform(PROGRAM_RENDERBUFFER, 0, UNIFORM_FLOAT4, v);
 
-	shader_program(PROGRAM_RENDERBUFFER, NULL);
-
+    shader_program(PROGRAM_RENDERBUFFER + glalphaid == 0 ? 0 : PROGRAM_ALPHAMAP_OFFSET, NULL);
+    
+    shader_texture(glid, 0);
+    if (glalphaid != 0)
+        shader_texture(glalphaid, 1);
+    else
+        shader_texture(0, 1);
+    
 	renderbuffer_commit(rb);
 
 	render_set(RS->R, VERTEXBUFFER, RS->vertex_buffer, 0);
