@@ -59,8 +59,10 @@ struct sprite {
 };
 
 struct sprite_trans * sprite_trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_trans *t, struct matrix *tmp_matrix);
-void sprite_drawquad(struct pack_picture *picture, const struct srt *srt, const struct sprite_trans *arg);
-int sprite_drawquad_ex(struct pack_picture *picture, const struct srt *srt, const struct sprite_trans *arg, struct vertex_pack * vp, int tex_glid);
+void sprite_drawquad(struct pack_picture *picture, const struct srt *srt,
+                    struct sprite_trans *arg, struct material * material);
+int sprite_drawquad_ex(struct pack_picture *picture, const struct srt *srt,
+                       const struct sprite_trans *arg, struct vertex_pack * vp, int tex_glid);
 void sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg);
 int sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct material * material);
 int sprite_draw_child_cache(struct sprite *s, struct sprite_trans * parent_ts, struct sprite_trans * frame_ts, struct material * material);

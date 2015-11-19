@@ -37,8 +37,19 @@ void sprite_cur_dtex_id(int dtex_id) {
     cur_dtex_id = dtex_id;
 }
 
+static void
+switch_program(struct sprite_trans *t, int def, struct material *m) {
+    int prog = t->program;
+    if (prog == PROGRAM_DEFAULT) {
+        prog = def;
+    }
+    prog = prog + t->program_offset;
+    shader_program(prog, m);
+}
+
 void
-sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const struct sprite_trans *arg) {
+sprite_drawquad(struct pack_picture *picture, const struct srt *srt,
+                struct sprite_trans *arg, struct material * material) {
 	struct matrix tmp;
 	struct vertex_pack vb[4];
 	int i,j;
@@ -87,6 +98,7 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
                     const uv_type* dtex_coord = dtex_lookup(cur_dtex_id, q->texture_coord, q->texid);
                     if (dtex_coord) {
                         glid = dtex_glid;
+                        glalphaid = 0;
                         for (j=0;j<4;j++) {
                             vb[j].tx = dtex_coord[j*2+0];
                             vb[j].ty = dtex_coord[j*2+1];
@@ -95,9 +107,17 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
                 }
             }
 #endif
+            if (glid == 0)
+                return;
+            
+            arg->program_offset = glalphaid == 0 ? 0 : PROGRAM_ALPHAMAP_OFFSET;
+            switch_program(arg, PROGRAM_PICTURE, material);
+            
             shader_texture(glid, 0);
             if (glalphaid != 0)
                 shader_texture(glalphaid, 1);
+            else
+                shader_texture(glalphaid, 0);
             shader_draw(vb, arg->color, arg->additive);
         }
 	}
@@ -286,6 +306,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
 	s->t.program = PROGRAM_DEFAULT;
+    s->t.program_offset = 0;
     s->cache_dirty = true;
 	s->flags = 0;
 	s->name = NULL;
@@ -315,17 +336,6 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 		if (s->type == TYPE_PANNEL) {
 			struct pack_pannel * pp = (struct pack_pannel *)pack->data[id];
 			s->data.scissor = pp->scissor;
-        }
-        else if (s->type == TYPE_PICTURE) {
-            int i;
-            for (i = 0; i < s->s.pic->n; i++) {
-                struct pack_quad *q = &s->s.pic->rect[i];
-                if (texture_glalphaid(q->texid) > 0) {
-                    s->t.program_offset = PROGRAM_ALPHAMAP_OFFSET;
-                } else {
-                    s->t.program_offset = 0;
-                }
-            }
         }
 	}
 }
@@ -500,16 +510,6 @@ mat_mul(struct matrix *a, struct matrix *b, struct matrix *tmp) {
 }
 
 static void
-switch_program(struct sprite_trans *t, int def, struct material *m) {
-	int prog = t->program;
-	if (prog == PROGRAM_DEFAULT) {
-		prog = def;
-	}
-    prog = prog + t->program_offset;
-	shader_program(prog, m);
-}
-
-static void
 set_scissor(const struct pack_pannel *p, const struct srt *srt, const struct sprite_trans *arg) {
 	struct matrix tmp;
 	if (arg->mat == NULL) {
@@ -607,7 +607,7 @@ drawparticle(struct sprite *s, struct particle_system *ps, struct pack_picture *
 
 		s->t.mat = mat;
 		s->t.color = color;
-		sprite_drawquad(pic, NULL, &s->t);
+		sprite_drawquad(pic, NULL, &s->t, NULL);
 	}
 	shader_defaultblend();
 
@@ -631,18 +631,18 @@ sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, s
 	switch (s->type) {
 	case TYPE_PICTURE:
 		if (global_lable_only != 2) {
-			switch_program(t, PROGRAM_PICTURE, material);
-            if (s->data.vp_cache == NULL) {
-                sprite_drawquad(s->s.pic, srt, t);
-            } else {
-                struct cache_vp * cache = s->data.vp_cache;
-                if (dirty) {
-                    cache->texglid = -1;
-                    cache->texglid = sprite_drawquad_ex(s->s.pic, srt, t, cache->vb, cache->texglid);
-                } else {
-                    sprite_drawquad_ex(s->s.pic, srt, t, cache->vb, cache->texglid);
-                }
-            }
+            sprite_drawquad(s->s.pic, srt, t, material);
+//            if (s->data.vp_cache == NULL) {
+//                sprite_drawquad(s->s.pic, srt, t, material);
+//            } else {
+//                struct cache_vp * cache = s->data.vp_cache;
+//                if (dirty) {
+//                    cache->texglid = -1;
+//                    cache->texglid = sprite_drawquad_ex(s->s.pic, srt, t, cache->vb, cache->texglid);
+//                } else {
+//                    sprite_drawquad_ex(s->s.pic, srt, t, cache->vb, cache->texglid);
+//                }
+//            }
 		}
 		return 0;
 	case TYPE_POLYGON:
@@ -654,32 +654,12 @@ sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, s
 	case TYPE_LABEL:
 		if (s->data.rich_text && global_lable_only != 1) {
             t->program = PROGRAM_DEFAULT;	// label never set user defined program
-//            switch_program(t, s->s.label->edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT, material);
-            
             int pre_value = global_lable_only;
             bool pre_draw_scene = draw_scene;
             
             global_lable_only = 0; draw_scene = false;
             label_draw(s->data.rich_text, s->s.label, pre_draw_scene ? &viewport_srt : srt, t);
             draw_scene = pre_draw_scene; global_lable_only = pre_value;
-
-//            if (s->data.rich_text->sprite_count > 0) {
-//                int pre_value = global_lable_only;
-//                global_lable_only = 0;
-//                
-//                switch_program(t, PROGRAM_PICTURE, material);
-//                if (s->data.rich_text->label_color_enable)
-//                    t->color = label_get_color(s->s.label, t);
-//                if (draw_scene) {
-//                    draw_scene = false;
-//                    label_draw_sprite(s->data.rich_text, &viewport_srt, t);
-//                    draw_scene = true;
-//                } else {
-//                    label_draw_sprite(s->data.rich_text, srt, t);
-//                }
-//                
-//                global_lable_only = pre_value;
-//            }
 		}
 		return 0;
 	case TYPE_ANCHOR:
