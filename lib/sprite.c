@@ -43,6 +43,7 @@ switch_program(struct sprite_trans *t, int def, struct material *m) {
     if (prog == PROGRAM_DEFAULT) {
         prog = def;
     }
+    assert(t->program_offset == 0 || t->program_offset == 10);
     prog = prog + t->program_offset;
     shader_program(prog, m);
 }
@@ -664,7 +665,7 @@ sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, s
 		return 0;
 	case TYPE_ANCHOR:
 		if (s->data.anchor->ps){
-			switch_program(t, PROGRAM_PICTURE, material);
+            //switch_program(t, PROGRAM_PICTURE, material);
 			drawparticle(s, s->data.anchor->ps, s->data.anchor->pic, srt);
 		}
 		anchor_update(s, srt, t);
