@@ -58,6 +58,7 @@ end
 
 function game.drawframe()
 	ej.clear(0xff808080)	-- clear (0.5,0.5,0.5,1) gray
+	-- geo.matrix(1.0,0,0,0,  0,1.0,0,0, 0,0,1.0,0, 0.1,0,0,1.0)
 	geo.line(0,0,x,y,0xffffffff)
 	geo.box(100,100,200,300, 0x80ff0000)
 	geo.polygon(hexagon, 0x40ffff00)

@@ -1440,7 +1440,7 @@ lnewproxy(lua_State *L) {
 static int
 lnewmaterial(lua_State *L) {
 	struct sprite *s = self(L);
-	int sz = sprite_material_size(s);
+	int sz = material_size(s->t.program);
 	if (sz == 0)
 		return luaL_error(L, "The program has not material");
 	get_reftable(L, 1);	

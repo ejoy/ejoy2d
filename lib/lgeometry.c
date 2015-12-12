@@ -9,12 +9,25 @@
 #include "spritepack.h"
 #include "array.h"
 #include "scissor.h"
+#include "material.h"
 
 static int PROGRAM = 0;
+struct material* material = NULL;
 
 static int
 lsetprogram(lua_State *L) {
-	PROGRAM = luaL_checkinteger(L,1);
+	PROGRAM = luaL_checkinteger(L,2);
+	int sz = material_size(PROGRAM);
+	if (sz > 0) {
+		struct material *m = (struct material*)lua_newuserdata(L, sz);
+		material_init(m, sz, PROGRAM);
+		lua_setfield(L, 1, "__obj");
+		material = m;
+	}else{
+		lua_pushnil(L);
+		lua_setfield(L, 1, "__obj");
+		material = NULL;
+	}
 	return 0;
 }
 
@@ -72,7 +85,7 @@ lline(lua_State *L) {
 		screen_trans(&vp[i].vx, &vp[i].vy);
 	}
 
-	shader_program(PROGRAM, NULL);
+	shader_program(PROGRAM, material);
 	shader_draw(vp, color, 0);
 
 	return 0;
@@ -107,7 +120,7 @@ lbox(lua_State *L) {
 		screen_trans(&vp[i].vx, &vp[i].vy);
 	}
 
-	shader_program(PROGRAM, NULL);
+	shader_program(PROGRAM, material);
 	shader_draw(vp, color, 0);
 
 	return 0;
@@ -134,7 +147,7 @@ lframe(lua_State *L) {
 		vp[i].tx = 0;
 		vp[i].ty = 0;
 	}
-	shader_program(PROGRAM, NULL);
+	shader_program(PROGRAM, material);
 
 	/*
 		0 (x,y)                      1 (x+w,y)
@@ -224,7 +237,7 @@ lpolygon(lua_State *L) {
 		vb[i].tx = 0;
 		vb[i].ty = 0;
 	}
-	shader_program(PROGRAM, NULL);
+	shader_program(PROGRAM, material);
 	if (point == 4) {
 		shader_draw(vb, color, 0);
 	} else {

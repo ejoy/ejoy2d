@@ -79,7 +79,7 @@ int sprite_pos(struct sprite *s, struct srt *srt, struct matrix *m, int pos[2]);
 void sprite_matrix(struct sprite *s, struct matrix *mat);
 
 bool sprite_child_visible(struct sprite *s, const char * childname);
-int sprite_material_size(struct sprite *s);
+int material_size(int program);
 
 int ejoy2d_sprite(lua_State *L);
 

@@ -1055,8 +1055,4 @@ sprite_setframe(struct sprite *s, int frame, bool force_child) {
 	return total_frame;
 }
 
-int 
-sprite_material_size(struct sprite *s) {
-	return material_size(s->t.program);
-}
 
