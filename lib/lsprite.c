@@ -1439,23 +1439,33 @@ lnewproxy(lua_State *L) {
 
 static int
 lnewmaterial(lua_State *L) {
-	struct sprite *s = self(L);
-	int sz = material_size(s->t.program);
-	if (sz == 0)
-		return luaL_error(L, "The program has not material");
-	get_reftable(L, 1);	
+	struct sprite * s = (struct sprite *)lua_touserdata(L, 1);
+	if (s) {
+		int sz = material_size(s->t.program);
+		if (sz == 0)
+			return luaL_error(L, "The program has not material");
+		get_reftable(L, 1);	
 
-	lua_createtable(L, 0, 1);
-	void * m = lua_newuserdata(L, sz); // sprite, uservalue, table, matertial
-	s->material = (struct material*)m;
-	material_init(m, sz, s->t.program);
-	lua_setfield(L, -2, "__obj");
+		lua_createtable(L, 0, 1);
+		void * m = lua_newuserdata(L, sz); // sprite, uservalue, table, matertial
+		s->material = (struct material*)m;
+		material_init(m, sz, s->t.program);
+		lua_setfield(L, -2, "__obj");
 
-	lua_pushvalue(L, -1);	// sprite, uservalue, table, table
-	lua_setfield(L, -3, "material");
-	lua_pushinteger(L, s->t.program);
+		lua_pushvalue(L, -1);	// sprite, uservalue, table, table
+		lua_setfield(L, -3, "material");
+		lua_pushinteger(L, s->t.program);
 
-	return 2;	// return table, program
+		return 2;	// return table, program
+	} else {
+		int program = (int)luaL_checkinteger(L, 1);
+		int sz = material_size(program);
+		if (sz == 0)
+			return luaL_error(L, "The program has not material");
+		struct material *m = (struct material*)lua_newuserdata(L, sz);
+		material_init(m, sz, program);
+		return 1;
+	}
 }
 
 static struct dfont*
@@ -1617,20 +1627,21 @@ ldfont_mothod(lua_State *L) {
  */
 static int
 ldrawtext(lua_State *L) {
-	const char * str = luaL_checkstring(L, 1);
-	float x = luaL_checknumber(L, 2);
-	float y = luaL_checknumber(L, 3);
+	struct material* mat = (struct material*)lua_touserdata(L, 1);
+	const char * str = luaL_checkstring(L, 2);
+	float x = luaL_checknumber(L, 3);
+	float y = luaL_checknumber(L, 4);
 	struct pack_label pl;
-	pl.width = luaL_checkinteger(L, 4);
-	pl.size = luaL_checkinteger(L, 5);
+	pl.width = luaL_checkinteger(L, 5);
+	pl.size = luaL_checkinteger(L, 6);
 	pl.height = pl.size;
-	pl.color = luaL_optinteger(L, 6, 0xffffffff);
+	pl.color = luaL_optinteger(L, 7, 0xffffffff);
 	pl.space_h = 0;
 	pl.space_w = 0;
 	pl.auto_scale = 0;
 	pl.align = LABEL_ALIGN_CENTER;
-	pl.edge = lua_toboolean(L, 7);
-	const char *align = lua_tostring(L, 8);
+	pl.edge = lua_toboolean(L, 8);
+	const char *align = lua_tostring(L, 9);
 	if (align) {
 		switch(align[0]) {
 		case 'l': case 'L' :
@@ -1641,7 +1652,7 @@ ldrawtext(lua_State *L) {
 			break;
 		}
 	}
-	shader_program(pl.edge ? PROGRAM_TEXT_EDGE : PROGRAM_TEXT, NULL);
+	shader_program(pl.edge ? PROGRAM_GUI_EDGE : PROGRAM_GUI_TEXT, mat);
 	label_rawdraw(str, x,y, &pl);
 	return 0;
 }

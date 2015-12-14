@@ -1,4 +1,5 @@
 local s = require "ejoy2d.shader.c"
+local c = require "ejoy2d.sprite.c"
 
 local PRECISION = ""
 local PRECISION_HIGH = ""
@@ -37,6 +38,26 @@ varying vec4 v_additive;
 
 void main() {
 	gl_Position = position + vec4(-1.0,1.0,0,0);
+	v_texcoord = texcoord;
+	v_color = color;
+	v_additive = additive;
+}
+]]
+
+local gui_text_vs = [[
+attribute vec4 position;
+attribute vec2 texcoord;
+attribute vec4 color;
+attribute vec4 additive;
+
+varying vec2 v_texcoord;
+varying vec4 v_color;
+varying vec4 v_additive;
+
+uniform mat4 inv_pmv;
+
+void main() {
+	gl_Position = inv_pmv * position + vec4(-1.0,1.0,0,0);
 	v_texcoord = texcoord;
 	v_color = color;
 	v_additive = additive;
@@ -238,23 +259,26 @@ local shader_name = {
 	RENDERBUFFER = 1,
 	TEXT = 2,
 	EDGE = 3,
-	GRAY = 4,
-	COLOR = 5,
-	BLEND = 6,
+	GUI_TEXT = 4,
+	GUI_EDGE = 5,
+	GRAY = 6,
+	COLOR = 7,
+	BLEND = 8,
+}
+-- user defined shader (or replace default shader)
+local MAX_PROGRAM = 16
+local USER_PROGRAM = 9
+
+local uniform_format = {
+	float = 1,
+	float2 = 2,
+	float3 = 3,
+	float4 = 4,
+	matrix33 = 5,
+	matrix44 = 6,
 }
 
 local shader_material = {}
-
-function shader.init()
-	s.load(shader_name.NORMAL, PRECISION .. sprite_fs, PRECISION .. sprite_vs)
-	s.load(shader_name.TEXT, PRECISION .. (text_fs[OPENGLES_VERSION] or text_fs[2]), PRECISION .. sprite_vs)
-	s.load(shader_name.EDGE, PRECISION .. (text_edge_fs[OPENGLES_VERSION] or text_edge_fs[2]), PRECISION .. sprite_vs)
-	s.load(shader_name.GRAY, PRECISION .. gray_fs, PRECISION .. sprite_vs)
-	s.load(shader_name.COLOR, PRECISION .. color_fs, PRECISION .. sprite_vs)
-	s.load(shader_name.BLEND, PRECISION .. blend_fs, PRECISION .. blend_vs)
-	s.load(shader_name.RENDERBUFFER, PRECISION .. renderbuffer_fs, PRECISION_HIGH .. renderbuffer_vs)
-	s.uniform_bind(shader_name.RENDERBUFFER, { { name = "st", type = 4} })	-- st must the first uniform (the type is float4/4)
-end
 
 shader.draw = s.draw
 shader.blend = s.blend
@@ -265,20 +289,6 @@ function shader.id(name)
 	local id = assert(shader_name[name] , "Invalid shader name " .. name)
 	return id
 end
-
--- user defined shader (or replace default shader)
-
-local MAX_PROGRAM = 16
-local USER_PROGRAM = 7
-
-local uniform_format = {
-	float = 1,
-	float2 = 2,
-	float3 = 3,
-	float4 = 4,
-	matrix33 = 5,
-	matrix44 = 6,
-}
 
 local uniform_set = s.uniform_set
 
@@ -300,7 +310,7 @@ local material_setuniform = s.material_setuniform
 local material_settexture = s.material_settexture
 
 local function material_meta(id, arg)
-	local uniform = arg.uniform
+	local uniform = arg.uniform or arg
 	local meta
 	if uniform then
 		local index_table = {}
@@ -318,6 +328,34 @@ local function material_meta(id, arg)
 		end
 	end
 	shader_material[id] = meta
+end
+
+local function create_text_material(id)
+	local text_uniform={{name="inv_pmv", type=uniform_format.matrix44}}
+	s.uniform_bind(id, text_uniform)
+	create_shader(id, text_uniform)
+	material_meta(id, text_uniform)
+	local meta=shader.material_meta(id)
+	local mat = {__obj=c.new_material(id)}
+	return setmetatable(mat, meta)
+end
+
+function shader.init()
+	s.load(shader_name.NORMAL, PRECISION .. sprite_fs, PRECISION .. sprite_vs)
+	s.load(shader_name.TEXT, PRECISION .. (text_fs[OPENGLES_VERSION] or text_fs[2]), PRECISION .. sprite_vs)
+	s.load(shader_name.EDGE, PRECISION .. (text_edge_fs[OPENGLES_VERSION] or text_edge_fs[2]), PRECISION .. sprite_vs)
+	s.load(shader_name.GUI_TEXT, PRECISION .. (text_fs[OPENGLES_VERSION] or text_fs[2]), PRECISION .. gui_text_vs)
+	s.load(shader_name.GUI_EDGE, PRECISION .. (text_edge_fs[OPENGLES_VERSION] or text_edge_fs[2]), PRECISION .. gui_text_vs)
+	s.load(shader_name.GRAY, PRECISION .. gray_fs, PRECISION .. sprite_vs)
+	s.load(shader_name.COLOR, PRECISION .. color_fs, PRECISION .. sprite_vs)
+	s.load(shader_name.BLEND, PRECISION .. blend_fs, PRECISION .. blend_vs)
+	s.load(shader_name.RENDERBUFFER, PRECISION .. renderbuffer_fs, PRECISION_HIGH .. renderbuffer_vs)
+	s.uniform_bind(shader_name.RENDERBUFFER, { { name = "st", type = uniform_format.float4} })	-- st must the first uniform (the type is float4/4)
+	
+	shader.gui_text_material = create_text_material(shader_name.GUI_TEXT)
+	shader.gui_edge_material = create_text_material(shader_name.GUI_EDGE)
+	shader.gui_text_material:inv_pmv(1.0,0,0,0,  0,1.0,0,0, 0,0,1.0,0, 0,0,0,1.0)
+	shader.gui_edge_material:inv_pmv(1.0,0,0,0,  0,1.0,0,0, 0,0,1.0,0, 0,0,0,1.0)
 end
 
 function shader.define( arg )

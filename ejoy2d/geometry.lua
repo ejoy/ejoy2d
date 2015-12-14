@@ -13,8 +13,7 @@ varying vec4 v_color;
 uniform mat4 inv_pmv;
 
 void main() {
-	gl_Position = position + vec4(-1.0,1.0,0,0);
-	gl_Position = inv_pmv * gl_Position;
+	gl_Position = inv_pmv * position + vec4(-1.0,1.0,0,0);
 	v_color = color;
 }
 	]],
@@ -45,6 +44,8 @@ end
 local function set_mat(...)
 	if core.material then
 		core.material:inv_pmv(...)
+		shader.gui_text_material:inv_pmv(...)
+		shader.gui_edge_material:inv_pmv(...)
 	end
 end
 

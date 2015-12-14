@@ -10,6 +10,7 @@ local method_fetch = method.fetch
 local method_test = method.test
 local method_fetch_by_index = method.fetch_by_index
 local dfont_method = c.dfont_method
+local drawtext = c.drawtext
 local fetch
 local test
 
@@ -158,6 +159,12 @@ end
 function sprite.dfont(width, height, fmt, tid)
 	local cobj = c.dfont(width, height, fmt, tid)
 	return debug.setmetatable(cobj, dfont_meta)
+end
+
+function sprite.drawtext(txt,x,y,w,size,color,edge,align)
+	local mat = edge and shader.gui_edge_material or shader.gui_text_material
+	mat=mat.__obj
+	drawtext(mat, txt, x, y, w, size, color, edge, align)
 end
 
 return sprite

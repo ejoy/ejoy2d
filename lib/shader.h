@@ -12,6 +12,8 @@
 #define PROGRAM_RENDERBUFFER 1
 #define PROGRAM_TEXT 2
 #define PROGRAM_TEXT_EDGE 3
+#define PROGRAM_GUI_TEXT 4
+#define PROGRAM_GUI_EDGE 5
 
 struct material;
 
