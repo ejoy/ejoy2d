@@ -1410,7 +1410,7 @@ lnewproxy(lua_State *L) {
 			0,	// touchable
 		},
 		{	// frame
-			POINTER_TO_OFFSET(&dp, &dp.part),
+			offsetof(struct dummy_pack, part),
 			1,	// n
 		},
 		{	// action
@@ -1419,13 +1419,13 @@ lnewproxy(lua_State *L) {
 			0,	// start_frame
 		},
 		{	// animation
-			POINTER_TO_OFFSET(&dp, &dp.frame),
-			POINTER_TO_OFFSET(&dp, &dp.action),
+			offsetof(struct dummy_pack, frame),
+			offsetof(struct dummy_pack, action),
 			1,	// frame_number
 			1,	// action_number
 			1,	// component_number
 			{{
-				POINTER_TO_OFFSET(&dp, &dp.name),
+				offsetof(struct dummy_pack, name),
 				0,	// id
 			}},
 		}
