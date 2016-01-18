@@ -328,11 +328,11 @@ import_sprite(struct import_stream *is) {
 	is->current_id = id;
 	uint8_t * type_array = (uint8_t *)OFFSET_TO_POINTER(is->pack, is->pack->type);
 	type_array[id] = type;
-	void ** data = (void **)OFFSET_TO_POINTER(is->pack, is->pack->data);
-	if (data[id]) {
+	offset_t * data = (offset_t *)OFFSET_TO_POINTER(is->pack, is->pack->data);
+	if (data[id] != 0) {
 		luaL_error(is->alloc->L, "Invalid stream : duplicate id %d", id);
 	}
-	data[id] = is->alloc->buffer;
+	data[id] = POINTER_TO_OFFSET(is->pack, is->alloc->buffer);
 	switch (type) {
 	case TYPE_PICTURE:
 		import_picture(is);
@@ -394,9 +394,9 @@ limport(lua_State *L) {
 	uint8_t * type = (uint8_t *)ialloc(&alloc, align_n * sizeof(uint8_t));
 	pack->type = POINTER_TO_OFFSET(pack, type);
 	memset(type, 0, align_n * sizeof(uint8_t));
-	void **data = (void **)ialloc(&alloc, pack->n * SIZEOF_POINTER);
+	offset_t *data = (offset_t *)ialloc(&alloc, pack->n * sizeof(offset_t));
 	pack->data = POINTER_TO_OFFSET(pack, data);
-	memset(data, 0, pack->n * SIZEOF_POINTER);
+	memset(data, 0, pack->n * sizeof(offset_t));
 
 	if (lua_istable(L,1)) {
 		int i;
@@ -578,7 +578,7 @@ lpack_size(lua_State *L) {
 	int align_n = (max_id + 1 + 3) & ~3;
 	int size = SIZEOF_PACK
 		+ align_n * sizeof(uint8_t)
-		+ (max_id+1) * SIZEOF_POINTER
+		+ (max_id+1) * sizeof(offset_t)
 		+ tex * sizeof(int);
 
 	lua_pushinteger(L, size);
@@ -655,12 +655,12 @@ dump_pack(struct sprite_pack *pack) {
 		return;
 	int i;
 	uint8_t *type = (uint8_t *)OFFSET_TO_POINTER(pack, pack->type);
-	void **data = (void **)OFFSET_TO_POINTER(pack, pack->data);
+	offset_t *data = (offset_t *)OFFSET_TO_POINTER(pack, pack->data);
 	for (i=0;i<pack->n;i++) {
 		if (type[i] == TYPE_PICTURE)
 			printf("%d : PICTURE\n", i);
 		else {
-			struct pack_animation *ani = (struct pack_animation *)data[i];
+			struct pack_animation *ani = (struct pack_animation *)OFFSET_TO_POINTER(pack, data[i]);
 			printf("%d : ANIMATION %d\n", i, ani->component_number);
 			int i;
 			for (i=0;i<ani->component_number;i++) {

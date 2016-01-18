@@ -150,8 +150,8 @@ update_message(struct sprite * s, int parentid, int componentid, int frame) {
 	struct sprite_pack * pack = s->pack;
 	if (pack == NULL)
 		return;
-	void ** data = (void **)OFFSET_TO_POINTER(pack, pack->data); 
-	struct pack_animation * ani = (struct pack_animation *)data[parentid];
+	offset_t * data = (offset_t *)OFFSET_TO_POINTER(pack, pack->data); 
+	struct pack_animation * ani = (struct pack_animation *)OFFSET_TO_POINTER(pack, data[parentid]);
 	if (frame < 0 || frame >= ani->frame_number) {
 		return;
 	}
