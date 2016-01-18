@@ -156,7 +156,7 @@ import_polygon(struct import_stream *is) {
 		int texid = import_byte(is);
 		p->texid = get_texid(is, texid);
 		p->n = import_byte(is);
-		uv_t * tc = (uint16_t *)ialloc(is->alloc, p->n * 2 * sizeof(uv_t));
+		uv_t * tc = (uv_t *)ialloc(is->alloc, p->n * 2 * sizeof(uv_t));
 		int32_t * sc = (int32_t *)ialloc(is->alloc, p->n * 2 * sizeof(uint32_t));
 		p->texture_coord = POINTER_TO_OFFSET(is->pack, tc);
 		p->screen_coord = POINTER_TO_OFFSET(is->pack, sc);
