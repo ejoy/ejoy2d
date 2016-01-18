@@ -176,10 +176,12 @@ drawsprite(struct render_buffer *rb, struct sprite *s, struct sprite_trans * ts)
 			frame += s->total_frame;
 		}
 		frame += s->start_frame;
-		struct pack_frame * pf = &ani->frame[frame];
+		struct pack_frame * pf = OFFSET_TO_POINTER(s->pack, ani->frame);
+		pf = &pf[frame];
 		int i;
 		for (i=0;i<pf->n;i++) {
-			struct pack_part *pp = &pf->part[i];
+			struct pack_part *pp = OFFSET_TO_POINTER(s->pack, pf->part);
+			pp = &pp[i];
 			int index = pp->component_id;
 			struct sprite * child = s->data.children[index];
 			if (child == NULL || (child->flags & SPRFLAG_INVISIBLE)) {
@@ -187,7 +189,7 @@ drawsprite(struct render_buffer *rb, struct sprite *s, struct sprite_trans * ts)
 			}
 			struct sprite_trans temp2;
 			struct matrix temp_matrix2;
-			struct sprite_trans *ct = sprite_trans_mul(&pp->t, t, &temp2, &temp_matrix2);
+			struct sprite_trans *ct = sprite_trans_mul2(s->pack, &pp->t, t, &temp2, &temp_matrix2);
 			int r = drawsprite(rb, child, ct);
 			if (r)
 				return r;
