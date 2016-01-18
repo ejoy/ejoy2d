@@ -180,36 +180,38 @@ import_picture(struct import_stream *is, float invw, float invh) {
 static void
 import_polygon(struct import_stream *is, float invw, float invh) {
 	int n = import_byte(is);
-	struct pack_polygon * pp = (struct pack_polygon *)ialloc(is->alloc, SIZEOF_POLYGON + n * SIZEOF_POLY);
+	struct pack_polygon_data * pp = (struct pack_polygon_data *)ialloc(is->alloc, SIZEOF_POLYGON + n * SIZEOF_POLY);
 	pp->n = n;
 	int i,j;
 	for (i=0;i<n;i++) {
-		struct pack_poly * p = &pp->poly[i];
+		struct pack_poly_data * p = &pp->poly[i];
 		int texid = import_byte(is);
 		p->texid = get_texid(is, texid);
 		p->n = import_byte(is);
-		p->texture_coord = (uv_type *)ialloc(is->alloc, p->n * 2 * sizeof(*p->texture_coord));
-		p->screen_coord = (int32_t *)ialloc(is->alloc, p->n * 2 * sizeof(uint32_t));
+		uv_t * tc = (uint16_t *)ialloc(is->alloc, p->n * 2 * sizeof(uv_t));
+		int32_t * sc = (int32_t *)ialloc(is->alloc, p->n * 2 * sizeof(uint32_t));
+		p->texture_coord = POINTER_TO_OFFSET(is->pack, tc);
+		p->screen_coord = POINTER_TO_OFFSET(is->pack, sc);
 		for (j=0;j<p->n*2;j+=2) {
 			float x = (float)import_word(is);
 			float y = (float)import_word(is);
-            int ret = texture_coord(p->texid, x, y, &p->texture_coord[j], &p->texture_coord[j+1]);
+            int ret = texture_coord(p->texid, x, y, &tc[j], &tc[j+1]);
             if (ret != 0) {
                 assert(invw > 0 && invh > 0);
-                cal_texture_coord(invw, invh, x, y, &p->texture_coord[j], &p->texture_coord[j+1]);
+                cal_texture_coord(invw, invh, x, y, &tc[j], &tc[j+1]);
             }
 		}
 		for (j=0;j<p->n*2;j++) {
-			p->screen_coord[j] = import_int32(is);
+			sc[j] = import_int32(is);
 		}
 	}
 }
 
-static const char *
+static offset_t
 import_string(struct import_stream *is) {
 	int n = import_byte(is);
 	if (n==255) {
-		return NULL;
+		return 0;
 	}
 	if (is->size < n) {
 		luaL_error(is->alloc->L, "Invalid stream (%d): read string failed", is->current_id);
@@ -220,17 +222,18 @@ import_string(struct import_stream *is) {
 	is->stream += n;
 	is->size -= n;
 
-	return buf;
+	return POINTER_TO_OFFSET(is->pack, buf);
 }
 
 static void
 import_frame(struct pack_frame * pf, struct import_stream *is, int maxc) {
 	int n = import_word(is);
 	int i;
-	pf->part = (struct pack_part *)ialloc(is->alloc, n * SIZEOF_PART);
+	struct pack_part * part = (struct pack_part *)ialloc(is->alloc, n * SIZEOF_PART);
+	pf->part = POINTER_TO_OFFSET(is->pack, part);
 	pf->n = n;
 	for (i=0;i<n;i++) {
-		struct pack_part *pp = &pf->part[i];
+		struct pack_part *pp = &part[i];
 		int tag = import_byte(is);
 		if (tag & TAG_ID) {
 			pp->component_id = import_word(is);
@@ -241,8 +244,9 @@ import_frame(struct pack_frame * pf, struct import_stream *is, int maxc) {
 			luaL_error(is->alloc->L, "Invalid stream (%d): frame part need an id", is->current_id);
 		}
 		if (tag & TAG_MATRIX) {
-			pp->t.mat = (struct matrix *)ialloc(is->alloc, SIZEOF_MATRIX);
-			int32_t *m = pp->t.mat->m;
+			struct matrix *mat = (struct matrix *)ialloc(is->alloc, SIZEOF_MATRIX);
+			pp->t.mat = POINTER_TO_OFFSET(is->pack, mat);
+			int32_t *m = mat->m;
 			int j;
 			for (j=0;j<6;j++) {
 				m[j] = import_int32(is);
@@ -252,9 +256,9 @@ import_frame(struct pack_frame * pf, struct import_stream *is, int maxc) {
 			if (ref >= is->matrix_n) {
 				luaL_error(is->alloc->L, "Invalid stream (%d): no martix ref %d", is->current_id, ref);
 			}
-			pp->t.mat = &is->matrix[ref];
+			pp->t.mat = POINTER_TO_OFFSET(is->pack, &is->matrix[ref]);
 		} else {
-			pp->t.mat = NULL;
+			pp->t.mat = 0;
 		}
 		if (tag & TAG_COLOR) {
 			pp->t.color = import_color(is);
@@ -272,8 +276,6 @@ import_frame(struct pack_frame * pf, struct import_stream *is, int maxc) {
 		} else {
 			pp->touchable = 0;
 		}
-		// todo: support other program
-		pp->t.program = PROGRAM_DEFAULT;
 	}
 }
 
@@ -292,18 +294,20 @@ import_animation(struct import_stream *is) {
 		pa->component[i].name = import_string(is);
 	}
 	pa->action_number = import_word(is);
-	pa->action = (struct pack_action *)ialloc(is->alloc, SIZEOF_ACTION * pa->action_number);
+	struct pack_action * action = (struct pack_action *)ialloc(is->alloc, SIZEOF_ACTION * pa->action_number);
+	pa->action = POINTER_TO_OFFSET(is->pack, action);
 	int frame = 0;
 	for (i=0;i<pa->action_number;i++) {
-		pa->action[i].name = import_string(is);
-		pa->action[i].number = import_word(is);
-		pa->action[i].start_frame = frame;
-		frame += pa->action[i].number;
+		action[i].name = import_string(is);
+		action[i].number = import_word(is);
+		action[i].start_frame = frame;
+		frame += action[i].number;
 	}
 	pa->frame_number = import_word(is);
-	pa->frame = (struct pack_frame *)ialloc(is->alloc, SIZEOF_FRAME * pa->frame_number);
+	struct pack_frame * pf = (struct pack_frame *)ialloc(is->alloc, SIZEOF_FRAME * pa->frame_number);
+	pa->frame = POINTER_TO_OFFSET(is->pack, pf);
 	for (i=0;i<pa->frame_number;i++) {
-		import_frame(&pa->frame[i], is, component);
+		import_frame(&pf[i], is, component);
 	}
 }
 
@@ -357,11 +361,13 @@ import_sprite(struct import_stream *is, float invw, float invh) {
 		luaL_error(is->alloc->L, "Invalid stream : wrong id %d", id);
 	}
 	is->current_id = id;
-	is->pack->type[id] = type;
-	if (is->pack->data[id]) {
+	uint8_t * type_array = (uint8_t *)OFFSET_TO_POINTER(is->pack, is->pack->type);
+	type_array[id] = type;
+	void ** data = (void **)OFFSET_TO_POINTER(is->pack, is->pack->data);
+	if (data[id]) {
 		luaL_error(is->alloc->L, "Invalid stream : duplicate id %d", id);
 	}
-	is->pack->data[id] = is->alloc->buffer;
+	data[id] = is->alloc->buffer;
 	switch (type) {
 	case TYPE_PICTURE:
 		import_picture(is, invw, invh);
@@ -428,10 +434,12 @@ limport(lua_State *L) {
 	struct sprite_pack *pack = (struct sprite_pack *)ialloc(&alloc, SIZEOF_PACK + tex * sizeof(int));
 	pack->n = max_id + 1;
 	int align_n = (pack->n + 3) & ~3;
-	pack->type = (uint8_t *)ialloc(&alloc, align_n * sizeof(uint8_t));
-	memset(pack->type, 0, align_n * sizeof(uint8_t));
-	pack->data = (void **)ialloc(&alloc, pack->n * SIZEOF_POINTER);
-	memset(pack->data, 0, pack->n * SIZEOF_POINTER);
+	uint8_t * type = (uint8_t *)ialloc(&alloc, align_n * sizeof(uint8_t));
+	pack->type = POINTER_TO_OFFSET(pack, type);
+	memset(type, 0, align_n * sizeof(uint8_t));
+	void **data = (void **)ialloc(&alloc, pack->n * SIZEOF_POINTER);
+	pack->data = POINTER_TO_OFFSET(pack, data);
+	memset(data, 0, pack->n * SIZEOF_POINTER);
 
 	if (lua_istable(L,1)) {
 		int i;
@@ -689,15 +697,17 @@ dump_pack(struct sprite_pack *pack) {
 	if (pack == NULL)
 		return;
 	int i;
+	uint8_t *type = (uint8_t *)OFFSET_TO_POINTER(pack, pack->type);
+	void **data = (void **)OFFSET_TO_POINTER(pack, pack->data);
 	for (i=0;i<pack->n;i++) {
-		if (pack->type[i] == TYPE_PICTURE)
+		if (type[i] == TYPE_PICTURE)
 			printf("%d : PICTURE\n", i);
 		else {
-			struct pack_animation *ani = (struct pack_animation *)pack->data[i];
+			struct pack_animation *ani = (struct pack_animation *)data[i];
 			printf("%d : ANIMATION %d\n", i, ani->component_number);
 			int i;
 			for (i=0;i<ani->component_number;i++) {
-				printf("\t%d %s\n",ani->component[i].id, ani->component[i].name ? ani->component[i].name : "");
+				printf("\t%d %s\n",ani->component[i].id, ani->component[i].name ? OFFSET_TO_STRING(pack, ani->component[i].name) : "");
 			}
 		}
 	}
