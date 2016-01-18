@@ -25,8 +25,6 @@ typedef uint16_t uv_t;
 struct matrix;
 typedef uint32_t offset_t;
 
-#define SIZEOF_POINTER 8
-
 #define SIZEOF_MATRIX (sizeof(struct matrix))
 
 struct pack_pannel {

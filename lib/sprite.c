@@ -220,8 +220,8 @@ sprite_size(struct sprite_pack *pack, int id) {
 	int8_t * type_array = OFFSET_TO_POINTER(pack, pack->type);
 	int type = type_array[id];
 	if (type == TYPE_ANIMATION) {
-		void **data = (void **)OFFSET_TO_POINTER(pack, pack->data);
-		struct pack_animation * ani = (struct pack_animation *)data[id];
+		offset_t *data = (offset_t *)OFFSET_TO_POINTER(pack, pack->data);
+		struct pack_animation * ani = (struct pack_animation *)OFFSET_TO_POINTER(pack, data[id]);
 		return sizeof(struct sprite) + (ani->component_number - 1) * sizeof(struct sprite *);
 	} else {
 		return sizeof(struct sprite);
@@ -297,9 +297,9 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	uint8_t *type_array = OFFSET_TO_POINTER(pack, pack->type);
 	s->type = type_array[id];
 	s->material = NULL;
-	void **data = OFFSET_TO_POINTER(pack, pack->data);
+	offset_t *data = OFFSET_TO_POINTER(pack, pack->data);
 	if (s->type == TYPE_ANIMATION) {
-		struct pack_animation * ani = (struct pack_animation *)data[id];
+		struct pack_animation * ani = (struct pack_animation *)OFFSET_TO_POINTER(pack, data[id]);
 		s->s.ani = ani;
 		s->frame = 0;
 		s->start_frame = 0;
@@ -312,14 +312,14 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 			s->data.children[i] = NULL;
 		}
 	} else {
-		s->s.pic = (struct pack_picture *)data[id];
+		s->s.pic = (struct pack_picture *)OFFSET_TO_POINTER(pack, data[id]);
 		s->start_frame = 0;
 		s->total_frame = 0;
 		s->frame = 0;
 		memset(&s->data, 0, sizeof(s->data));
 		assert(sz >= sizeof(struct sprite) - sizeof(struct sprite *));
 		if (s->type == TYPE_PANNEL) {
-			struct pack_pannel * pp = (struct pack_pannel *)data[id];
+			struct pack_pannel * pp = (struct pack_pannel *)OFFSET_TO_POINTER(pack, data[id]);
 			s->data.scissor = pp->scissor;
         }
 	}
