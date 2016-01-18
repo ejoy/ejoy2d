@@ -472,7 +472,14 @@ limport(lua_State *L) {
 	while (is.size != 0) {
 		import_sprite(&is, invw, invh);
 	}
-
+    
+    size_t used_mem =  alloc.buffer - (char *)pack;
+    ssize_t diff_size = (ssize_t)size - (ssize_t)used_mem;
+    if (diff_size > 4096){
+        void * new_pack = lua_newuserdata(L, used_mem);
+        memcpy(new_pack, pack, used_mem);
+    }
+    
 	return 1;
 }
 
