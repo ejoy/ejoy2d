@@ -1160,7 +1160,8 @@ lset_children_visible(lua_State *L) {
     int i;
     struct pack_animation *ani = s->s.ani;
     for (i=0; i<ani->component_number;i++) {
-        if (ani->component[i].name && strcmp(ani->component[i].name, name) == 0) {
+        offset_t name_offset = ani->component[i].name;
+        if (name_offset != 0 && strcmp(OFFSET_TO_STRING(s->pack, name_offset), name) == 0) {
             struct sprite *child = s->data.children[i];
             if (visible) {
                 child->flags &= ~SPRFLAG_INVISIBLE;
