@@ -270,7 +270,7 @@ sprite_has_action(struct sprite *s, const char * action) {
     struct pack_animation *ani = s->s.ani;
     for (i=0;i<ani->action_number;i++) {
         const char *name = NULL;
-        struct pack_action * pa = OFFSET_TO_POINTER(s->pack, ani->action);
+        struct pack_action * pa = OFFSET_TO_POINTER(struct pack_action, s->pack, ani->action);
         if (pa[i].name != 0)
             name = OFFSET_TO_STRING(s->pack, pa[i].name);
         if (name && strcmp(name, action)==0) {
@@ -774,11 +774,11 @@ void
 sprite_set_child_visible(struct sprite *s, const char * childname, bool visible) {
     struct pack_animation *ani = s->s.ani;
     int frame = get_frame(s);
-    struct pack_frame * pf =  OFFSET_TO_POINTER(s->pack, ani->frame);
+    struct pack_frame * pf =  OFFSET_TO_POINTER(struct pack_frame, s->pack, ani->frame);
     pf = &pf[frame];
     int i;
     for (i=0;i<pf->n;i++) {
-        struct pack_part *pp = OFFSET_TO_POINTER(s->pack, pf->part);
+        struct pack_part *pp = OFFSET_TO_POINTER(struct pack_part, s->pack, pf->part);
         pp = &pp[i];
         int index = pp->component_id;
         struct sprite * child = s->data.children[index];
