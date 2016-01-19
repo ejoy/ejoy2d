@@ -174,22 +174,17 @@ static const char * srt_key[] = {
 	"scale",
 };
 
-
 static void
-update_message(struct sprite * s, int parentid, int componentid, int frame) {
-	struct sprite_pack * pack = s->pack;
-	if (pack == NULL)
-		return;
-	offset_t * data = OFFSET_TO_POINTER(offset_t, pack, pack->data); 
-	struct pack_animation * ani = OFFSET_TO_POINTER(struct pack_animation, pack, data[parentid]);
+update_message(struct sprite * s, struct sprite * parent, int componentid, int frame) {
+	struct pack_animation * ani = parent->s.ani;
 	if (frame < 0 || frame >= ani->frame_number) {
 		return;
 	}
-	struct pack_frame *pframe = OFFSET_TO_POINTER(struct pack_frame, pack, ani->frame);
+	struct pack_frame *pframe = OFFSET_TO_POINTER(struct pack_frame, parent->pack, ani->frame);
 	pframe = &pframe[frame];
 	int i = 0;
 	for (; i < pframe->n; i++) {
-		struct pack_part * pp = OFFSET_TO_POINTER(struct pack_part, pack, pframe->part);
+		struct pack_part * pp = OFFSET_TO_POINTER(struct pack_part, parent->pack, pframe->part);
 		pp = &pp[i];
 		if (pp->component_id == componentid && pp->touchable) {
 			s->flags |= SPRFLAG_MESSAGE;
@@ -247,7 +242,7 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id, int cache_enable) {
 		if (c) {
 			c->name = sprite_childname(s, i);
 			sprite_mount(s, i, c);
-			update_message(c, id, i, s->frame);
+			update_message(c, s, i, s->frame);
 			lua_rawseti(L, -2, i+1);
             
             if (cache_enable && c->type == TYPE_PICTURE) {
