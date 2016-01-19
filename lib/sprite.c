@@ -217,11 +217,11 @@ int
 sprite_size(struct sprite_pack *pack, int id) {
 	if (id < 0 || id >=	pack->n)
 		return 0;
-	int8_t * type_array = OFFSET_TO_POINTER(pack, pack->type);
+	int8_t * type_array = OFFSET_TO_POINTER(int8_t, pack, pack->type);
 	int type = type_array[id];
 	if (type == TYPE_ANIMATION) {
-		offset_t *data = (offset_t *)OFFSET_TO_POINTER(pack, pack->data);
-		struct pack_animation * ani = (struct pack_animation *)OFFSET_TO_POINTER(pack, data[id]);
+		offset_t *data = OFFSET_TO_POINTER(offset_t, pack, pack->data);
+		struct pack_animation * ani = OFFSET_TO_POINTER(struct pack_animation, pack, data[id]);
 		return sizeof(struct sprite) + (ani->component_number - 1) * sizeof(struct sprite *);
 	} else {
 		return sizeof(struct sprite);
@@ -235,7 +235,7 @@ sprite_action(struct sprite *s, const char * action) {
 		return -1;
 	}
 	struct pack_animation *ani = s->s.ani;
-	struct pack_action *pa = OFFSET_TO_POINTER(s->pack, ani->action);
+	struct pack_action *pa = OFFSET_TO_POINTER(struct pack_action, s->pack, ani->action);
 	if (action == NULL) {
 		if (ani->action == 0) {
 			return -1;
@@ -294,12 +294,12 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	s->flags = 0;
 	s->name = NULL;
 	s->id = id;
-	uint8_t *type_array = OFFSET_TO_POINTER(pack, pack->type);
+	uint8_t *type_array = OFFSET_TO_POINTER(uint8_t, pack, pack->type);
 	s->type = type_array[id];
 	s->material = NULL;
-	offset_t *data = OFFSET_TO_POINTER(pack, pack->data);
+	offset_t *data = OFFSET_TO_POINTER(offset_t, pack, pack->data);
 	if (s->type == TYPE_ANIMATION) {
-		struct pack_animation * ani = (struct pack_animation *)OFFSET_TO_POINTER(pack, data[id]);
+		struct pack_animation * ani = OFFSET_TO_POINTER(struct pack_animation, pack, data[id]);
 		s->s.ani = ani;
 		s->frame = 0;
 		s->start_frame = 0;
@@ -312,14 +312,14 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 			s->data.children[i] = NULL;
 		}
 	} else {
-		s->s.pic = (struct pack_picture *)OFFSET_TO_POINTER(pack, data[id]);
+		s->s.pic = OFFSET_TO_POINTER(struct pack_picture, pack, data[id]);
 		s->start_frame = 0;
 		s->total_frame = 0;
 		s->frame = 0;
 		memset(&s->data, 0, sizeof(s->data));
 		assert(sz >= sizeof(struct sprite) - sizeof(struct sprite *));
 		if (s->type == TYPE_PANNEL) {
-			struct pack_pannel * pp = (struct pack_pannel *)OFFSET_TO_POINTER(pack, data[id]);
+			struct pack_pannel * pp = OFFSET_TO_POINTER(struct pack_pannel, pack, data[id]);
 			s->data.scissor = pp->scissor;
         }
 	}
@@ -481,7 +481,7 @@ sprite_trans_mul2(struct sprite_pack *pack, struct sprite_trans_data *a, struct 
 	if (b == NULL && a == NULL) {
 		return NULL;
 	}
-	t->mat = OFFSET_TO_POINTER(pack, a->mat);
+	t->mat = OFFSET_TO_POINTER(struct matrix, pack, a->mat);
 	t->color = a->color;
 	t->additive = a->additive;
 	t->program = PROGRAM_DEFAULT;
@@ -724,12 +724,12 @@ sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, s
 		return 0;
 	}
 	struct pack_animation *ani = s->s.ani;
-	struct pack_frame * pf = OFFSET_TO_POINTER(s->pack, ani->frame);
+	struct pack_frame * pf = OFFSET_TO_POINTER(struct pack_frame, s->pack, ani->frame);
 	pf = &pf[frame];
 	int i;
 	int scissor = 0;
 	for (i=0;i<pf->n;i++) {
-		struct pack_part *pp = OFFSET_TO_POINTER(s->pack, pf->part);
+		struct pack_part *pp = OFFSET_TO_POINTER(struct pack_part, s->pack, pf->part);
 		pp = &pp[i];
 		int index = pp->component_id;
 		struct sprite * child = s->data.children[index];
@@ -755,11 +755,11 @@ sprite_child_visible(struct sprite *s, const char * childname) {
 	if (frame < 0) {
 		return false;
 	}
-	struct pack_frame * pf = OFFSET_TO_POINTER(s->pack, ani->frame);
+	struct pack_frame * pf = OFFSET_TO_POINTER(struct pack_frame, s->pack, ani->frame);
 	pf = &pf[frame];
 	int i;
 	for (i=0;i<pf->n;i++) {
-		struct pack_part *pp = OFFSET_TO_POINTER(s->pack, pf->part);
+		struct pack_part *pp = OFFSET_TO_POINTER(struct pack_part, s->pack, pf->part);
 		pp = &pp[i];
 		int index = pp->component_id;
 		struct sprite * child = s->data.children[index];
@@ -849,16 +849,16 @@ sprite_matrix(struct sprite * self, struct matrix *mat) {
 		if (frame < 0) {
 			return;
 		}
-		struct pack_frame * pf = OFFSET_TO_POINTER(parent->pack, ani->frame);
+		struct pack_frame * pf = OFFSET_TO_POINTER(struct pack_frame, parent->pack, ani->frame);
 		pf = &pf[frame];
 		int i;
 		for (i=0;i<pf->n;i++) {
-			struct pack_part *pp = OFFSET_TO_POINTER(parent->pack, pf->part);
+			struct pack_part *pp = OFFSET_TO_POINTER(struct pack_part, parent->pack, pf->part);
 			pp = &pp[i];
 			int index = pp->component_id;
 			struct sprite * child = parent->data.children[index];
 			if (child == self) {
-				child_mat = OFFSET_TO_POINTER(parent->pack, pp->t.mat);
+				child_mat = OFFSET_TO_POINTER(struct matrix, parent->pack, pp->t.mat);
 				break;
 			}
 		}
@@ -982,11 +982,11 @@ child_aabb(struct sprite *s, struct srt *srt, struct matrix * mat, int aabb[4]) 
 	if (frame < 0) {
 		return 0;
 	}
-	struct pack_frame * pf = OFFSET_TO_POINTER(s->pack, ani->frame);
+	struct pack_frame * pf = OFFSET_TO_POINTER(struct pack_frame, s->pack, ani->frame);
 	pf = &pf[frame];
 	int i;
 	for (i=0;i<pf->n;i++) {
-		struct pack_part *pp = OFFSET_TO_POINTER(s->pack, pf->part);
+		struct pack_part *pp = OFFSET_TO_POINTER(struct pack_part, s->pack, pf->part);
 		pp = &pp[i];
 		int index = pp->component_id;
 		struct sprite * child = s->data.children[index];
@@ -994,7 +994,7 @@ child_aabb(struct sprite *s, struct srt *srt, struct matrix * mat, int aabb[4]) 
 			continue;
 		}
 		struct matrix temp2;
-		struct matrix *ct = mat_mul(OFFSET_TO_POINTER(s->pack, pp->t.mat), t, &temp2);
+		struct matrix *ct = mat_mul(OFFSET_TO_POINTER(struct matrix, s->pack, pp->t.mat), t, &temp2);
 		if (child_aabb(child, srt, ct, aabb))
 			break;
 	}
@@ -1099,7 +1099,7 @@ static int test_child(struct sprite *s, struct srt *srt, struct matrix * ts, int
 
 static int
 check_child(struct sprite *s, struct srt *srt, struct matrix * t, struct pack_frame * pf, int i, int x, int y, struct sprite ** touch) {
-	struct pack_part *pp = OFFSET_TO_POINTER(s->pack, pf->part);
+	struct pack_part *pp = OFFSET_TO_POINTER(struct pack_part, s->pack, pf->part);
 	pp = &pp[i];
 	int index = pp->component_id;
 	struct sprite * child = s->data.children[index];
@@ -1107,7 +1107,7 @@ check_child(struct sprite *s, struct srt *srt, struct matrix * t, struct pack_fr
 		return 0;
 	}
 	struct matrix temp2;
-	struct matrix *ct = mat_mul(OFFSET_TO_POINTER(s->pack, pp->t.mat), t, &temp2);
+	struct matrix *ct = mat_mul(OFFSET_TO_POINTER(struct matrix, s->pack, pp->t.mat), t, &temp2);
 	struct sprite *tmp = NULL;
 	int testin = test_child(child, srt, ct, x, y, &tmp);
 	if (testin) {
@@ -1133,7 +1133,7 @@ test_animation(struct sprite *s, struct srt *srt, struct matrix * t, int x, int 
 	if (frame < 0) {
 		return 0;
 	}
-	struct pack_frame * pf = OFFSET_TO_POINTER(s->pack, ani->frame);
+	struct pack_frame * pf = OFFSET_TO_POINTER(struct pack_frame, s->pack, ani->frame);
 	pf = &pf[frame];
 	int start = pf->n-1;
 	do {
@@ -1141,7 +1141,7 @@ test_animation(struct sprite *s, struct srt *srt, struct matrix * t, int x, int 
 		int i;
 		// find scissor and check it first
 		for (i=start;i>=0;i--) {
-			struct pack_part *pp = OFFSET_TO_POINTER(s->pack, pf->part);
+			struct pack_part *pp = OFFSET_TO_POINTER(struct pack_part, s->pack, pf->part);
 			pp = &pp[i];
 			int index = pp->component_id;
 			struct sprite * c = s->data.children[index];
