@@ -370,7 +370,7 @@ function bird:crash_with(p)
       return false
     end
     print("-------------- crash -------------")
-    print(string.format("bird x:%d, y:%d, altitude:%d, half height:%d", bird_x, bird_y, self.altitude, self.half_height))
+    print(string.format("bird x:%s, y:%s, altitude:%s, half height:%s", bird_x, bird_y, self.altitude, self.half_height))
     print(string.format("pipe x:%d, y:%d, offset_x:%d, offset_y:%d", x, y, offset_x, offset_y))
     print("-------------- crash end-------------")
     return true
