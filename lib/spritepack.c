@@ -326,9 +326,9 @@ import_sprite(struct import_stream *is) {
 		luaL_error(is->alloc->L, "Invalid stream : wrong id %d", id);
 	}
 	is->current_id = id;
-	uint8_t * type_array = (uint8_t *)OFFSET_TO_POINTER(is->pack, is->pack->type);
+	uint8_t * type_array = OFFSET_TO_POINTER(uint8_t, is->pack, is->pack->type);
 	type_array[id] = type;
-	offset_t * data = (offset_t *)OFFSET_TO_POINTER(is->pack, is->pack->data);
+	offset_t * data = OFFSET_TO_POINTER(offset_t, is->pack, is->pack->data);
 	if (data[id] != 0) {
 		luaL_error(is->alloc->L, "Invalid stream : duplicate id %d", id);
 	}
@@ -654,13 +654,13 @@ dump_pack(struct sprite_pack *pack) {
 	if (pack == NULL)
 		return;
 	int i;
-	uint8_t *type = (uint8_t *)OFFSET_TO_POINTER(pack, pack->type);
-	offset_t *data = (offset_t *)OFFSET_TO_POINTER(pack, pack->data);
+	uint8_t *type = OFFSET_TO_POINTER(uint8_t, pack, pack->type);
+	offset_t *data = OFFSET_TO_POINTER(offset_t, pack, pack->data);
 	for (i=0;i<pack->n;i++) {
 		if (type[i] == TYPE_PICTURE)
 			printf("%d : PICTURE\n", i);
 		else {
-			struct pack_animation *ani = (struct pack_animation *)OFFSET_TO_POINTER(pack, data[i]);
+			struct pack_animation *ani = OFFSET_TO_POINTER(struct pack_animation, pack, data[i]);
 			printf("%d : ANIMATION %d\n", i, ani->component_number);
 			int i;
 			for (i=0;i<ani->component_number;i++) {

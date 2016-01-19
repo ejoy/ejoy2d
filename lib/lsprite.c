@@ -150,16 +150,16 @@ update_message(struct sprite * s, int parentid, int componentid, int frame) {
 	struct sprite_pack * pack = s->pack;
 	if (pack == NULL)
 		return;
-	offset_t * data = (offset_t *)OFFSET_TO_POINTER(pack, pack->data); 
-	struct pack_animation * ani = (struct pack_animation *)OFFSET_TO_POINTER(pack, data[parentid]);
+	offset_t * data = OFFSET_TO_POINTER(offset_t, pack, pack->data); 
+	struct pack_animation * ani = OFFSET_TO_POINTER(struct pack_animation, pack, data[parentid]);
 	if (frame < 0 || frame >= ani->frame_number) {
 		return;
 	}
-	struct pack_frame *pframe = OFFSET_TO_POINTER(pack, ani->frame);
+	struct pack_frame *pframe = OFFSET_TO_POINTER(struct pack_frame, pack, ani->frame);
 	pframe = &pframe[frame];
 	int i = 0;
 	for (; i < pframe->n; i++) {
-		struct pack_part * pp = OFFSET_TO_POINTER(pack, pframe->part);
+		struct pack_part * pp = OFFSET_TO_POINTER(struct pack_part, pack, pframe->part);
 		pp = &pp[i];
 		if (pp->component_id == componentid && pp->touchable) {
 			s->flags |= SPRFLAG_MESSAGE;

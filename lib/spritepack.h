@@ -155,7 +155,7 @@ struct sprite_pack {
 int ejoy2d_spritepack(lua_State *L);
 void dump_pack(struct sprite_pack *pack);
 
-#define OFFSET_TO_POINTER(pack, off) ((off == 0) ? NULL : (void*)((uintptr_t)(pack) + (off)))
+#define OFFSET_TO_POINTER(t, pack, off) ((off == 0) ? NULL : (t*)((uintptr_t)(pack) + (off)))
 #define OFFSET_TO_STRING(pack, off) ((const char *)(pack) + (off))
 #define POINTER_TO_OFFSET(pack, ptr) ((ptr == NULL) ? 0 : (offset_t)((uintptr_t)(ptr) - (uintptr_t)pack))
 

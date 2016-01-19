@@ -176,11 +176,11 @@ drawsprite(struct render_buffer *rb, struct sprite *s, struct sprite_trans * ts)
 			frame += s->total_frame;
 		}
 		frame += s->start_frame;
-		struct pack_frame * pf = OFFSET_TO_POINTER(s->pack, ani->frame);
+		struct pack_frame * pf = OFFSET_TO_POINTER(struct pack_frame, s->pack, ani->frame);
 		pf = &pf[frame];
 		int i;
 		for (i=0;i<pf->n;i++) {
-			struct pack_part *pp = OFFSET_TO_POINTER(s->pack, pf->part);
+			struct pack_part *pp = OFFSET_TO_POINTER(struct pack_part, s->pack, pf->part);
 			pp = &pp[i];
 			int index = pp->component_id;
 			struct sprite * child = s->data.children[index];
