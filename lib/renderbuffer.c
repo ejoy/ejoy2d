@@ -111,7 +111,7 @@ add_polygon(struct render_buffer *rb, int n, const struct vertex_pack *vb, uint3
 }
 
 static int
-drawpolygon(struct render_buffer *rb, struct pack_polygon *poly, const struct sprite_trans *arg) {
+drawpolygon(struct render_buffer *rb, struct sprite_pack *pack, struct pack_polygon_data *poly, const struct sprite_trans *arg) {
 	struct matrix tmp;
 	int i,j;
 	if (arg->mat == NULL) {
@@ -122,7 +122,7 @@ drawpolygon(struct render_buffer *rb, struct pack_polygon *poly, const struct sp
 	int *m = tmp.m;
 	int object = rb->object;
 	for (i=0;i<poly->n;i++) {
-		struct pack_poly *p = &poly->poly[i];
+		struct pack_poly_data *p = &poly->poly[i];
 		if (update_tex(rb, p->texid)) {
 			rb->object = object;
 			return -1;
@@ -132,14 +132,17 @@ drawpolygon(struct render_buffer *rb, struct pack_polygon *poly, const struct sp
 
 		ARRAY(struct vertex_pack, vb, pn);
 
+		uv_t * texture_coord = OFFSET_TO_POINTER(uv_t, pack, p->texture_coord);
+		int32_t * screen_coord = OFFSET_TO_POINTER(int32_t, pack, p->screen_coord);
+
 		for (j=0;j<pn;j++) {
-			int xx = p->screen_coord[j*2+0];
-			int yy = p->screen_coord[j*2+1];
+			int xx = screen_coord[j*2+0];
+			int yy = screen_coord[j*2+1];
 		
 			vb[j].vx = (xx * m[0] + yy * m[2]) / 1024 + m[4];
 			vb[j].vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
-			vb[j].tx = p->texture_coord[j*2+0];
-			vb[j].ty = p->texture_coord[j*2+1];
+			vb[j].tx = texture_coord[j*2+0];
+			vb[j].ty = texture_coord[j*2+1];
 		}
 		if (add_polygon(rb, pn, vb, arg->color, arg->additive)) {
 			rb->object = object;
@@ -168,7 +171,7 @@ drawsprite(struct render_buffer *rb, struct sprite *s, struct sprite_trans * ts)
 	case TYPE_PICTURE:
 		return drawquad(rb, s->s.pic, t);
 	case TYPE_POLYGON:
-		return drawpolygon(rb, s->s.poly, t);
+		return drawpolygon(rb, s->pack, s->s.poly, t);
 	case TYPE_ANIMATION: {
 		struct pack_animation *ani = s->s.ani;
 		int frame = s->frame % s->total_frame;

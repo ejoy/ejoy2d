@@ -59,13 +59,6 @@ struct pack_picture {
 
 #define SIZEOF_PICTURE (sizeof(struct pack_picture) - sizeof(struct pack_quad))
 
-struct pack_poly {
-	uv_t *texture_coord;	// uv_t *
-	int32_t *screen_coord;	// int32_t *
-	int texid;
-	int n;
-};
-
 struct pack_poly_data {
 	offset_t texture_coord;	// uv_t *
 	offset_t screen_coord;	// int32_t *
@@ -81,11 +74,6 @@ struct pack_polygon_data {
 };
 
 #define SIZEOF_POLYGON (sizeof(struct pack_polygon_data) - sizeof(struct pack_poly_data))
-
-struct pack_polygon {
-	int n;
-	struct pack_poly poly[1];
-};
 
 struct sprite_trans {
 	struct matrix * mat;

@@ -52,7 +52,7 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,  const stru
 }
 
 void
-sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg) {
+sprite_drawpolygon(struct sprite_pack *pack, struct pack_polygon_data *poly, const struct srt *srt, const struct sprite_trans *arg) {
 	struct matrix tmp;
 	int i,j;
 	if (arg->mat == NULL) {
@@ -63,7 +63,7 @@ sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struc
 	matrix_srt(&tmp, srt);
 	int *m = tmp.m;
 	for (i=0;i<poly->n;i++) {
-		struct pack_poly *p = &poly->poly[i];
+		struct pack_poly_data *p = &poly->poly[i];
 		int glid = texture_glid(p->texid);
 		if (glid == 0)
 			continue;
@@ -72,15 +72,18 @@ sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struc
 
 		ARRAY(struct vertex_pack, vb, pn);
 
+		uv_t * texture_coord = OFFSET_TO_POINTER(uv_t, pack, p->texture_coord);
+		int32_t * screen_coord = OFFSET_TO_POINTER(int32_t, pack, p->screen_coord);
+
 		for (j=0;j<pn;j++) {
-			int xx = p->screen_coord[j*2+0];
-			int yy = p->screen_coord[j*2+1];
+			int xx = screen_coord[j*2+0];
+			int yy = screen_coord[j*2+1];
 
 
 			float vx = (xx * m[0] + yy * m[2]) / 1024 + m[4];
 			float vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
-			float tx = p->texture_coord[j*2+0];
-			float ty = p->texture_coord[j*2+1];
+			float tx = texture_coord[j*2+0];
+			float ty = texture_coord[j*2+1];
 
 			screen_trans(&vx,&vy);
 
@@ -172,6 +175,7 @@ sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 			s->data.children[i] = NULL;
 		}
 	} else {
+		// may be polygon depend on  s->type
 		s->s.pic = OFFSET_TO_POINTER(struct pack_picture, pack, data[id]);
 		s->start_frame = 0;
 		s->total_frame = 0;
@@ -504,7 +508,7 @@ draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct m
 		return 0;
 	case TYPE_POLYGON:
 		switch_program(t, PROGRAM_PICTURE, material);
-		sprite_drawpolygon(s->s.poly, srt, t);
+		sprite_drawpolygon(s->pack, s->s.poly, srt, t);
 		return 0;
 	case TYPE_LABEL:
 		if (s->data.rich_text) {
@@ -716,11 +720,12 @@ quad_aabb(struct pack_picture * pic, struct srt *srt, struct matrix *ts, int aab
 }
 
 static inline void
-polygon_aabb(struct pack_polygon * polygon, struct srt *srt, struct matrix *ts, int aabb[4]) {
+polygon_aabb(struct sprite_pack * pack, struct pack_polygon_data * polygon, struct srt *srt, struct matrix *ts, int aabb[4]) {
 	int i;
 	for (i=0;i<polygon->n;i++) {
-		struct pack_poly * poly = &polygon->poly[i];
-		poly_aabb(poly->n, poly->screen_coord, srt, ts, aabb);
+		struct pack_poly_data * poly = &polygon->poly[i];
+		int32_t * screen_coord = OFFSET_TO_POINTER(int32_t, pack, poly->screen_coord);
+		poly_aabb(poly->n, screen_coord, srt, ts, aabb);
 	}
 }
 
@@ -755,7 +760,7 @@ child_aabb(struct sprite *s, struct srt *srt, struct matrix * mat, int aabb[4]) 
 		quad_aabb(s->s.pic, srt, t, aabb);
 		return 0;
 	case TYPE_POLYGON:
-		polygon_aabb(s->s.poly, srt, t, aabb);
+		polygon_aabb(s->pack, s->s.poly, srt, t, aabb);
 		return 0;
 	case TYPE_LABEL:
 		label_aabb(s->s.label, srt, t, aabb);
@@ -847,17 +852,18 @@ test_quad(struct pack_picture * pic, int x, int y) {
 }
 
 static int
-test_polygon(struct pack_polygon * poly,  int x, int y) {
+test_polygon(struct sprite_pack *pack, struct pack_polygon_data * poly,  int x, int y) {
 	int p;
 	for (p=0;p<poly->n;p++) {
-		struct pack_poly *pp = &poly->poly[p];
+		struct pack_poly_data *pp = &poly->poly[p];
 		int maxx,maxy,minx,miny;
-		minx= maxx = pp->screen_coord[0];
-		miny= maxy = pp->screen_coord[1];
+		int32_t * screen_coord = OFFSET_TO_POINTER(int32_t, pack, pp->screen_coord);
+		minx= maxx = screen_coord[0];
+		miny= maxy = screen_coord[1];
 		int i;
 		for (i=1;i<pp->n;i++) {
-			int x = pp->screen_coord[i*2+0];
-			int y = pp->screen_coord[i*2+1];
+			int x = screen_coord[i*2+0];
+			int y = screen_coord[i*2+1];
 			if (x<minx)
 				minx = x;
 			else if (x>maxx)
@@ -1012,7 +1018,7 @@ test_child(struct sprite *s, struct srt *srt, struct matrix * ts, int x, int y, 
 		testin = test_quad(s->s.pic, xx, yy);
 		break;
 	case TYPE_POLYGON:
-		testin = test_polygon(s->s.poly, xx, yy);
+		testin = test_polygon(s->pack, s->s.poly, xx, yy);
 		break;
 	case TYPE_LABEL:
 		testin = test_label(s->s.label, xx, yy);

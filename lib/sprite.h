@@ -30,7 +30,7 @@ struct sprite {
 	union {
 		struct pack_animation *ani;
 		struct pack_picture *pic;
-		struct pack_polygon *poly;
+		struct pack_polygon_data *poly;
 		struct pack_label *label;
 		struct pack_pannel *pannel;
 		struct matrix *mat;
@@ -53,7 +53,7 @@ struct sprite {
 struct sprite_trans * sprite_trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_trans *t, struct matrix *tmp_matrix);
 struct sprite_trans * sprite_trans_mul2(struct sprite_pack *pack, struct sprite_trans_data *a, struct sprite_trans *b, struct sprite_trans *t, struct matrix *tmp_matrix);
 void sprite_drawquad(struct pack_picture *picture, const struct srt *srt, const struct sprite_trans *arg);
-void sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg);
+void sprite_drawpolygon(struct sprite_pack *pack, struct pack_polygon_data *poly, const struct srt *srt, const struct sprite_trans *arg);
 
 // sprite_size must be call before sprite_init
 int sprite_size(struct sprite_pack *pack, int id);
