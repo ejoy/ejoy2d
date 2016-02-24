@@ -93,7 +93,7 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,
         if (!enable_visible_test || !screen_is_poly_invisible(tmp_vb, 4)) {
             int glalphaid = texture_glalphaid(q->texid);
 #ifdef USE_DTEX
-            if (cur_dtex_id >= 0 && glalphaid == 0 && (glid == 0 || dtex_enable_scale(viewport_srt.scalex))) {
+            if (cur_dtex_id >= 0 && ((glalphaid == 0 && glid == 0) || dtex_enable_scale(viewport_srt.scalex))) {
                 int dtex_glid = texture_glid(dtex_texid(cur_dtex_id));
                 if (dtex_glid != 0 ) {
                     const uv_type* dtex_coord = dtex_lookup(cur_dtex_id, q->texture_coord, q->texid);
@@ -111,14 +111,12 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,
             if (glid == 0)
                 return;
             
-//            arg->program_offset = glalphaid == 0 ? 0 : PROGRAM_ALPHAMAP_OFFSET;
+            arg->program_offset = glalphaid == 0 ? 0 : PROGRAM_ALPHAMAP_OFFSET;
             switch_program(arg, PROGRAM_PICTURE, material);
             
             shader_texture(glid, 0);
-            if (glalphaid != 0)
-                shader_texture(glalphaid, 1);
-            else
-                shader_texture(glalphaid, 0);
+            shader_texture(glalphaid, 1);
+            
             shader_draw(vb, arg->color, arg->additive);
         }
 	}
