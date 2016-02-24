@@ -85,6 +85,7 @@ struct sprite_trans {
 	uint32_t color;
 	uint32_t additive;
 	int program;
+    int program_offset;
 };
 
 struct sprite_trans_data {

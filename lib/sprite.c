@@ -111,7 +111,7 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,
             if (glid == 0)
                 return;
             
-            arg->program_offset = glalphaid == 0 ? 0 : PROGRAM_ALPHAMAP_OFFSET;
+//            arg->program_offset = glalphaid == 0 ? 0 : PROGRAM_ALPHAMAP_OFFSET;
             switch_program(arg, PROGRAM_PICTURE, material);
             
             shader_texture(glid, 0);
@@ -666,17 +666,6 @@ sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, s
 	case TYPE_PICTURE:
 		if (global_lable_only != 2) {
             sprite_drawquad(s->s.pic, srt, t, material);
-//            if (s->data.vp_cache == NULL) {
-//                sprite_drawquad(s->s.pic, srt, t, material);
-//            } else {
-//                struct cache_vp * cache = s->data.vp_cache;
-//                if (dirty) {
-//                    cache->texglid = -1;
-//                    cache->texglid = sprite_drawquad_ex(s->s.pic, srt, t, cache->vb, cache->texglid);
-//                } else {
-//                    sprite_drawquad_ex(s->s.pic, srt, t, cache->vb, cache->texglid);
-//                }
-//            }
 		}
 		return 0;
 	case TYPE_POLYGON:
