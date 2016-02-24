@@ -5,9 +5,9 @@
 #include <stdint.h>
 
 #ifdef UV_FLOAT
-typedef float uv_type;
+typedef float uv_t;
 #else
-typedef uint16_t uv_type;
+typedef uint16_t uv_t;
 #endif
 
 #define TYPE_EMPTY 0
@@ -22,11 +22,8 @@ typedef uint16_t uv_type;
 #define ANCHOR_ID 0xffff
 #define SCREEN_SCALE 16
 
-// binary package should reserve more bytes for 64bit platform
-#define PTR_SIZE_DIFF (8 - sizeof(void *))
-#define SIZEOF_POINTER 8
-
 struct matrix;
+typedef uint32_t offset_t;
 
 #define SIZEOF_MATRIX (sizeof(struct matrix))
 
@@ -54,7 +51,7 @@ struct pack_label {
 
 struct pack_quad {
 	int texid;
-	uv_type texture_coord[8];
+	uv_t texture_coord[8];
 	int32_t screen_coord[8];
 };
 
@@ -67,89 +64,92 @@ struct pack_picture {
 
 #define SIZEOF_PICTURE (sizeof(struct pack_picture) - sizeof(struct pack_quad))
 
-struct pack_poly {
-	uv_type *texture_coord;
-	int32_t *screen_coord;
+struct pack_poly_data {
+	offset_t texture_coord;	// uv_t *
+	offset_t screen_coord;	// int32_t *
 	int texid;
 	int n;
 };
 
-#define SIZEOF_POLY (sizeof(struct pack_poly) + 2 * PTR_SIZE_DIFF)
+#define SIZEOF_POLY (sizeof(struct pack_poly_data))
 
-struct pack_polygon {
+struct pack_polygon_data {
 	int n;
-	int _dummy;		// unused: dummy for align to 64bit
-	struct pack_poly poly[1];
+	struct pack_poly_data poly[1];
 };
 
-#define SIZEOF_POLYGON (sizeof(struct pack_polygon) - sizeof(struct pack_poly))
+#define SIZEOF_POLYGON (sizeof(struct pack_polygon_data) - sizeof(struct pack_poly_data))
 
 struct sprite_trans {
 	struct matrix * mat;
 	uint32_t color;
 	uint32_t additive;
 	int program;
-    int program_offset;         // switch program for alphamap shader 
-//	int _dummy;		// unused: dummy for align to 64bit
 };
 
-#define SIZEOF_TRANS (sizeof(struct sprite_trans) + PTR_SIZE_DIFF)
+struct sprite_trans_data {
+	offset_t mat;
+	uint32_t color;
+	uint32_t additive;
+};
+
+#define SIZEOF_TRANS (sizeof(struct sprite_trans_data))
 
 struct pack_part {
-	struct sprite_trans t;
-	int component_id;
-	int touchable;
+	struct sprite_trans_data t;
+	int16_t component_id;
+	int16_t touchable;
 };
 
-#define SIZEOF_PART (sizeof(struct pack_part) + SIZEOF_TRANS - sizeof(struct sprite_trans))
+#define SIZEOF_PART (sizeof(struct pack_part))
 
 struct pack_frame {
-	struct pack_part *part;
+	offset_t part;	// struct pack_part *
 	int n;
-	int _dummy;		// unused: dummy for align to 64bit
 };
 
-#define SIZEOF_FRAME (sizeof(struct pack_frame) + PTR_SIZE_DIFF)
+#define SIZEOF_FRAME (sizeof(struct pack_frame))
 
 struct pack_action {
-	const char * name;
-	int number;
-	int start_frame;
+	offset_t name;	// const char *
+	int16_t number;
+	int16_t start_frame;
 };
 
-#define SIZEOF_ACTION (sizeof(struct pack_action) + PTR_SIZE_DIFF)
+#define SIZEOF_ACTION (sizeof(struct pack_action))
 
 struct pack_component {
-	const char *name;
+	offset_t name;	// const char *
 	int id;
-	int _dummy;		// unused: dummy for align to 64bit
 };
 
-#define SIZEOF_COMPONENT (sizeof(struct pack_component) + PTR_SIZE_DIFF)
+#define SIZEOF_COMPONENT (sizeof(struct pack_component))
 
 struct pack_animation {
-	struct pack_frame *frame;
-	struct pack_action *action;
+	offset_t frame;	// struct pack_frame *
+	offset_t action;	// struct pack_action *
 	int frame_number;
 	int action_number;
 	int component_number;
-	int _dummy;		// unused: dummy for align to 64bit
 	struct pack_component component[1];
 };
 
-#define SIZEOF_ANIMATION (sizeof(struct pack_animation) + 2 * PTR_SIZE_DIFF - sizeof(struct pack_component))
+#define SIZEOF_ANIMATION (sizeof(struct pack_animation) - sizeof(struct pack_component))
 
 struct sprite_pack {
-	uint8_t * type;
-	void ** data;
+	offset_t type;	// uint8_t *
+	offset_t data;	// void **
 	int n;
-	int _dummy;		// unused: dummy for align to 64bit
 	int tex[2];
 };
 
-#define SIZEOF_PACK (sizeof(struct sprite_pack) + 2 * PTR_SIZE_DIFF - 2 * sizeof(int))
+#define SIZEOF_PACK (sizeof(struct sprite_pack) - 2 * sizeof(int))
 
 int ejoy2d_spritepack(lua_State *L);
 void dump_pack(struct sprite_pack *pack);
+
+#define OFFSET_TO_POINTER(t, pack, off) ((off == 0) ? NULL : (t*)((uintptr_t)(pack) + (off)))
+#define OFFSET_TO_STRING(pack, off) ((const char *)(pack) + (off))
+#define POINTER_TO_OFFSET(pack, ptr) ((ptr == NULL) ? 0 : (offset_t)((uintptr_t)(ptr) - (uintptr_t)pack))
 
 #endif

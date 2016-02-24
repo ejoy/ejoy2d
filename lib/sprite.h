@@ -30,6 +30,7 @@ struct cache_vp {
 
 struct sprite {
 	struct sprite * parent;
+	struct sprite_pack * pack;
 	uint16_t type;
 	uint16_t id;
     bool cache_dirty;
@@ -37,7 +38,7 @@ struct sprite {
 	union {
 		struct pack_animation *ani;
 		struct pack_picture *pic;
-		struct pack_polygon *poly;
+		struct pack_polygon_data *poly;
 		struct pack_label *label;
 		struct pack_pannel *pannel;
 		struct matrix *mat;
@@ -59,11 +60,18 @@ struct sprite {
 };
 
 struct sprite_trans * sprite_trans_mul(struct sprite_trans *a, struct sprite_trans *b, struct sprite_trans *t, struct matrix *tmp_matrix);
-void sprite_drawquad(struct pack_picture *picture, const struct srt *srt,
-                    struct sprite_trans *arg, struct material * material);
-int sprite_drawquad_ex(struct pack_picture *picture, const struct srt *srt,
-                       const struct sprite_trans *arg, struct vertex_pack * vp, int tex_glid);
-void sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg);
+//<<<<<<< HEAD
+//void sprite_drawquad(struct pack_picture *picture, const struct srt *srt,
+//                    struct sprite_trans *arg
+//int sprite_drawquad_ex(struct pack_picture *picture, const struct srt *srt,
+//                       const struct sprite_trans *arg, struct vertex_pack * vp, int tex_glid);
+//void sprite_drawpolygon(struct pack_polygon *poly, const struct srt *srt, const struct sprite_trans *arg);
+//=======
+struct sprite_trans * sprite_trans_mul2(struct sprite_pack *pack, struct sprite_trans_data *a, struct sprite_trans *b, struct sprite_trans *t, struct matrix *tmp_matrix);
+void sprite_drawquad(struct pack_picture *picture, const struct srt *srt, const struct sprite_trans *arg);
+int sprite_drawquad_ex(struct pack_picture *picture, const struct srt *srt, const struct sprite_trans *arg, struct vertex_pack * vp, int tex_glid);
+void sprite_drawpolygon(struct sprite_pack *pack, struct pack_polygon_data *poly, const struct srt *srt, const struct sprite_trans *arg);
+//>>>>>>> ejoy2d_farm
 int sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, struct material * material);
 int sprite_draw_child_cache(struct sprite *s, struct sprite_trans * parent_ts, struct sprite_trans * frame_ts, struct material * material);
 
