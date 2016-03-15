@@ -189,13 +189,15 @@ newanchor(lua_State *L) {
 
 static struct sprite *
 newsprite(lua_State *L, struct sprite_pack *pack, int id) {
-	if (id == ANCHOR_ID) {
+	if (id == ANCHOR_ID) { 
+		luaL_checkstack(L, 1, "lua stack overflow");
 		return newanchor(L);
 	}
 	int sz = sprite_size(pack, id);
 	if (sz == 0) {
 		return NULL;
 	}
+	luaL_checkstack(L, 1, "lua stack overflow");
 	struct sprite * s = (struct sprite *)lua_newuserdata(L, sz);
 	sprite_init(s, pack, id, sz);
 	int i;
@@ -204,6 +206,7 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id) {
 		if (childid < 0)
 			break;
 		if (i==0) {
+			luaL_checkstack(L, 2, "lua stack overflow");
 			lua_newtable(L);
 			lua_pushvalue(L,-1);
 			lua_setuservalue(L, -3);	// set uservalue for sprite
