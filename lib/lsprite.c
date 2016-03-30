@@ -1178,7 +1178,8 @@ lchildren_name(lua_State *L) {
 	struct pack_animation * ani = s->s.ani;
     lua_createtable(L, 0, 0);
 	for (i=0;i<ani->component_number;i++) {
-		if (ani->component[i].name != NULL) {
+		offset_t name_offset = ani->component[i].name;
+        if (name_offset != 0) {
 			lua_pushstring(L, OFFSET_TO_STRING(s->pack, ani->component[i].name));
             lua_rawseti(L, -2, ++cnt);
 		}

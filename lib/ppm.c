@@ -329,65 +329,6 @@ loadtexture(lua_State *L) {
 	return 0;
 }
 
-static int
-loadtexture_test(lua_State *L) {
-    int id = (int)luaL_checkinteger(L,1);
-    size_t sz = 0;
-    const char * filename = luaL_checklstring(L, 2, &sz);
-    ARRAY(char, tmp, sz + 5);
-    sprintf(tmp, "%s.ppm", filename);
-    FILE *rgb = fopen(tmp, "rb");
-    sprintf(tmp, "%s.pgm", filename);
-    FILE *alpha = fopen(tmp, "rb");
-    if (rgb == NULL && alpha == NULL) {
-        return luaL_error(L, "Can't open %s(.ppm/.pgm)", filename);
-    }
-    
-    struct ppm ppm;
-    int ok = loadppm_from_file(rgb, NULL, &ppm);
-    
-    struct ppm ppm_alpha;
-    int ok2 = loadppm_from_file(NULL, alpha, &ppm_alpha);
-
-    if (rgb) {
-        fclose(rgb);
-    }
-    if (alpha) {
-        fclose(alpha);
-    }
-    if (!ok || !ok2) {
-        if (ppm.buffer) {
-            free(ppm.buffer);
-        }
-        if (ppm_alpha.buffer) {
-            free(ppm_alpha.buffer);
-        }
-        luaL_error(L, "Invalid file %s", filename);
-    }
-    
-    int type = 0;
-    if (ppm.depth == 255) {
-        if (ppm.step == 4) {
-            type = TEXTURE_RGBA8;
-        } else if (ppm.step == 3) {
-            type = TEXTURE_RGB;
-        } else {
-            type = TEXTURE_A8;
-        }
-    } else {
-        return 0;
-    }
-    
-    const char * err = texture_load_alpha(id, (enum TEXTURE_FORMAT)type, ppm.width, ppm.height, ppm.buffer, ppm_alpha.buffer, lua_tointeger(L, 3));
-    free(ppm.buffer);
-    free(ppm_alpha.buffer);
-    if (err) {
-        return luaL_error(L, "%s", err);
-    }
-    
-    return 0;
-}
-
 static void
 ppm_type(lua_State *L, const char * format, struct ppm *ppm) {
 	if (strcmp(format, "RGBA8")==0) {

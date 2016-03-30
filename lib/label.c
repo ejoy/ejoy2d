@@ -338,18 +338,18 @@ get_rich_field_color(const struct rich_text *rich, int idx) {
   return 0;
 }
 
-static bool
-get_rich_filed_lf(const struct rich_text *rich, int idx, float * offset) {
-	int i;
-	for (i=0; i<rich->count; i++) {
-		struct label_field *field = (struct label_field*)(rich->fields+i);
-		if (idx==field->start && idx==field->end && field->type==RL_LINEFEED) {
-			*offset = (float)(field->val / 1000.0);
-			return true;
-		}
-	}
-	return false;
-}
+// static bool
+// get_rich_filed_lf(const struct rich_text *rich, int idx, float * offset) {
+// 	int i;
+// 	for (i=0; i<rich->count; i++) {
+// 		struct label_field *field = (struct label_field*)(rich->fields+i);
+// 		if (idx==field->start && idx==field->end && field->type==RL_LINEFEED) {
+// 			*offset = (float)(field->val / 1000.0);
+// 			return true;
+// 		}
+// 	}
+// 	return false;
+// }
 
 static struct label_sprite *
 get_rich_field_sprite(const struct rich_text *rich, int start) {
@@ -620,7 +620,8 @@ label_size(struct rich_text *rich, const struct pack_label * l) {
         const char *str = rich->text;
         char utf8[7];
         int cy = 0, cx = 0, ch = 0, idx = 0, w = 0, sw = 0, ls = 0, ty = 0;
-        for (int i=0; str && str[i];) {
+        int i;
+        for (i=0; str && str[i];) {
             int unicode;
             int len = unicode_len(str[i]);
             unicode = copystr(utf8, str+i, len);
