@@ -290,6 +290,7 @@ ejoy2d_game_drawframe(struct game *G) {
 	lua_settop(G->L, TOP_FUNCTION);
 	shader_flush();
 	label_flush();
+	nukclear_test();
 	//int cnt = drawcall_count();
 	//printf("-> %d\n", cnt);
 }

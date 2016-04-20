@@ -12,6 +12,16 @@
 #include "render.h"
 #include "blendmode.h"
 
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
+
+#include "nuklear_ejoy2d.h"
+#include "nuklear_ejoy2d.c"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,6 +63,7 @@ struct render_state {
 	RID index_buffer;
 	RID layout;
 	struct render_buffer vb;
+	struct nk_context *nctx;
 };
 
 static struct render_state *RS = NULL;
@@ -82,6 +93,24 @@ shader_init() {
 	label_initrender(rs->R);
 	lsprite_initrender(rs->R);
 	renderbuffer_initrender(rs->R);
+
+//	float screen_width = 1, screen_height = 1;
+//	screen_trans(&screen_width, &screen_height);
+//	screen_width = 2.0f / SCREEN_SCALE / screen_width;
+//	screen_height = -2.0f / SCREEN_SCALE / screen_height;
+//	rs->nctx = nk_ejoy2d_init(rs->R, (int)screen_width, (int)screen_height);
+	rs->nctx = nk_ejoy2d_init(rs->R, 1024, 768);
+
+	{struct nk_font_atlas *atlas;
+	nk_ejoy2d_font_stash_begin(&atlas);
+	/*struct nk_font *droid = nk_font_atlas_add_from_file(atlas, "../../../extra_font/DroidSans.ttf", 14, 0);*/
+	/*struct nk_font *robot = nk_font_atlas_add_from_file(atlas, "../../../extra_font/Robot-Regular.ttf", 14, 0);*/
+	/*struct nk_font *future = nk_font_atlas_add_from_file(atlas, "../../../extra_font/kenvector_future_thin.ttf", 13, 0);*/
+	/*struct nk_font *clean = nk_font_atlas_add_from_file(atlas, "../../../extra_font/ProggyClean.ttf", 12, 0);*/
+	/*struct nk_font *tiny = nk_font_atlas_add_from_file(atlas, "../../../extra_font/ProggyTiny.ttf", 10, 0);*/
+	/*struct nk_font *cousine = nk_font_atlas_add_from_file(atlas, "../../../extra_font/Cousine-Regular.ttf", 13, 0);*/
+	nk_ejoy2d_font_stash_end();
+	/*nk_style_set_font(ctx, &droid->handle)*/;}
 
 	rs->current_program = -1;
 	rs->blendchange = 0;
@@ -113,6 +142,41 @@ shader_init() {
 	render_set(rs->R, VERTEXBUFFER, rs->vertex_buffer, 0);
 
 	RS = rs;
+}
+
+// todo: remove test
+void
+nukclear_test() {
+   struct nk_context *ctx = RS->nctx;
+        {struct nk_panel layout;
+        if (nk_begin(ctx, &layout, "Demo", nk_rect(50, 50, 230, 250),
+            NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
+            NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
+        {
+            enum {EASY, HARD};
+            static int op = EASY;
+            static int property = 20;
+            nk_layout_row_static(ctx, 30, 80, 1);
+            if (nk_button_label(ctx, "button", NK_BUTTON_DEFAULT))
+                fprintf(stdout, "button pressed\n");
+            nk_layout_row_dynamic(ctx, 30, 2);
+            if (nk_option_label(ctx, "easy", op == EASY)) op = EASY;
+            if (nk_option_label(ctx, "hard", op == HARD)) op = HARD;
+
+            nk_layout_row_dynamic(ctx, 22, 1);
+            nk_property_int(ctx, "Compression:", 0, &property, 100, 10, 1);
+        }
+        nk_end(ctx);}
+
+        nk_ejoy2d_render(NK_ANTI_ALIASING_ON);
+
+	render_setblend(RS->R, BLEND_ONE, BLEND_ONE_MINUS_SRC_ALPHA);
+	render_set(RS->R, VERTEXLAYOUT, RS->layout, 0);
+	render_set(RS->R, INDEXBUFFER, RS->index_buffer,0);
+	render_set(RS->R, VERTEXBUFFER, RS->vertex_buffer,0);
+	render_set(RS->R, TEXTURE, RS->tex[0], 0);
+	render_shader_bind(RS->R, 0);
+	RS->current_program = -1;
 }
 
 void
@@ -168,6 +232,8 @@ shader_unload() {
 	label_initrender(NULL);
 	lsprite_initrender(NULL);
 	renderbuffer_initrender(NULL);
+	nk_ejoy2d_shutdown();
+	RS->nctx = NULL;
 
 	render_exit(R);
 	free(R);

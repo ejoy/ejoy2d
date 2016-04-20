@@ -44,5 +44,6 @@ void shader_reset();
 void shader_mask(float x, float y);
 void reset_drawcall_count();
 int drawcall_count();
+void nukclear_test();
 
 #endif
