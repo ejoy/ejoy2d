@@ -3,6 +3,7 @@
 #include "fault.h"
 #include "screen.h"
 #include "winfw.h"
+#include "nuklear_ejoy2d.h"
 
 #include <windows.h>
 #include <lauxlib.h>
@@ -94,6 +95,8 @@ ejoy2d_win_frame() {
 
 void
 ejoy2d_win_touch(int x, int y,int touch) {
+	int id = 0;
+	nk_ejoy2d_touch(id, x, y, touch);
 	switch (touch) {
 	case TOUCH_BEGIN:
 		G->intouch = 1;
@@ -108,7 +111,6 @@ ejoy2d_win_touch(int x, int y,int touch) {
 		break;
 	}
 	// windows only support one touch id (0)
-	int id = 0;
 	ejoy2d_game_touch(G->game, id, x,y,touch);
 }
 

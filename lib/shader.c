@@ -147,7 +147,10 @@ shader_init() {
 // todo: remove test
 void
 nukclear_test() {
+
    struct nk_context *ctx = RS->nctx;
+	nk_ejoy2d_newframe();
+
         {struct nk_panel layout;
         if (nk_begin(ctx, &layout, "Demo", nk_rect(50, 50, 230, 250),
             NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|

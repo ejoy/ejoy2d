@@ -2,6 +2,12 @@
 #include <stdint.h>
 #include "render/render.h"
 
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
 #define NK_IMPLEMENTATION
 #include "nuklear_ejoy2d.h"
 #include "nuklear.h"
@@ -182,6 +188,8 @@ nk_ejoy2d_render(enum nk_anti_aliasing AA) {
 		nk_clear(ctx);
 	}
 	render_enablescissor(dev->R, 0);
+
+	nk_input_begin(ctx);	// next frame input
 }
 
 NK_API struct nk_context*
@@ -190,6 +198,7 @@ nk_ejoy2d_init(struct render *R, int w, int h) {
 	ejoy2d.height = h;
 	nk_init_default(&ejoy2d.ctx, 0);
 	nk_ejoy2d_device_create(R, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
+	nk_input_begin(&ejoy2d.ctx);	// new frame input
 	return &ejoy2d.ctx;
 }
 
@@ -215,4 +224,29 @@ void nk_ejoy2d_shutdown(void) {
 	nk_font_atlas_clear(&ejoy2d.atlas);
 	nk_free(&ejoy2d.ctx);
 	nk_ejoy2d_device_destroy();
+}
+
+#define TOUCH_BEGIN 0
+#define TOUCH_END 1
+#define TOUCH_MOVE 2
+
+NK_API
+void nk_ejoy2d_touch(int id, int x, int y, int touch) {
+	// ignore touch id (only one touch supported now)
+	struct nk_context *ctx = &ejoy2d.ctx;
+	switch (touch) {
+	case TOUCH_BEGIN:
+	case TOUCH_END:
+		nk_input_button(ctx, NK_BUTTON_LEFT, x, y, touch == TOUCH_BEGIN);
+		break;
+	case TOUCH_MOVE:
+		nk_input_motion(ctx, x, y);
+		break;
+	}
+}
+
+void
+nk_ejoy2d_newframe() {
+	struct nk_context *ctx = &ejoy2d.ctx;
+	nk_input_end(ctx);
 }
