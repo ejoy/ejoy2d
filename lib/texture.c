@@ -122,8 +122,10 @@ texture_load(int id, enum TEXTURE_FORMAT pixel_format, int pixel_width, int pixe
         }
         int offset = pixel_width * pixel_height >> 1;
         render_texture_update(R, tex->alphaid, pixel_width, pixel_height, data + offset, 0, 0);
+    } else {
+        tex->alphaid = 0;
     }
-
+ 
 	return NULL;
 }
 
