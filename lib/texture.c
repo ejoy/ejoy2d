@@ -184,6 +184,7 @@ texture_new_rt(int id, int w, int h){
 	if (tex->id == 0) {
 		tex->fb = render_target_create(R, w, h, TEXTURE_RGBA8);
 		tex->id = render_target_texture(R, tex->fb);
+        tex->alphaid = 0;
 	}
 
 	return NULL;
@@ -254,7 +255,7 @@ texture_unload(int id) {
 	if (tex->fb != 0)
 		render_release(R, TARGET, tex->fb);
     if (tex->alphaid != 0)
-        render_release(R, TARGET, tex->alphaid);
+        render_release(R, TEXTURE, tex->alphaid);
     
 	tex->id = 0;
     tex->alphaid = 0;

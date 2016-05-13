@@ -83,14 +83,13 @@ sprite_drawquad(struct pack_picture *picture, const struct srt *srt,
 			vb[j].tx = texture_coord[j*2+0];
 			vb[j].ty = texture_coord[j*2+1];
 
-            if (draw_scene) {
+            if (draw_scene && enable_visible_test) {
                 drawscene_vb[j].vx = vx * scalex + transx;
                 drawscene_vb[j].vy = vy * scaley + transy;
             }
 		}
 
-        struct vertex_pack *tmp_vb = draw_scene ? drawscene_vb : vb;
-        if (!enable_visible_test || !screen_is_poly_invisible(tmp_vb, 4)) {
+        if (!enable_visible_test || !screen_is_poly_invisible(draw_scene ? drawscene_vb : vb, 4)) {
             int glalphaid = texture_glalphaid(q->texid);
 #ifdef USE_DTEX
             if (cur_dtex_id >= 0 && (glid == 0 || dtex_enable_scale(viewport_srt.scalex))) {
