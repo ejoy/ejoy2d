@@ -430,6 +430,8 @@ limport(lua_State *L) {
 	alloc.L = L;
 	alloc.buffer = (char *)lua_newuserdata(L, size);
 	alloc.cap = size;
+    
+    printf("addr %p size%d\n", alloc.buffer, alloc.cap);
 
 	struct sprite_pack *pack = (struct sprite_pack *)ialloc(&alloc, SIZEOF_PACK + tex * sizeof(int));
 	pack->n = max_id + 1;
