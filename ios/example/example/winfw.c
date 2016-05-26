@@ -37,14 +37,18 @@ create_game() {
 static int
 traceback(lua_State *L) {
 	const char *msg = lua_tostring(L, 1);
-	if (msg)
-		luaL_traceback(L, L, msg, 1);
-	else if (!lua_isnoneornil(L, 1)) {
-	if (!luaL_callmeta(L, 1, "__tostring"))
-		lua_pushliteral(L, "(no error message)");
+	if (msg == NULL) {
+	if (luaL_callmeta(L, 1, "__tostring") &&
+		lua_type(L, -1) == LUA_TSTRING)
+		return 1; 
+	else
+		msg = lua_pushfstring(L, "(error object is a %s value)",
+								luaL_typename(L, 1));
 	}
+	luaL_traceback(L, L, msg, 1); 
 	return 1;
 }
+
 
 void
 ejoy2d_win_init(int orix, int oriy, int width, int height, float scale, const char* folder) {
