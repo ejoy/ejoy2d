@@ -91,6 +91,10 @@ struct render {
 	RID vbslot[MAX_VB_SLOT];
 	RID program;
 	GLint default_framebuffer;
+#ifdef VAO_ENABLE
+    GLuint vao;
+    int gen_vao;
+#endif
 	struct rstate current;
 	struct rstate last;
 	struct log log;
@@ -127,6 +131,13 @@ check_opengl_error_debug(struct render *R, const char *filename, int line) {
 // what should be VERTEXBUFFER or INDEXBUFFER
 RID 
 render_buffer_create(struct render *R, enum RENDER_OBJ what, const void *data, int n, int stride) {
+#ifdef VAO_ENABLE
+    if (!R->vao) {
+    glGenVertexArrays(1, &R->vao);
+    glBindVertexArray(R->vao);
+    }
+#endif
+    
 	GLenum gltype;
 	switch(what) {
 	case VERTEXBUFFER:
@@ -151,6 +162,10 @@ render_buffer_create(struct render *R, enum RENDER_OBJ what, const void *data, i
 	}
 	buf->gltype = gltype;
 	buf->stride = stride;
+
+#ifdef VAO_ENABLE
+    glBindVertexArray(0);
+#endif
 
 	CHECK_GL_ERROR
 
@@ -481,6 +496,9 @@ render_exit(struct render * R) {
 	array_exit(&R->shader, close_shader, R);
 	array_exit(&R->texture, close_texture, R);
 	array_exit(&R->target, close_target, R);
+#ifdef VAO_ENABLE
+    glDeleteVertexArrays(1, &R->vao);
+#endif
 }
 
 void 
@@ -497,6 +515,9 @@ static void
 apply_vb(struct render *R) {
 	RID prog = R->program;
 	struct shader * s = (struct shader *)array_ref(&R->shader, prog);
+#ifdef VAO_ENABLE
+    glBindVertexArray(R->vao);
+#endif
 	if (s) {
 		int i;
 		RID last_vb = 0;
@@ -518,7 +539,9 @@ apply_vb(struct render *R) {
 			glVertexAttribPointer(i, al->size, al->type, al->normalized, stride, (const GLvoid *)(ptrdiff_t)(al->offset));
 		}
 	}
-
+//#ifdef VAO_ENABLE
+//    glBindVertexArray(0);
+//#endif
 	CHECK_GL_ERROR
 }
 
@@ -615,7 +638,11 @@ texture_format(struct texture * tex, GLint *pf, GLenum *pt) {
 		break;
 	case TEXTURE_A8 :
 	case TEXTURE_DEPTH :
-		format = GL_ALPHA;
+    #if OPENGLES == 3
+            format = GL_RED;
+    #else
+            format = GL_ALPHA;
+    #endif
 		itype = GL_UNSIGNED_BYTE;
 		break;
 #ifdef GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG 
@@ -732,6 +759,7 @@ void render_texture_wrapmode(struct render *R, RID id, int mode) {
         default:
             break;
     }
+
 }
 
 enum TEXTURE_FORMAT render_texture_format(struct render *R, RID id) {
