@@ -18,7 +18,7 @@
 #include <assert.h>
 #include <stdbool.h>
 
-#define MAX_PROGRAM 20
+#define MAX_PROGRAM 40
 
 #define BUFFER_OFFSET(f) ((intptr_t)&(((struct vertex *)NULL)->f))
 

@@ -117,9 +117,15 @@ ejoy2d_lua_init() {
 void
 ejoy2d_init(lua_State *L) {
 	checkluaversion(L);
+    
 	lua_pushliteral(L, OS_STRING);
 	lua_setglobal(L , "OS");
-
+    
+#ifdef _EJOY_VER_
+    lua_pushinteger(L, _EJOY_VER_);
+    lua_setglobal(L , "_EJOY_VER_");
+#endif
+    
 	luaL_requiref(L, "ejoy2d.shader.c", ejoy2d_shader, 0);
 	luaL_requiref(L, "ejoy2d.framework", ejoy2d_framework, 0);
 	luaL_requiref(L, "ejoy2d.ppm", ejoy2d_ppm, 0);
