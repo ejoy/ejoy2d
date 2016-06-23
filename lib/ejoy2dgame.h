@@ -1,7 +1,7 @@
 #ifndef EJOY_2D_LUASTATE_H
 #define EJOY_2D_LUASTATE_H
 
-#define _EJOY_VER_ (1)
+#define _EJOY_VER_ (2)
 
 #include <lua.h>
 
