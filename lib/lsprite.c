@@ -250,9 +250,8 @@ newsprite(lua_State *L, struct sprite_pack *pack, int id, int cache_enable) {
                 get_reftable(L, lua_absindex(L, -1));
                 
                 // gen cache userdata
-                int size = sizeof(struct cache_vp);
-                struct cache_vp* cache = (struct cache_vp*)lua_newuserdata(L, size);
-                c->data.vp_cache = cache;
+                int size = sizeof(struct cache_vp) * c->s.pic->n;
+                c->data.vp_cache = (struct cache_vp*)lua_newuserdata(L, size);
                 lua_setfield(L, -2, "usr_vp_cache");
                 
                 lua_pop(L, 2);
@@ -1014,6 +1013,43 @@ ldraw_scene(lua_State *L) {
 
     return 0;
 }
+
+static int
+lflush_scene(lua_State *L) {
+    if (!lua_istable(L, 1)) {
+        return luaL_error(L, "need a table to flush scene");
+    }
+    
+    struct srt srt;
+    fill_srt(L,&srt,2);
+    
+    int scene_shader_id = (int)luaL_checkinteger(L, 3);
+    
+    size_t len = lua_rawlen(L, 1);
+    int i;
+    for (i=1; i<=len; i++) {
+        lua_rawgeti(L, 1, i);
+        struct sprite * s = (struct sprite *)lua_touserdata(L, -1);
+        if (s == NULL) {
+            luaL_error(L, "Need sprite to flush scene");
+        }
+        if (s->t.program == scene_shader_id) {
+            screen_draw_scene_begin();
+            if (view_srt_dirty)
+                s->cache_dirty = true;
+            sprite_draw(s, NULL);
+            screen_draw_scene_end();
+        } else {
+            sprite_draw(s, &srt);
+        }
+        lua_pop(L, 1);
+        
+        lua_pushnil(L);
+        lua_rawseti(L, 1, i);
+    }
+    return 0;
+}
+
 
 static int
 lset_wrap_mode(lua_State *L) {
@@ -1897,6 +1933,7 @@ ejoy2d_sprite(lua_State *L) {
         { "viewport_srt", lviewport_srt },
         { "set_dtex_id", lset_dtex_id },
         { "drawscene_st", ldrawscene_st },
+        { "flush_scene", lflush_scene },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
