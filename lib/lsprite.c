@@ -1678,6 +1678,7 @@ lmethod(lua_State *L) {
         { "has_anim", lhas_anim },
         { "set_wrap_mode", lset_wrap_mode },
         { "get_name_index", lget_name_index },
+        { "flush_scene", lflush_scene },
 		{ NULL, NULL, },
 	};
 	luaL_setfuncs(L,l2,nk);
@@ -1933,7 +1934,6 @@ ejoy2d_sprite(lua_State *L) {
         { "viewport_srt", lviewport_srt },
         { "set_dtex_id", lset_dtex_id },
         { "drawscene_st", ldrawscene_st },
-        { "flush_scene", lflush_scene },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
