@@ -25,7 +25,9 @@ struct anchor_data {
 
 struct cache_vp {
     struct vertex_pack vb[4];
-    int texglid;
+    bool is_poly_visible;
+    int gl_id;
+    int gl_alpha_id;
 };
 
 struct sprite {

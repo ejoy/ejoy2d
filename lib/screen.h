@@ -12,4 +12,6 @@ void screen_scissor(int x, int y, int w, int h);
 bool screen_is_visible(float x,float y);
 bool screen_is_poly_invisible(const struct vertex_pack* vp, int len);
 void screen_get_info(int* w, int* h, float* scale);
+float screen_invw();
+float screen_invh();
 #endif

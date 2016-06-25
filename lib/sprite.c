@@ -141,57 +141,64 @@ sprite_drawquad_ex(struct pack_picture *picture, const struct srt *srt,  struct 
         int glid = texture_glid(q->texid);
         if (glid == 0 && cur_dtex_id < 0)
             continue;
-        struct vertex_pack *vb = cache[i].vb;
+        struct cache_vp *vp = &cache[i];
+        struct vertex_pack *vb = vp->vb;
         
         if (dirty) {
             const uv_type* texture_coord = q->texture_coord;
             for (j=0;j<4;j++) {
                 int xx = q->screen_coord[j*2+0];
                 int yy = q->screen_coord[j*2+1];
-                float vx = (xx * m[0] + yy * m[2]) / 1024 + m[4];
-                float vy = (xx * m[1] + yy * m[3]) / 1024 + m[5];
+                float vx = ((xx * m[0] + yy * m[2]) / 1024 + m[4]) * screen_invw();
+                float vy = ((xx * m[1] + yy * m[3]) / 1024 + m[5]) * screen_invh();
                 
-                screen_trans(&vx,&vy);
                 vb[j].vx = vx;
                 vb[j].vy = vy;
                 vb[j].tx = texture_coord[j*2+0];
                 vb[j].ty = texture_coord[j*2+1];
             }
-        }
-        
-        if (draw_scene && enable_visible_test) {
-            for (j=0; j<4; j++) {
-                drawscene_vb[j].vx = vb[j].vx * scalex + transx;
-                drawscene_vb[j].vy = vb[j].vy * scaley + transy;
+            
+            if (draw_scene) {
+                for (j=0; j<4; j++) {
+                    drawscene_vb[j].vx = vb[j].vx * scalex + transx;
+                    drawscene_vb[j].vy = vb[j].vy * scaley + transy;
+                }
+                vp->is_poly_visible = !screen_is_poly_invisible(drawscene_vb, 4);
+            } else {
+                vp->is_poly_visible = !screen_is_poly_invisible(vb, 4);
             }
         }
         
-        if (!enable_visible_test || !screen_is_poly_invisible(draw_scene ? drawscene_vb : vb, 4)) {
-            int glalphaid = texture_glalphaid(q->texid);
+        if (!enable_visible_test || vp->is_poly_visible){
+            if (dirty) {
+                int glalphaid = texture_glalphaid(q->texid);
 #ifdef USE_DTEX
-            if (cur_dtex_id >= 0 && (glid == 0 || dtex_enable_scale(viewport_srt.scalex))) {
-                int dtex_glid = texture_glid(dtex_texid(cur_dtex_id));
-                if (dtex_glid != 0 ) {
-                    const uv_type* dtex_coord = dtex_lookup(cur_dtex_id, q->texture_coord, q->texid);
-                    if (dtex_coord) {
-                        glid = dtex_glid;
-                        glalphaid = 0;
-                        for (j=0;j<4;j++) {
-                            vb[j].tx = dtex_coord[j*2+0];
-                            vb[j].ty = dtex_coord[j*2+1];
+                if (cur_dtex_id >= 0 && (glid == 0 || dtex_enable_scale(viewport_srt.scalex))) {
+                    int dtex_glid = texture_glid(dtex_texid(cur_dtex_id));
+                    if (dtex_glid != 0 ) {
+                        const uv_type* dtex_coord = dtex_lookup(cur_dtex_id, q->texture_coord, q->texid);
+                        if (dtex_coord) {
+                            glid = dtex_glid;
+                            glalphaid = 0;
+                            for (j=0;j<4;j++) {
+                                vb[j].tx = dtex_coord[j*2+0];
+                                vb[j].ty = dtex_coord[j*2+1];
+                            }
                         }
                     }
                 }
-            }
 #endif
-            if (glid == 0)
+                vp->gl_id = glid;
+                vp->gl_alpha_id = glalphaid;
+            }
+            if (vp->gl_id == 0)
                 return;
             
-            arg->program_offset = glalphaid == 0 ? 0 : PROGRAM_ALPHAMAP_OFFSET;
+            arg->program_offset = vp->gl_alpha_id == 0 ? 0 : PROGRAM_ALPHAMAP_OFFSET;
             switch_program(arg, PROGRAM_PICTURE, material);
             
-            shader_texture(glid, 0);
-            shader_texture(glalphaid, 1);
+            shader_texture(vp->gl_id, 0);
+            shader_texture(vp->gl_alpha_id, 1);
             
             shader_draw(vb, arg->color, arg->additive);
         }
@@ -732,14 +739,14 @@ sprite_draw_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, s
 		pp = &pp[i];
 		int index = pp->component_id;
 		struct sprite * child = s->data.children[index];
-		if (child == NULL || (child->flags & SPRFLAG_INVISIBLE)) {
-			continue;
-		}
-		struct sprite_trans temp2;
-		struct matrix temp_matrix2;
-		struct sprite_trans *ct = sprite_trans_mul2(s->pack, &pp->t, t, &temp2, &temp_matrix2);
-        child->cache_dirty = dirty || child->cache_dirty;
-		scissor += sprite_draw_child(child, srt, ct, material);
+        
+        if (child && !(child->flags & SPRFLAG_INVISIBLE)) {
+            struct sprite_trans temp2;
+            struct matrix temp_matrix2;
+            struct sprite_trans *ct = sprite_trans_mul2(s->pack, &pp->t, t, &temp2, &temp_matrix2);
+            child->cache_dirty = dirty || child->cache_dirty;
+            scissor += sprite_draw_child(child, srt, ct, material);
+        }
 	}
 	for (i=0;i<scissor;i++) {
 		scissor_pop();

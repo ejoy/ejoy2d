@@ -53,6 +53,16 @@ screen_trans(float *x, float *y) {
 	*y *= SCREEN.invh;
 }
 
+float
+screen_invw() {
+    return SCREEN.invw;
+}
+
+float
+screen_invh() {
+    return SCREEN.invh;
+}
+
 void
 screen_scissor(int x, int y, int w, int h) {
 	y = SCREEN.height - y - h;
