@@ -16,6 +16,7 @@
 #include "particle.h"
 #include "lrenderbuffer.h"
 #include "lgeometry.h"
+#include "screen.h"
 
 //#define LOGIC_FRAME 30
 
@@ -72,9 +73,19 @@ linject(lua_State *L) {
 }
 
 static int
+lreset_screen(lua_State *L) {
+    int w = (int)luaL_checkinteger(L, 1);
+    int h = (int)luaL_checkinteger(L, 2);
+    float scale = (float)luaL_checknumber(L, 3);
+    screen_init(w, h, scale);
+    return 0;
+}
+
+static int
 ejoy2d_framework(lua_State *L) {
 	luaL_Reg l[] = {
-		{ "inject", linject },
+        { "inject", linject },
+        { "reset_screen", lreset_screen },
 		{ NULL, NULL },
 	};
 	luaL_newlibtable(L, l);

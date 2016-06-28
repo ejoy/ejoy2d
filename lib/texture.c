@@ -203,6 +203,11 @@ texture_active_rt(int id) {
 }
 
 void
+texture_reset_rt() {
+    render_set(R, TARGET, 0, 0);
+}
+
+void
 texture_deactive_rt() {
     render_set(R, TARGET, 0, 0);
     render_state_commit(R);
