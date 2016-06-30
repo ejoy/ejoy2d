@@ -1033,10 +1033,10 @@ lflush_scene(lua_State *L) {
         if (s == NULL) {
             luaL_error(L, "Need sprite to flush scene");
         }
+        if (view_srt_dirty)
+            s->cache_dirty = true;
         if (s->t.program == scene_shader_id) {
             screen_draw_scene_begin();
-            if (view_srt_dirty)
-                s->cache_dirty = true;
             sprite_draw(s, NULL);
             screen_draw_scene_end();
         } else {
