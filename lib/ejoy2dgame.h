@@ -1,7 +1,14 @@
 #ifndef EJOY_2D_LUASTATE_H
 #define EJOY_2D_LUASTATE_H
 
-#define _EJOY_VER_ (2)
+
+//changelog
+//ver 1: alphamap shader
+//       add flush_scene
+//       unitmap drawground logic
+//ver 2: sprite vb cache
+//ver 3: revert unitmap drawground logic
+#define _EJOY_VER_ (3)
 
 #include <lua.h>
 
