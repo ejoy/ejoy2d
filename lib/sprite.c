@@ -271,6 +271,7 @@ sprite_action(struct sprite *s, const char * action) {
 	if (s->type != TYPE_ANIMATION) {
 		return -1;
 	}
+    s->cache_dirty = true;
 	struct pack_animation *ani = s->s.ani;
 	struct pack_action *pa = OFFSET_TO_POINTER(struct pack_action, s->pack, ani->action);
 	if (action == NULL) {
