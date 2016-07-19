@@ -106,14 +106,13 @@ checkluaversion(lua_State *L) {
 }
 #if __ANDROID__
 #define OS_STRING "ANDROID"
-#else
-#ifdef __MACOSX
+#elif defined(__MACOSX)
 #define OS_STRING "MAC"
-#else
 #define STR_VALUE(arg)	#arg
 #define _OS_STRING(name) STR_VALUE(name)
 #define OS_STRING _OS_STRING(EJOY2D_OS)
-#endif
+#elif defined(_WIN32)
+#define OS_STRING "PC"
 #endif
 
 lua_State *

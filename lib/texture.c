@@ -121,7 +121,7 @@ texture_load(int id, enum TEXTURE_FORMAT pixel_format, int pixel_width, int pixe
             tex->alphaid = render_texture_create(R, pixel_width, pixel_height, TEXTURE_A8, TEXTURE_2D, 0);
         }
         int offset = pixel_width * pixel_height >> 1;
-        render_texture_update(R, tex->alphaid, pixel_width, pixel_height, data + offset, 0, 0);
+        render_texture_update(R, tex->alphaid, pixel_width, pixel_height, ((char*)data) + offset, 0, 0);
     } else {
         tex->alphaid = 0;
     }

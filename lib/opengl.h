@@ -24,7 +24,7 @@
 #include <OpenGL/gl.h>
 #endif
 #else
-#define OPENGLES 0
+#define OPENGLES 2
 #include <GL/glew.h>
 
 #endif

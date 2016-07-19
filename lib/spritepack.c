@@ -2,6 +2,13 @@
 #include "matrix.h"
 #include "array.h"
 
+#ifdef _WIN32
+#ifndef ssize_t
+#include <basetsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+#endif
+
 #ifndef EXPORT_EP
 
 #include "shader.h"
