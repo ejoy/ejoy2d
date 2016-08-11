@@ -422,6 +422,7 @@ struct material {
 	int texture[MAX_TEXTURE_CHANNEL];
 	bool uniform_enable[MAX_UNIFORM];
 	float uniform[1];
+	bool reset;
 };
 
 int 
@@ -445,6 +446,7 @@ material_init(void *self, int size, int prog) {
 	memset(self, 0, rsz);
 	struct material * m = (struct material *)self;
 	m->p = p;
+	m->reset = false;
 	int i;
 	for (i=0;i<MAX_TEXTURE_CHANNEL;i++) {
 		m->texture[i] = -1;
@@ -463,6 +465,7 @@ material_setuniform(struct material *m, int index, int n, const float *v) {
 	}
 	memcpy(m->uniform + u->offset, v, n * sizeof(float));
 	m->uniform_enable[index] = true;
+	m->reset = true;
 	return 0;
 }
 
@@ -471,9 +474,10 @@ material_apply(int prog, struct material *m) {
 	struct program * p = m->p;
 	if (p != &RS->program[prog])
 		return;
-	if (p->material == m) {
+	if (p->material == m && !m->reset) {
 		return;
 	}
+	m->reset = false;
 	p->material = m;
 	p->reset_uniform = true;
 	int i;
@@ -502,5 +506,6 @@ material_settexture(struct material *m, int channel, int texture) {
 		return 1;
 	}
 	m->texture[channel] = texture;
+	m->reset = true;
 	return 0;
 }
