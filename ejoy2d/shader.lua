@@ -351,7 +351,7 @@ function shader.init()
 	s.load(shader_name.BLEND, PRECISION .. blend_fs, PRECISION .. blend_vs)
 	s.load(shader_name.RENDERBUFFER, PRECISION .. renderbuffer_fs, PRECISION_HIGH .. renderbuffer_vs)
 	s.uniform_bind(shader_name.RENDERBUFFER, { { name = "st", type = uniform_format.float4} })	-- st must the first uniform (the type is float4/4)
-	
+
 	shader.gui_text_material = create_text_material(shader_name.GUI_TEXT)
 	shader.gui_edge_material = create_text_material(shader_name.GUI_EDGE)
 	shader.gui_text_material:inv_pmv(1.0,0,0,0,  0,1.0,0,0, 0,0,1.0,0, 0,0,0,1.0)

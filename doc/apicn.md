@@ -47,6 +47,7 @@ spritepack.import 接受 spritepack.export 生成的字符串，返回和 sprite
 ```Lua
 local simplepackage = require "ejoy2d.simplepackage"
 ```
+
 simplepackage 是对 package 的一个简单封装，它按一定命名规则，从文件系统中加载一个图元描述表，通过 ejoy2d.spritepackage 解析后加载到内存中。
 
 在开发期，simplepackage 是一个简单易用的选择；但通常不建议最终项目直接使用它。最好能根据你的项目情况，设计一个合适的资源包文件格式，使用 package 的低层 api 封装出项目相关的包支持模块。
@@ -58,14 +59,17 @@ simplepackage.load { pattern = "path/?" , packagename1, packagename2, ... }
 参数中的 pattern 指资源包所在文件系统中的位置。? 将被后续的 packagename 字符串替代。
 
 例如：
-````Lua
+
+```Lua
 simplepackage.load { pattern = "path/?" , "sample" }
 ```
+
 会加载 path/sample.lua 作为图元的描述文件，以及将 path/sample.1.ppm 作为这个包所用到的第一张贴图。如果存在 path/sample.1.pgm 文件，还会将它作为贴图的 alpha 通道。如果包的描述文件中提到了多张贴图，会继续尝试加载 path/sample.2.ppm 等图片。
 
 ```Lua
 simplepackage.sprite( packname, name )
 ```
+
 从 packname 指代的包中构造名为 name 的对象并返回。
 
 ## <span id="texture">texture</span>
@@ -137,9 +141,11 @@ ejoy2d 使用一个 3*2 的 2D 变换矩阵，进行 2D 图像的各种变换操
 当我们给它添加默认的一列 (0,0,1) 后就构成了一个 3*3 的二维变换矩阵。任何一个二维坐标 |x y 1| 都可以通过和这个 3*3 矩阵做乘法做二维空间变换。
 
 ejoy2d.matrix 是一个方便开发者使用的针对矩阵数据类型处理的数学库。所有相关 API 在接受一个 matrix 参数时，可以是一个由 ejoy2d.matrix 构造程序来 lua userdata ，也可以是其它 C 模块传递过来的 lightuserdata （C 指针）。如果它是一个 lightuserdata ，需要调用者保证它指向的的确是一个长度为 6 的整数数组。
+
 ```Lua
 { 1024, 0, 0, 1024, 0, 0 }  -- 单位矩阵
 ```
+
 由于是定点数，1024 表示 1.0 ，上面展示了一个单位矩阵。对于矩阵的最后两个数字，**SCREEN_SCALE** : 16 （定义在 [lib/spritepack.h](https://github.com/cloudwu/ejoy2d/blob/master/lib/spritepack.h) 中） 表示 1.0 。
 
 ```Lua
@@ -147,25 +153,35 @@ local matrix = require "ejoy2d.matrix"
 ```
 
 这里 matrix 就是一个矩阵构造函数，可以用下列方法构造出一个矩阵。
+
 ```Lua
 local m = matrix()
 ```
+
 构造一个单位矩阵。
+
 ```Lua
 local m = matrix { 1024, 0, 0, 1024, 0, 0 }
 ```
+
 用一个 table （6 个整数）构造出一个矩阵。
+
 ```Lua
 local m = matrix (mat)
 ```
+
 这里 mat 可以是另一个 matrix 对象或是一个 C 的 matrix 结构指针（一个 lightuserdata），这可以复制出一个新的 matrix 对象出来。
+
 ```Lua
 local m = matrix { scale = 2.0, rot = 90.0, x = 10.0, y = 20.0 }
 ```
+
 这里构造了一个先放大 2.0 倍，再顺时针旋转 90 度，最后平移 (10.0, 20.0) 单位的变换矩阵。你也可以在 X 轴和 Y 轴上单独做缩放，例如：
+
 ```Lua
 matrix { sx = -1, sy = 1 }
 ```
+
 可以构造出一个左右镜像的变换。
 > matrix:mul(m)
 
@@ -210,6 +226,7 @@ local obj = sprite.new("packname", "objectname")
 ```Lua
 sprite:draw(srt)
 ```
+
 这个 api 用于把 sprite 对象绘制到屏幕。注意：ejoy2d 是一个 2d engine ，它并没有层次或 Z 排序的概念。使用 ejoy2d 绘制 sprite 必须遵从画家算法。在同一个渲染帧内，先调用 sprite:draw 方法的对象会先被绘制到屏幕上，即在后绘制的对象的下方。如果 srt 这个参数为 nil ，那么对象被绘制到屏幕坐标原点，即屏幕的左上角。ejoy2d 的坐标系统是 X 轴向右，y 轴向下。
 
 srt 参数可以是一张变换表。位移变换放在 .x 和 .y 中，单位为像素，默认值为 0 ，可以是小数。缩放变换在 .sx 和 .sy 中，默认值为 1 即没有缩放。旋转变换在 .rot 中，单位为度，360 度一圈，默认值为 0 。
@@ -219,6 +236,7 @@ srt 参数不建议用来给 sprite 对象定位，通常它用于画布的定�
 ```Lua
 sprite:ps(x,y,scale)
 ```
+
 即使你要向屏幕上画多个同样的东西，也不建议只创建一个 sprite 对象，而多次调用它的 draw 方法。更好的选择是创建多个 sprite 对象，这个每个对象都可以有自己的局部矩阵。这个局部空间矩阵可以单独记录对象的位置等信息。
 
 sprite:ps 这个方法就是用来设置对象的位置和缩放信息的。前两个参数是 x 和 y 坐标值，第三个参数是缩放量，这里只提供等比缩放。第三个参数可以不填，这样这个 api 不会改变原有的缩放比。
@@ -228,6 +246,7 @@ sprite:ps 这个方法就是用来设置对象的位置和缩放信息的。前�
 ```Lua
 sprite:sr(sx,sy,rot)
 ```
+
 sprite:sr 可以用来做不等比缩放， x 轴和 y 轴的缩放比是分别由前两个参数传入的。比如，如果你想将 sprite 对象做左右镜像，只需要调用 `sprite:sr(-1,1)` 。
 
 第三个参数是可选的，表示旋转这个对象。单位是度，360 度为一圈。当只传入一个参数时，这个参数被解释为旋转，而原有的缩放量不会被改变。
@@ -237,6 +256,7 @@ sprite:sr 可以用来做不等比缩放， x 轴和 y 轴的缩放比是分别�
 ```Lua
 sprite:test(x,y,srt)
 ```
+
 test 方法和 draw 有点类似，但是它不会绘制这个对象，而只会用屏幕坐标 (x,y) 测试它。这主要用来实现对象的点选，给 UI 模块提供底层支持。
 
 通常你应该用画家算法的逆序，对绘制在屏幕上，可能被点选的对象依次调用 test 方法，并传入触摸点的屏幕坐标。这个 api 会告诉你这个对象是否在 (x,y) 的位置被触摸到。如果这个对象是一个树状复合对象，那么 test 返回值可能是它的一个子对象。
@@ -256,6 +276,7 @@ sprite:fetch(name)
 ```Lua
 sprite:mount(name, child)
 ```
+
 在运行时，可以动态换掉一个 sprite 对象的具名子节点。这里 name 是一个字符串，child 是另一个 sprite 对象。sprite.name = child 是 `sprite:mount("name", child)` 的语法糖，两种写法是等价的。
 
 注：不能将同一个 sprite 对象 mount 到两个不同的 sprite 对象上。如果你需要这样做，请用同一份资源构造两个 sprite 对象。
@@ -311,6 +332,7 @@ sprite 用 lua 表的形式描述在资源文件中。资源文件通常于开�
 	screen = { -388, -652, -384, 452, 416, 452, 412, -652} },
 }
 ```
+
 src 字段 8 个整数表示的是 4 组贴图坐标，以像素为单位。screen 字段的 8 个整数则表示对应的屏幕坐标，是以屏幕像素为单位，但放大了 16 倍。你也可以认为这是一种定点数表达。
 > Polygon
 
@@ -346,6 +368,7 @@ ejoy2d粒子发射器的描述文件见[examples/asset/particle_particle_config.
 local c = require "ejoy2d.particle.c"
 local particle = c.new(config)
 ```
+
 config对应描述文件中的一个table。ejoy2d只负责根据这个table发射粒子,并不负责具体的渲染，所以它是一个抽象的渲染无关的模块。除了new外，ejoy2d.particle.c还提供如下三个接口：
 
 1. 更新粒子系统，world_matrix为粒子系统的世界坐标矩阵，当希望粒子发射器在世界坐标系类发射粒子（对应于在粒子系统自身坐标系类发射粒子）时，每个粒子会根据这个矩阵记录下当它出生时的世界坐标。
@@ -362,6 +385,7 @@ config对应描述文件中的一个table。ejoy2d只负责根据这个table发�
 完整的特效系统通过[ejoy2d/particle.lua](https://github.com/cloudwu/ejoy2d/blob/master/ejoy2d/particle.lua)封装实现。除了完成粒子系统的渲染外，一个特效还支持多个粒子系统组成的组合，一个组合内的多个粒子系统可定义它们之间的层级关系，相对位置，甚至可以为单个粒子系统指定动画信息。这一切都是基于sprite来实现的，即我们先定义一个简单的sprite层级结构，每个子节点对应一个粒子系统。特效系统sprite层级结构的示例见[asset/particle.lua](https://github.com/cloudwu/ejoy2d/blob/master/examples/asset/particle.lua)
 
 一个更简单的示例如下：
+
 ```lua
 {
 		component = 	{
@@ -375,6 +399,7 @@ config对应描述文件中的一个table。ejoy2d只负责根据这个table发�
 		}
 }
 ```
+
 如上所示：一个export为ice_fire的sprite包含两个anchor：fire和ice，这是一个典型的sprite定义。ejoy2d/particle.lua会首先创建出这个sprite，并遍历它的component，根据anchor的名字创建单个particle。可以在[examples/asset/particle_particle_config.lua](https://github.com/cloudwu/ejoy2d/blob/master/examples/asset/particle_particle_config.lua)中找到他们对应的粒子发射器配置文件。当anchor和particle绑定之后，如上particle.update所述，我们可以将anchor.world_matrix传入备用
 
 然后我们就可以做粒子系统的渲染。在update之后，通过data接口获取粒子的矩阵和颜色信息，通过sprite.matrix_multi_draw将所有粒子逐一渲染出来
