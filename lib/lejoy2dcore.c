@@ -1,7 +1,8 @@
-#include <GL/glew.h>
+
 #include <lua.h>
 #include <lauxlib.h>
 
+#include "opengl.h"
 #include "screen.h"
 #include "shader.h"
 #include "label.h"
