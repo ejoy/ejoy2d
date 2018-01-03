@@ -15,6 +15,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+#include <spawn.h>
+#endif
 
 #include "lua.h"
 
@@ -111,7 +114,12 @@
 
 static int os_execute (lua_State *L) {
   const char *cmd = luaL_optstring(L, 1, NULL);
-  int stat = system(cmd);
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+    pid_t child_pid;
+    int stat = posix_spawn(&child_pid,cmd,NULL,NULL,NULL,NULL);
+#else
+    int stat = system(cmd);
+#endif
   if (cmd != NULL)
     return luaL_execresult(L, stat);
   else {
